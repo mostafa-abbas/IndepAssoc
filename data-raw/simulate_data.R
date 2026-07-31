@@ -20,11 +20,6 @@ outcome_binary <- rbinom(n, 1, prob = prob_outcome)
 
 outcome_continuous <- 50 + 2.0 * exposure + 0.5 * age + 3 * diabetes + 2 * hypertension + rnorm(n, 0, 5)
 
-# Time-to-event
-linear_pred <- 0.3 * exposure + 0.02 * age + 0.3 * diabetes
-time <- rexp(n, rate = exp(-linear_pred) * 0.01)
-event <- rbinom(n, 1, prob = 0.7)
-
 example_cohort <- data.frame(
   exposure = exposure,
   age = age,
@@ -32,9 +27,7 @@ example_cohort <- data.frame(
   hypertension = hypertension,
   bmi = bmi,
   outcome_binary = outcome_binary,
-  outcome_continuous = outcome_continuous,
-  time = time,
-  event = event
+  outcome_continuous = outcome_continuous
 )
 
 usethis::use_data(example_cohort, overwrite = TRUE)

@@ -19,8 +19,6 @@ simulate_test_cohort <- function(n = 200, seed = 123) {
     age = age,
     diabetes = diabetes,
     hypertension = hypertension,
-    outcome = outcome,
-    time = rexp(n, 0.01),
-    event = rbinom(n, 1, 0.7)
+    outcome = outcome
   )
 }
