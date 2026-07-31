@@ -8,13 +8,7 @@
 #'
 #' @export
 mcnemar_test <- function(matched_data, outcome, exposure) {
-  if (!"match_num" %in% names(matched_data)) {
-    if ("strata" %in% names(matched_data)) {
-      matched_data$match_num <- as.numeric(matched_data$strata)
-    } else {
-      stop("matched_data must contain 'match_num' or 'strata'.")
-    }
-  }
+  matched_data <- .ensure_match_num(matched_data)
   if (!outcome %in% names(matched_data)) stop(paste("Outcome", outcome, "not found."))
 
   matched_data$label <- as.character(matched_data[[outcome]])
@@ -50,13 +44,7 @@ mcnemar_test <- function(matched_data, outcome, exposure) {
 #'
 #' @export
 paired_wilcoxon_test <- function(matched_data, outcome, exposure) {
-  if (!"match_num" %in% names(matched_data)) {
-    if ("strata" %in% names(matched_data)) {
-      matched_data$match_num <- as.numeric(matched_data$strata)
-    } else {
-      stop("matched_data must contain 'match_num' or 'strata'.")
-    }
-  }
+  matched_data <- .ensure_match_num(matched_data)
   if (!outcome %in% names(matched_data)) stop(paste("Outcome", outcome, "not found."))
 
   matched_data$label <- matched_data[[outcome]]

@@ -36,10 +36,7 @@ run_pipeline <- function(data, exposure, covariates, outcome,
   tbl_matched <- table_matched(matched, covariates)
 
   message("Step 6/8: Fitting all outcome models (4 types)...")
-  matched_data <- matched$data
-  if (!"match_num" %in% names(matched_data)) {
-    matched_data$match_num <- matched_data$strata
-  }
+  matched_data <- .ensure_match_num(matched$data)
   all_models <- fit_all_models(ps, matched_data, outcome, type = type)
 
   message("Step 7/8: Running paired statistical tests...")

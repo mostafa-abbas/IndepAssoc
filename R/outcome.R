@@ -60,13 +60,7 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
   pred_features <- c(exposure, all_covs)
 
   if (!outcome %in% names(full_data)) stop(paste("Outcome", outcome, "not found."))
-  if (!"match_num" %in% names(matched_data)) {
-    if ("strata" %in% names(matched_data)) {
-      matched_data$match_num <- as.numeric(matched_data$strata)
-    } else {
-      stop("matched_data must contain 'match_num' or 'strata' column.")
-    }
-  }
+  matched_data <- .ensure_match_num(matched_data)
 
   if (type == "binary") {
     full_data$label <- full_data[[outcome]]

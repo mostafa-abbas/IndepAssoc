@@ -7,6 +7,18 @@
 #' @noRd
 NULL
 
+#' Ensure a numeric 'match_num' column exists
+#' @keywords internal
+#' @noRd
+.ensure_match_num <- function(data) {
+  if ("match_num" %in% names(data)) return(data)
+  if ("strata" %in% names(data)) {
+    data$match_num <- as.numeric(data$strata)
+    return(data)
+  }
+  stop("Matched data must contain 'match_num' or 'strata' column.")
+}
+
 #' Export pipeline results to CSV files
 #'
 #' Saves all pipeline outputs to CSV files in the specified directory.

@@ -42,9 +42,7 @@ match_cohort <- function(ps_model, method = "nearest", caliper = 0.2,
   if ("subclass" %in% names(matched_data) && !"strata" %in% names(matched_data)) {
     matched_data$strata <- matched_data$subclass
   }
-  if (!"match_num" %in% names(matched_data) && "strata" %in% names(matched_data)) {
-    matched_data$match_num <- as.numeric(matched_data$strata)
-  }
+  matched_data <- .ensure_match_num(matched_data)
 
   structure(
     list(match_obj = m, data = matched_data, ps_model = ps_model),
