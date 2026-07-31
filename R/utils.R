@@ -2,6 +2,7 @@
 #'
 #' @importFrom stats aggregate as.formula confint glm lm predict quantile wilcox.test
 #' @importFrom utils write.csv
+#' @importFrom survival clogit coxph
 #' @keywords internal
 #' @noRd
 NULL

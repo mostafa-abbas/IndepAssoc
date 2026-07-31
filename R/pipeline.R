@@ -73,6 +73,11 @@ run_pipeline <- function(data, exposure, covariates, outcome,
   )
 }
 
+#' Print an IndepAssoc pipeline result
+#'
+#' @param x An `IndepAssoc` object from `run_pipeline()`.
+#' @param ... Additional arguments (ignored).
+#'
 #' @export
 print.IndepAssoc <- function(x, ...) {
   cat("IndepAssoc Pipeline Result\n")
@@ -87,6 +92,11 @@ print.IndepAssoc <- function(x, ...) {
   invisible(x)
 }
 
+#' Summary of an IndepAssoc pipeline result
+#'
+#' @param object An `IndepAssoc` object from `run_pipeline()`.
+#' @param ... Additional arguments passed to `print.IndepAssoc()`.
+#'
 #' @export
 summary.IndepAssoc <- function(object, ...) {
   print.IndepAssoc(object, ...)
