@@ -35,7 +35,7 @@ run_pipeline <- function(data, exposure, covariates, outcome,
   message("Step 5/8: Generating matched descriptive table...")
   tbl_matched <- table_matched(matched, covariates)
 
-  message("Step 6/8: Fitting all outcome models (4 types)...")
+  message("Step 6/8: Fitting all outcome models (3 types)...")
   matched_data <- .ensure_match_num(matched$data)
   all_models <- fit_all_models(ps, matched_data, outcome, type = type)
 

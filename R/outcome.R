@@ -33,13 +33,12 @@ model_summ <- function(model, treatment_feature, type = c("binary", "continuous"
   summ
 }
 
-#' Fit All 4 Outcome Models
+#' Fit All 3 Outcome Models
 #'
-#' Fits 4 regression models matching the published pipeline:
+#' Fits 3 regression models matching the published pipeline:
 #' 1. Fully adjusted (on full unmatched data)
 #' 2. Conditional (clogit/plm on matched data)
-#' 3. Doubly robust (glm/lm on matched data with all covariates)
-#' 4. Mixed effect (glmer/lmer on matched data)
+#' 3. Mixed effect (glmer/lmer on matched data)
 #'
 #' @param ps_model An `IndepPSModel` object.
 #' @param matched_data Matched data frame from `match_cohort()`.
@@ -73,7 +72,6 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
   if (type == "binary") {
     model_all_form <- as.formula(paste("label ~", paste(pred_features, collapse = " + ")))
     fully_adjusted <- glm(model_all_form, data = full_data, family = "binomial")
-    doubly_robust <- glm(model_all_form, data = matched_data, family = "binomial")
 
     cond_form <- as.formula(paste("label ~", exposure, "+ survival::strata(match_num)"))
     conditional <- survival::clogit(cond_form, data = matched_data)
@@ -84,13 +82,11 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
     models <- list(
       "Fully adjusted logistic" = fully_adjusted,
       "Conditional logit" = conditional,
-      "Doubly robust logistic" = doubly_robust,
       "Mixed effect logistic" = mixed_effect
     )
   } else {
     model_all_form <- as.formula(paste("label ~", paste(pred_features, collapse = " + ")))
     fully_adjusted <- lm(model_all_form, data = full_data)
-    doubly_robust <- lm(model_all_form, data = matched_data)
 
     cond_form <- as.formula(paste("label ~", exposure))
     panel_data <- plm::pdata.frame(matched_data, index = "match_num")
@@ -103,7 +99,6 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
     models <- list(
       "Fully adjusted linear regression" = fully_adjusted,
       "Conditional linear regression" = conditional,
-      "Doubly robust linear regression" = doubly_robust,
       "Mixed effect linear regression" = mixed_effect
     )
   }

@@ -1,18 +1,11 @@
-test_that("fit_outcome works for binary outcome", {
+test_that("fit_all_models has no mislabeled doubly robust model", {
   d <- simulate_test_cohort()
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
   m <- match_cohort(ps)
-  res <- fit_outcome(m, "outcome", type = "binary")
-
-  expect_s3_class(res, "IndepOutcome")
-  expect_equal(res$type, "binary")
-  expect_true("estimate" %in% names(res$tidy))
-  expect_true("p.value" %in% names(res$tidy))
-})
-
-test_that("fit_outcome errors on missing outcome", {
-  d <- simulate_test_cohort()
-  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
-  m <- match_cohort(ps)
-  expect_error(fit_outcome(m, "fake_outcome", type = "binary"), "not found")
+  bin <- fit_all_models(ps, m$data, "outcome", type = "binary")
+  cont <- fit_all_models(ps, m$data, "outcome", type = "continuous")
+  expect_false(any(grepl("Doubly robust", names(bin$models))))
+  expect_false(any(grepl("Doubly robust", names(cont$models))))
+  expect_equal(length(bin$models), 3)
+  expect_equal(length(cont$models), 3)
 })

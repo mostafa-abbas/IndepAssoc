@@ -2,7 +2,7 @@
 % Please edit documentation in R/outcome.R
 \name{fit_all_models}
 \alias{fit_all_models}
-\title{Fit All 4 Outcome Models}
+\title{Fit All 3 Outcome Models}
 \usage{
 fit_all_models(
   ps_model,
@@ -30,11 +30,10 @@ fit_all_models(
 A list of class \code{"IndepOutcomeModels"} with \verb{$models}, \verb{$summary}, \verb{$summary_w}.
 }
 \description{
-Fits 4 regression models matching the published pipeline:
+Fits 3 regression models matching the published pipeline:
 \enumerate{
 \item Fully adjusted (on full unmatched data)
 \item Conditional (clogit/plm on matched data)
-\item Doubly robust (glm/lm on matched data with all covariates)
 \item Mixed effect (glmer/lmer on matched data)
 }
 }

@@ -138,7 +138,7 @@ table_matched(matched, c("age", "bmi", "smoker", "hypertension"))
 
 ## Step 6: Estimate the Treatment Effect
 
-`IndepAssoc` fits four regression models matching common reporting standards in
+`IndepAssoc` fits three regression models matching common reporting standards in
 the cardiac surgery literature (Benedetto et al., 2018):
 
 ### Binary Outcome
@@ -154,12 +154,11 @@ models_bin <- fit_all_models(
 models_bin$summary_w
 ```
 
-The four models are:
+The three models are:
 
 1. **Fully adjusted logistic**: GLM on the full unmatched data with all covariates
 2. **Conditional logit**: `clogit()` on matched data, stratified by pair
-3. **Doubly robust logistic**: GLM on matched data with all covariates
-4. **Mixed effect logistic**: `glmer()` on matched data with random intercept for pair
+3. **Mixed effect logistic**: `glmer()` on matched data with random intercept for pair
 
 ### Continuous Outcome
 
@@ -222,8 +221,8 @@ To report matching results in a manuscript, include:
 3. Covariate balance statistics (ASMD before and after matching, Love plot)
 4. Number of matched, unmatched, and discarded units
 5. The method of estimating the treatment effect and standard error
-6. All four regression model results (fully adjusted, conditional, doubly
-   robust, mixed effect)
+6. All three regression model results (fully adjusted, conditional,
+   mixed effect)
 
 ### Example write-up
 
@@ -233,12 +232,11 @@ To report matching results in a manuscript, include:
 > scores, and 1:1 nearest-neighbor matching without replacement was performed
 > with a caliper of 0.2 standard deviations of the logit propensity score.
 > After matching, all standardized mean differences for covariates were below
-> 0.10, indicating adequate balance (Figure 1). Four regression models were
+> 0.10, indicating adequate balance (Figure 1). Three regression models were
 > fitted to the matched cohort: (1) a fully adjusted logistic regression on
 > the unmatched data, (2) a conditional logistic regression on the matched
-> data stratified by pair, (3) a doubly robust logistic regression on the
-> matched data with all covariates, and (4) a mixed-effect logistic regression
-> with a random intercept for matched pair. All four models showed a
+> data stratified by pair, and (3) a mixed-effect logistic regression
+> with a random intercept for matched pair. All three models showed a
 > statistically significant association between treatment and outcome (Table 1).
 
 ## References
