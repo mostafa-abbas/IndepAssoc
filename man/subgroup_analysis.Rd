@@ -19,7 +19,7 @@ subgroup_analysis(
 
 \item{subgroup_var}{Character string naming the subgroup variable.}
 
-\item{type}{Outcome type (\code{"binary"}, \code{"continuous"}, \code{"time_to_event"}).}
+\item{type}{Outcome type (\code{"binary"}, \code{"continuous"}).}
 
 \item{...}{Additional arguments passed to \code{fit_outcome()}.}
 }

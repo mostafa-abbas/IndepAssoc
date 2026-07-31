@@ -5,7 +5,7 @@
 #' @param match_obj An `IndepMatch` object from `match_cohort()`.
 #' @param outcome Character string naming the outcome variable.
 #' @param subgroup_var Character string naming the subgroup variable.
-#' @param type Outcome type (`"binary"`, `"continuous"`, `"time_to_event"`).
+#' @param type Outcome type (`"binary"`, `"continuous"`).
 #' @param ... Additional arguments passed to `fit_outcome()`.
 #'
 #' @return A data frame with one row per subgroup level, containing

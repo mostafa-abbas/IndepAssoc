@@ -50,6 +50,7 @@ model_summ <- function(model, treatment_feature, type = c("binary", "continuous"
 #'
 #' @return A list of class `"IndepOutcomeModels"` with `$models`, `$summary`, `$summary_w`.
 #'
+#' @importFrom survival clogit coxph
 #' @export
 fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "continuous"),
                            covariates = NULL, normalize_continuous = TRUE) {

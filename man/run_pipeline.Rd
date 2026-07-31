@@ -9,13 +9,10 @@ run_pipeline(
   exposure,
   covariates,
   outcome,
-  type = c("binary", "continuous", "time_to_event"),
-  time_var = NULL,
-  event_var = NULL,
+  type = c("binary", "continuous"),
   caliper = 0.2,
   ratio = 1,
-  balance_threshold = 0.1,
-  ...
+  balance_threshold = 0.1
 )
 }
 \arguments{
@@ -27,32 +24,18 @@ run_pipeline(
 
 \item{outcome}{Character string naming the outcome variable.}
 
-\item{type}{Outcome type: \code{"binary"}, \code{"continuous"}, or \code{"time_to_event"}.}
-
-\item{time_var}{Character; time variable name (for \code{type = "time_to_event"}).}
-
-\item{event_var}{Character; event indicator name (for \code{type = "time_to_event"}).}
+\item{type}{Outcome type: \code{"binary"} or \code{"continuous"}.}
 
 \item{caliper}{Caliper for matching (default \code{0.2}).}
 
 \item{ratio}{Match ratio (default \code{1}).}
 
 \item{balance_threshold}{ASMD threshold (default \code{0.10}).}
-
-\item{...}{Additional arguments passed to \code{fit_outcome()}.}
 }
 \value{
-A list of class \code{"IndepAssoc"} with elements:
-\describe{
-\item{ps_model}{The \code{IndepPSModel} object.}
-\item{matched}{The \code{IndepMatch} object.}
-\item{balance}{The \code{IndepBalance} object.}
-\item{table_unmatched}{Unmatched descriptive table.}
-\item{table_matched}{Matched descriptive table.}
-\item{outcome}{The \code{IndepOutcome} object.}
-}
+A list of class \code{"IndepAssoc"} containing all pipeline results.
 }
 \description{
 Orchestrates the full pipeline: PS model, matching, balance check,
-descriptive tables, and outcome analysis.
+descriptive tables, outcome models (all 4 types), and statistical tests.
 }
