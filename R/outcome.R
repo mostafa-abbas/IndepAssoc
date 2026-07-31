@@ -11,7 +11,7 @@ normalize <- function(x) {
 model_summ <- function(model, treatment_feature, type = c("binary", "continuous")) {
   type <- match.arg(type)
   summ_coeff <- as.data.frame(summary(model)$coefficients)
-  row_treat <- grep(treatment_feature, rownames(summ_coeff), value = TRUE)
+  row_treat <- grep(paste0("^", treatment_feature), rownames(summ_coeff), value = TRUE)
   if (length(row_treat) == 0) row_treat <- rownames(summ_coeff)[2]
   summ_coeff <- summ_coeff[row_treat, , drop = FALSE]
 
