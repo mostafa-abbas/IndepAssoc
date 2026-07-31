@@ -1,0 +1,259 @@
+---
+title: "IndepAssoc: Confounder-Adjusted Association Testing via Propensity Score Methods"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{IndepAssoc: Confounder-Adjusted Association Testing via Propensity Score Methods}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 5,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+## Introduction
+
+`IndepAssoc` generalizes the propensity-score-based analysis pipeline used in
+retrospective cohort studies to answer the core scientific question:
+
+> Is a risk factor or exposure independently associated with an outcome, after
+> adjusting for confounders?
+
+Matching is used in the context of estimating the effect of a binary treatment
+or exposure on an outcome while controlling for measured pre-treatment
+variables. The goal of matching is to produce *covariate balance*, i.e., for
+the distributions of covariates in the two groups to be approximately equal, as
+they would be in a successful randomized experiment.
+
+A matching analysis with `IndepAssoc` involves four primary steps: 1) building
+a propensity score model, 2) matching cohorts, 3) assessing covariate balance,
+and 4) estimating the treatment effect using multiple regression approaches.
+Here we walk through these steps using a simulated example dataset.
+
+```{r load-packages}
+library(IndepAssoc)
+
+data <- read.csv(system.file("extdata/sample_psm_dataset.csv", package = "IndepAssoc"))
+head(data, 5)
+```
+
+The dataset contains a binary treatment indicator (`treatment`), baseline
+covariates (`age`, `bmi`, `smoker`, `hypertension`), and two outcomes
+(`binary_outcome`, `numeric_outcome`).
+
+## Step 1: Build the Propensity Score Model
+
+The first step is to estimate a propensity score for each unit — the predicted
+probability of receiving treatment given the covariates. This is done via
+logistic regression.
+
+```{r ps-model}
+ps <- build_ps_model(
+  data = data,
+  exposure = "treatment",
+  covariates = c("age", "bmi", "smoker", "hypertension")
+)
+
+summary(ps$model)$coefficients
+```
+
+The propensity scores are appended to the data as the `.ps` column:
+
+```{r ps-scores}
+summary(ps$data$.ps)
+```
+
+## Step 2: Check Initial Imbalance
+
+Before matching, we can examine the initial imbalance using
+`cobalt::bal.tab()` via `check_balance()`:
+
+```{r initial-balance, fig.width=8, fig.height=4}
+m0 <- match_cohort(ps, caliper = 0.2)
+check_balance(m0, threshold = 0.10, plot = FALSE)
+```
+
+## Step 3: Match Cohorts
+
+We perform 1:1 nearest-neighbor matching on the propensity score without
+replacement, with a caliper of 0.2 standard deviations of the logit(PS):
+
+```{r match}
+matched <- match_cohort(ps, caliper = 0.2)
+cat("Unmatched:", nrow(data), "-> Matched:", nrow(matched$data), "observations\n")
+```
+
+The matched data includes a `match_num` (and `strata`) column identifying each
+matched pair.
+
+## Step 4: Assess Covariate Balance
+
+After matching, we assess whether the covariates are balanced between treatment
+groups:
+
+```{r balance}
+balance <- check_balance(matched, threshold = 0.10)
+cat("All balanced:", balance$all_balanced, "\n")
+```
+
+### Love Plot
+
+The Love plot visualizes absolute standardized mean differences (ASMD) for each
+covariate before and after matching:
+
+```{r love-plot, fig.width=8, fig.height=5}
+plot_love(matched, threshold = 0.10)
+```
+
+Blue bars represent the unmatched cohort and orange bars represent the matched
+cohort. All covariates should fall below the dashed line (ASMD < 0.10) after
+matching.
+
+## Step 5: Descriptive Tables
+
+### Unmatched Data
+
+For the unmatched data, we use chi-square tests (categorical) and Wilcoxon
+rank-sum tests (continuous):
+
+```{r table-unmatched}
+table_unmatched(data, "treatment", c("age", "bmi", "smoker", "hypertension"))
+```
+
+### Matched Data
+
+For the matched data, we use paired tests — McNemar (categorical) and
+Wilcoxon signed-rank (continuous):
+
+```{r table-matched}
+table_matched(matched, c("age", "bmi", "smoker", "hypertension"))
+```
+
+## Step 6: Estimate the Treatment Effect
+
+`IndepAssoc` fits four regression models matching common reporting standards in
+the cardiac surgery literature (Benedetto et al., 2018):
+
+### Binary Outcome
+
+```{r models-binary}
+models_bin <- fit_all_models(
+  ps_model = ps,
+  matched_data = matched$data,
+  outcome = "binary_outcome",
+  type = "binary"
+)
+
+models_bin$summary_w
+```
+
+The four models are:
+
+1. **Fully adjusted logistic**: GLM on the full unmatched data with all covariates
+2. **Conditional logit**: `clogit()` on matched data, stratified by pair
+3. **Doubly robust logistic**: GLM on matched data with all covariates
+4. **Mixed effect logistic**: `glmer()` on matched data with random intercept for pair
+
+### Continuous Outcome
+
+```{r models-continuous}
+models_cont <- fit_all_models(
+  ps_model = ps,
+  matched_data = matched$data,
+  outcome = "numeric_outcome",
+  type = "continuous"
+)
+
+models_cont$summary_w
+```
+
+## Step 7: Paired Statistical Tests
+
+### McNemar Test (Binary)
+
+```{r mcnemar}
+mcnemar_test(matched$data, "binary_outcome", "treatment")
+```
+
+### Paired Wilcoxon Test (Continuous)
+
+```{r wilcoxon}
+paired_wilcoxon_test(matched$data, "numeric_outcome", "treatment")
+```
+
+## Full Pipeline
+
+All steps above can be executed in a single call:
+
+```{r pipeline, eval=FALSE}
+result <- run_pipeline(
+  data = data,
+  exposure = "treatment",
+  covariates = c("age", "bmi", "smoker", "hypertension"),
+  outcome = "binary_outcome",
+  type = "binary"
+)
+
+summary(result)
+```
+
+## Exporting Results
+
+```{r export, eval=FALSE}
+export_results(result, output_dir = "output")
+```
+
+This writes CSV files for the balance tables, regression summaries, and
+statistical tests.
+
+## Reporting Results
+
+To report matching results in a manuscript, include:
+
+1. The matching specification (method, caliper, ratio)
+2. The distance measure (logistic regression PS)
+3. Covariate balance statistics (ASMD before and after matching, Love plot)
+4. Number of matched, unmatched, and discarded units
+5. The method of estimating the treatment effect and standard error
+6. All four regression model results (fully adjusted, conditional, doubly
+   robust, mixed effect)
+
+### Example write-up
+
+> We used propensity score matching to estimate the association between
+> treatment and outcome while adjusting for age, BMI, smoking status, and
+> hypertension. A logistic regression model was used to estimate propensity
+> scores, and 1:1 nearest-neighbor matching without replacement was performed
+> with a caliper of 0.2 standard deviations of the logit propensity score.
+> After matching, all standardized mean differences for covariates were below
+> 0.10, indicating adequate balance (Figure 1). Four regression models were
+> fitted to the matched cohort: (1) a fully adjusted logistic regression on
+> the unmatched data, (2) a conditional logistic regression on the matched
+> data stratified by pair, (3) a doubly robust logistic regression on the
+> matched data with all covariates, and (4) a mixed-effect logistic regression
+> with a random intercept for matched pair. All four models showed a
+> statistically significant association between treatment and outcome (Table 1).
+
+## References
+
+- Benedetto, U., Head, S.J., Angelini, G.D. and Blackstone, E.H. (2018).
+  Statistical primer: propensity score matching and its alternatives.
+  *European Journal of Cardio-Thoracic Surgery*, 53(6), pp.1112-1117.
+
+- Ho, D.E., Imai, K., King, G. and Stuart, E.A. (2007). Matching as
+  Nonparametric Preprocessing for Reducing Model Dependence in Parametric
+  Causal Inference. *Political Analysis*, 15(3), pp.199-236.
+
+- Rosenbaum, P.R. and Rubin, D.B. (1983). The Central Role of the Propensity
+  Score in Observational Studies for Causal Effects. *Biometrika*, 70(1),
+  pp.41-55.
+
+- Stuart, E.A. (2010). Matching Methods for Causal Inference: A Review and a
+  Look Forward. *Statistical Science*, 25(1), pp.1-21.

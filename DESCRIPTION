@@ -1,0 +1,37 @@
+Package: IndepAssoc
+Title: Confounder-Adjusted Independent Association Testing via Propensity Score
+    Methods
+Version: 0.1.0
+Authors@R: 
+    person("Mostafa", "Elshamy", role = c("aut", "cre"),
+           email = "mostafa@example.com")
+Description: Generalizes a propensity-score-based analysis pipeline for
+    retrospective cohort studies. Answers whether a risk factor or exposure
+    is independently associated with an outcome after adjusting for
+    confounders via matching, weighting, stratification, or regression.
+    Provides publication-ready tables and effect estimates with minimal code.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    MatchIt,
+    cobalt,
+    survival,
+    gtsummary,
+    stats,
+    broom,
+    lme4,
+    plm,
+    rstatix,
+    stringr,
+    ggplot2
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+Depends: 
+    R (>= 3.5)
+LazyData: true
+Config/roxygen2/version: 8.0.0

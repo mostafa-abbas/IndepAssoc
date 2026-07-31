@@ -1,0 +1,93 @@
+#' Run the IndepAssoc Analysis Pipeline
+#'
+#' Orchestrates the full pipeline: PS model, matching, balance check,
+#' descriptive tables, outcome models (all 4 types), and statistical tests.
+#'
+#' @param data Data frame containing the cohort.
+#' @param exposure Character string naming the binary exposure variable.
+#' @param covariates Character vector of covariate names.
+#' @param outcome Character string naming the outcome variable.
+#' @param type Outcome type: `"binary"` or `"continuous"`.
+#' @param caliper Caliper for matching (default `0.2`).
+#' @param ratio Match ratio (default `1`).
+#' @param balance_threshold ASMD threshold (default `0.10`).
+#'
+#' @return A list of class `"IndepAssoc"` containing all pipeline results.
+#'
+#' @export
+run_pipeline <- function(data, exposure, covariates, outcome,
+                         type = c("binary", "continuous"),
+                         caliper = 0.2, ratio = 1, balance_threshold = 0.10) {
+  type <- match.arg(type)
+
+  message("Step 1/8: Building propensity score model...")
+  ps <- build_ps_model(data, exposure, covariates)
+
+  message("Step 2/8: Matching cohorts...")
+  matched <- match_cohort(ps, caliper = caliper, ratio = ratio)
+
+  message("Step 3/8: Checking balance...")
+  balance <- check_balance(matched, threshold = balance_threshold)
+
+  message("Step 4/8: Generating unmatched descriptive table...")
+  tbl_unmatched <- table_unmatched(data, exposure, covariates)
+
+  message("Step 5/8: Generating matched descriptive table...")
+  tbl_matched <- table_matched(matched, covariates)
+
+  message("Step 6/8: Fitting all outcome models (4 types)...")
+  matched_data <- matched$data
+  if (!"match_num" %in% names(matched_data)) {
+    matched_data$match_num <- matched_data$strata
+  }
+  all_models <- fit_all_models(ps, matched_data, outcome, type = type)
+
+  message("Step 7/8: Running paired statistical tests...")
+  if (type == "binary") {
+    stat_test <- mcnemar_test(matched_data, outcome, exposure)
+  } else {
+    stat_test <- paired_wilcoxon_test(matched_data, outcome, exposure)
+  }
+
+  message("Step 8/8: Generating balance table...")
+  balance_pre <- as.data.frame(balance$pre$Balance)
+  balance_post <- as.data.frame(balance$post$Balance)
+
+  message("Pipeline complete.")
+
+  structure(
+    list(
+      ps_model = ps,
+      matched = matched,
+      matched_data = matched_data,
+      balance = balance,
+      balance_pre = balance_pre,
+      balance_post = balance_post,
+      table_unmatched = tbl_unmatched,
+      table_matched = tbl_matched,
+      models = all_models,
+      stat_test = stat_test,
+      outcome_type = type
+    ),
+    class = "IndepAssoc"
+  )
+}
+
+#' @export
+print.IndepAssoc <- function(x, ...) {
+  cat("IndepAssoc Pipeline Result\n")
+  cat("==========================\n\n")
+  cat("Exposure:", x$ps_model$exposure, "\n")
+  cat("Covariates:", paste(x$ps_model$covariates, collapse = ", "), "\n")
+  cat("Outcome type:", x$outcome_type, "\n")
+  cat("Matched observations:", nrow(x$matched_data), "\n")
+  cat("Balance check:", if (x$balance$all_balanced) "PASSED" else "FAILED", "\n\n")
+  cat("Model Summary:\n")
+  print(x$models$summary_w)
+  invisible(x)
+}
+
+#' @export
+summary.IndepAssoc <- function(object, ...) {
+  print.IndepAssoc(object, ...)
+}
