@@ -1,3 +1,11 @@
+#' IndepAssoc package-level imports
+#'
+#' @importFrom stats aggregate as.formula confint glm lm predict quantile wilcox.test
+#' @importFrom utils write.csv
+#' @keywords internal
+#' @noRd
+NULL
+
 #' Export pipeline results to CSV files
 #'
 #' Saves all pipeline outputs to CSV files in the specified directory.

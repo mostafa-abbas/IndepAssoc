@@ -19,11 +19,9 @@ Imports:
     survival,
     gtsummary,
     stats,
-    broom,
     lme4,
     plm,
     rstatix,
-    stringr,
     ggplot2
 Suggests:
     testthat (>= 3.0.0),
