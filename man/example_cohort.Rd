@@ -5,7 +5,7 @@
 \alias{example_cohort}
 \title{Simulated Example Cohort}
 \format{
-A data frame with 500 rows and 8 variables:
+A data frame with 500 rows and 7 variables:
 \describe{
 \item{exposure}{Binary exposure (0/1).}
 \item{age}{Continuous covariate (years).}
@@ -14,8 +14,6 @@ A data frame with 500 rows and 8 variables:
 \item{bmi}{Continuous covariate (kg/m2).}
 \item{outcome_binary}{Binary outcome (0/1).}
 \item{outcome_continuous}{Continuous outcome.}
-\item{time}{Time-to-event (days).}
-\item{event}{Event indicator (0/1).}
 }
 }
 \usage{
@@ -24,7 +22,7 @@ example_cohort
 \description{
 A simulated dataset mimicking a retrospective cardiac surgery cohort
 for demonstrating the \code{IndepAssoc} pipeline. Contains a binary exposure
-(e.g., sex), several baseline covariates, a binary outcome, and
-time-to-event variables.
+(e.g., sex), several baseline covariates, a binary outcome, and a
+continuous outcome.
 }
 \keyword{datasets}
