@@ -1,8 +1,9 @@
 #' IndepAssoc package-level imports
 #'
-#' @importFrom stats aggregate as.formula confint glm lm predict quantile wilcox.test
+#' @importFrom stats aggregate as.formula confint coef glm lm predict quantile setNames wilcox.test
 #' @importFrom utils write.csv
 #' @importFrom survival clogit coxph
+#' @importFrom rlang .data
 #' @importFrom sandwich vcovHC
 #' @importFrom survey svydesign svyglm
 #' @keywords internal
