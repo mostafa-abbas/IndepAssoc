@@ -68,7 +68,7 @@ test_that("fit_outcome iptw method returns a real estimate", {
   expect_equal(res$method, "iptw")
   expect_true(res$estimate > 0)
   expect_true(is.finite(res$p_value))
-  expect_s3_class(res$model, "svyglm")
+  expect_s3_class(res$model, "glm")
   expect_equal(res$n, nrow(d))
   expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
 })

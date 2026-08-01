@@ -5,7 +5,6 @@
 #' @importFrom survival clogit coxph
 #' @importFrom rlang .data
 #' @importFrom sandwich vcovHC
-#' @importFrom survey svydesign svyglm
 #' @keywords internal
 #' @noRd
 NULL

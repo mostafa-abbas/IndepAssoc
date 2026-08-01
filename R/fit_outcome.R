@@ -134,22 +134,19 @@ fit_outcome <- function(data, exposure, covariates, outcome,
   num <- mean(d[[exposure]])
   sw <- ifelse(d[[exposure]] == 1, num / denom, (1 - num) / (1 - denom))
   d$.sw <- sw
-  design <- survey::svydesign(ids = ~1, data = d, weights = ~.sw)
   pred <- c(exposure, covariates)
   form <- stats::as.formula(paste(outcome, "~", paste(pred, collapse = " + ")))
   if (type == "binary") {
-    mod <- survey::svyglm(form, design = design, family = stats::quasibinomial)
-    sc <- summary(mod)$coefficients
+    mod <- stats::glm(form, data = d, family = stats::quasibinomial, weights = d$.sw)
     est <- unname(coef(mod)[exposure])
-    se <- as.numeric(sc[grep(paste0("^", exposure), rownames(sc))[1], "Std. Error"])
+    se <- sqrt(sandwich::vcovHC(mod, type = "HC0")[exposure, exposure])
     p_value <- 2 * stats::pnorm(-abs(est / se))
     ci <- c(exp(est - stats::qnorm(0.975) * se), exp(est + stats::qnorm(0.975) * se))
     .fit_outcome_entry("iptw", type, exp(est), ci[1], ci[2], p_value, nrow(d), mod)
   } else {
-    mod <- survey::svyglm(form, design = design)
-    sc <- summary(mod)$coefficients
+    mod <- stats::lm(form, data = d, weights = d$.sw)
     est <- unname(coef(mod)[exposure])
-    se <- as.numeric(sc[grep(paste0("^", exposure), rownames(sc))[1], "Std. Error"])
+    se <- sqrt(sandwich::vcovHC(mod, type = "HC0")[exposure, exposure])
     df <- mod$df.residual
     p_value <- 2 * stats::pt(-abs(est / se), df = df)
     ci <- est + stats::qt(c(0.025, 0.975), df = df) * se

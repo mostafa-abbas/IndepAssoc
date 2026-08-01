@@ -8,11 +8,24 @@
 ## 0.1.0.9000 (development)
 
 * New `fit_outcome()` five-method dispatcher (`regression`, `matching`,
-  `stratification`, `iptw`, `aipw`) returning a common tidy result; new
-  dependencies `survey` (IPTW robust SE) and `sandwich` (AIPW robust SE);
+  `stratification`, `iptw`, `aipw`) returning a common tidy result;
   `run_pipeline(..., methods = ...)` now returns a `$comparison` table;
   `subgroup_analysis()` now uses the dispatcher; new `plot_comparison()`
   forest-plot helper.
+  * IPTW uses manually computed stabilized weights (`P(A) / P(A | X)`) with
+    robust standard errors from `sandwich::vcovHC()` on a plain weighted
+    `glm`/`lm` — no `WeightIt`, no `survey`/`svyglm` (deviation from the
+    plan's Task 1–5 text, which had first adopted `survey::svyglm`; reverted
+    per review to avoid a `svydesign(ids = ~1)` object and a fifth model
+    class).
+  * AIPW is a manual Bang & Robins (2005) augmented estimator. For binary
+    outcomes it returns the marginal odds ratio from augmented `E[Y(1)]` /
+    `E[Y(0)]` with a delta-method log-scale SE on the influence-function
+    terms; continuous returns the mean difference. Standard errors are the
+    empirical influence-function SEs, not `sandwich::vcovHC` (deviation from
+    the plan's Task 6 text, which had sketched a `psi`/`theta` contrast whose
+    `exp()` is not a log-OR and failed its own recovery test; the corrected
+    estimator recovers the true log-OR within tolerance).
 * Removed survival/time-to-event analysis: `km_logrank()` and its
   exports, NAMESPACE imports, and `time`/`event` columns from
   `example_cohort`. The `survival` dependency remains for

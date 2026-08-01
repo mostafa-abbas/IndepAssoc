@@ -180,7 +180,7 @@ association under five confounding-adjustment methods that share a common tidy
 result: `regression` (full-sample adjusted GLM/LM), `matching` (fully adjusted on
 the matched cohort), `stratification` (Mantel–Haenszel quintiles for binary,
 inverse-variance pooling for continuous), `iptw` (stabilized inverse-probability
-weights with robust `svyglm` standard errors), and `aipw` (Bang & Robins
+weights with robust `sandwich` (`vcovHC`) standard errors), and `aipw` (Bang & Robins
 augmented estimator). `run_pipeline(..., methods = ...)` runs them all and
 returns a single comparison table:
 
