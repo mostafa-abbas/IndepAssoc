@@ -14,11 +14,14 @@ simulate_test_cohort <- function(n = 200, seed = 123) {
   prob_outcome <- 1 / (1 + exp(-logit_outcome))
   outcome <- rbinom(n, 1, prob = prob_outcome)
 
+  outcome_continuous <- 50 + 2.0 * exposure + 0.5 * age + 3 * diabetes + 2 * hypertension + rnorm(n, 0, 5)
+
   data.frame(
     exposure = exposure,
     age = age,
     diabetes = diabetes,
     hypertension = hypertension,
-    outcome = outcome
+    outcome = outcome,
+    outcome_continuous = outcome_continuous
   )
 }
