@@ -38,3 +38,14 @@ test_that("fit_outcome validates inputs", {
   expect_error(fit_outcome(d, "exposure", "age", "missing_outcome", type = "binary"),
                "not found")
 })
+
+test_that("fit_outcome matching method returns a real estimate", {
+  d <- simulate_test_cohort()
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "matching")
+  expect_equal(res$method, "matching")
+  expect_true(res$estimate > 0)
+  expect_true(is.finite(res$p_value))
+  expect_true(res$n < nrow(d))
+  expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
+})
