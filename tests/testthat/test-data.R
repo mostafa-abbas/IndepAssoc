@@ -9,9 +9,14 @@ test_that("example_cohort matches its documented format", {
 })
 
 test_that("example_cohort is reproducible from data-raw script", {
-  script <- normalizePath(file.path("..", "..", "data-raw", "simulate_data.R"))
-  expect_true(file.exists(script))
-  lines <- readLines(script)
+  start <- dirname(normalizePath(testthat::test_path("."), mustWork = FALSE))
+  dirs <- c(start)
+  while (dirname(dirs[length(dirs)]) != dirs[length(dirs)]) {
+    dirs <- c(dirs, dirname(dirs[length(dirs)]))
+  }
+  found <- dirs[vapply(dirs, function(d) file.exists(file.path(d, "data-raw", "simulate_data.R")), logical(1))][1]
+  skip_if_not(!is.na(found), "data-raw/ is a development-only directory excluded from R CMD check")
+  lines <- readLines(file.path(found, "data-raw", "simulate_data.R"))
   expect_true(any(grepl("set.seed", lines)))
   expect_true(any(grepl("use_data", lines)))
 })

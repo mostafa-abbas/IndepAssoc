@@ -48,8 +48,8 @@ model_summ <- function(model, treatment_feature, type = c("binary", "continuous"
   est <- summ_coeff[rows, est_col[1]]
   se <- as.numeric(summ_coeff[rows, se_col[1]])
   data.frame(
-    "2.5 %" = est - qnorm(0.975) * se,
-    "97.5 %" = est + qnorm(0.975) * se,
+    "2.5 %" = est - stats::qnorm(0.975) * se,
+    "97.5 %" = est + stats::qnorm(0.975) * se,
     row.names = rows,
     check.names = FALSE
   )
@@ -99,7 +99,7 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
     conditional <- survival::clogit(cond_form, data = matched_data)
 
     mixed_form <- as.formula(paste("label ~", exposure, "+ (1 | match_num)"))
-    mixed_effect <- lme4::glmer(mixed_form, family = binomial, data = matched_data)
+    mixed_effect <- lme4::glmer(mixed_form, family = stats::binomial, data = matched_data)
 
     models <- list(
       "Fully adjusted logistic" = fully_adjusted,

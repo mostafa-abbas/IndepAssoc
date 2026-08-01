@@ -69,3 +69,21 @@ test_that("model_summ applies an explicit Wald interval for every model class", 
     expect_equal(unname(summ$upper[1]), unname(w["upper"]), tolerance = 1e-6, info = nm)
   }
 })
+
+test_that("fit_all_models returns IndepOutcomeModels for binary outcome", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- match_cohort(ps)
+  res <- fit_all_models(ps, m$data, "outcome", type = "binary")
+  expect_s3_class(res, "IndepOutcomeModels")
+  expect_equal(res$type, "binary")
+  expect_true("OR" %in% names(res$summary_w))
+  expect_true("p" %in% names(res$summary_w))
+})
+
+test_that("fit_all_models errors on missing outcome", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- match_cohort(ps)
+  expect_error(fit_all_models(ps, m$data, "fake_outcome", type = "binary"), "not found")
+})

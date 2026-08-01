@@ -12,8 +12,8 @@ test_that("run_pipeline returns full result", {
   expect_s3_class(res$ps_model, "IndepPSModel")
   expect_s3_class(res$matched, "IndepMatch")
   expect_s3_class(res$balance, "IndepBalance")
-  expect_s3_class(res$outcome, "IndepOutcome")
-  expect_true("estimate" %in% names(res$outcome$tidy))
+  expect_s3_class(res$models, "IndepOutcomeModels")
+  expect_true("OR" %in% names(res$models$summary_w))
 })
 
 test_that("print.IndepAssoc works", {

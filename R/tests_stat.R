@@ -76,5 +76,5 @@ paired_wilcoxon_test <- function(matched_data, outcome, exposure) {
     nm <- paste0(grp_vals[i], "(n=", n_per_group[i], ")")
     summ_df[[nm]] <- summ[i]
   }
-  summ_df[, c("label", tail(names(summ_df), length(grp_vals)), "statistic", "p.value"), drop = FALSE]
+  summ_df[, c("label", utils::tail(names(summ_df), length(grp_vals)), "statistic", "p.value"), drop = FALSE]
 }

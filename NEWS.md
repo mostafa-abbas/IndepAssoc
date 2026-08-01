@@ -11,3 +11,18 @@
   exports, NAMESPACE imports, and `time`/`event` columns from
   `example_cohort`. The `survival` dependency remains for
   `survival::clogit()` used in `fit_all_models()` (conditional logit).
+* Bug fixes: `paired_wilcoxon_test()` now uses a true paired test aligned
+  on `match_num`; result frames for the paired tests carry a numeric
+  `p.value`; the mislabeled "doubly robust" model was removed from
+  `fit_all_models()` (a real AIPW arrives in the 5-method dispatcher);
+  treatment-coefficient extraction in `model_summ()` is anchored to the
+  exposure name; model confidence intervals are true Wald intervals
+  (`coef +/- qnorm(0.975) * SE`) for every model class instead of
+  whatever `confint(..., method = "Wald")` happened to return; and the
+  CI bounds are no longer double-exponentiated; `subgroup_analysis()`
+  warns when the subgroup variable was not part of the matching
+  covariates; duplicated `match_num` handling consolidated into
+  `.ensure_match_num()`.
+* Deferred to Phase 2: `fit_outcome()` multi-method dispatcher
+  (referenced by `subgroup_analysis()`, which returns `NA` rows until it
+  exists).
