@@ -19,6 +19,12 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
   if (!subgroup_var %in% names(data)) stop(paste("Subgroup variable", subgroup_var, "not found."))
   if (!outcome %in% names(data)) stop(paste("Outcome", outcome, "not found."))
 
+  if (!subgroup_var %in% match_obj$ps_model$covariates) {
+    warning("Subgroup variable '", subgroup_var,
+            "' was not part of the covariates used for matching; ",
+            "paired tests within subgroups may not be valid.")
+  }
+
   groups <- unique(data[[subgroup_var]])
   results <- lapply(groups, function(g) {
     sub_data <- data[data[[subgroup_var]] == g, ]
