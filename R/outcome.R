@@ -15,22 +15,44 @@ model_summ <- function(model, treatment_feature, type = c("binary", "continuous"
   if (length(row_treat) == 0) row_treat <- rownames(summ_coeff)[2]
   summ_coeff <- summ_coeff[row_treat, , drop = FALSE]
 
-  summ_confint <- as.data.frame(confint(model, method = "Wald"))
-  summ_confint <- summ_confint[rownames(summ_coeff), , drop = FALSE]
+  summ_confint <- .wald_confint(model, row_treat)
 
   summ <- cbind(summ_coeff, summ_confint)
 
   if (type == "binary") {
     summ$OR <- exp(summ[, 1])
-    summ$lower <- exp(summ[, ncol(summ) - 1])
-    summ$upper <- exp(summ[, ncol(summ)])
+    summ$lower <- exp(summ[, "2.5 %"])
+    summ$upper <- exp(summ[, "97.5 %"])
   } else {
     summ$SC <- summ[, 1]
-    summ$lower <- summ[, ncol(summ) - 1]
-    summ$upper <- summ[, ncol(summ)]
+    summ$lower <- summ[, "2.5 %"]
+    summ$upper <- summ[, "97.5 %"]
   }
 
   summ
+}
+
+#' Explicit Wald confidence interval for a fitted model's coefficients
+#'
+#' `confint(..., method = "Wald")` is silently ignored by most model classes
+#' (`glm`/`lmer` use profile likelihood, `lm` uses t-quantiles, `clogit`/`plm`
+#' use profile likelihood), so it does not guarantee a Wald interval. Compute
+#' the Wald interval explicitly from `coef +/- qnorm(0.975) * SE`.
+#' @keywords internal
+.wald_confint <- function(model, rows) {
+  summ_coeff <- summary(model)$coefficients
+  se_col <- grep("Std. Error", colnames(summ_coeff), value = TRUE)
+  if (length(se_col) == 0) se_col <- grep("^se", colnames(summ_coeff), value = TRUE)
+  est_col <- grep("Estimate", colnames(summ_coeff), value = TRUE)
+  if (length(est_col) == 0) est_col <- grep("^coef", colnames(summ_coeff), value = TRUE)
+  est <- summ_coeff[rows, est_col[1]]
+  se <- as.numeric(summ_coeff[rows, se_col[1]])
+  data.frame(
+    "2.5 %" = est - qnorm(0.975) * se,
+    "97.5 %" = est + qnorm(0.975) * se,
+    row.names = rows,
+    check.names = FALSE
+  )
 }
 
 #' Fit All 3 Outcome Models

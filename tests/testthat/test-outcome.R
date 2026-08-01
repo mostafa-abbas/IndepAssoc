@@ -36,3 +36,36 @@ test_that("model_summ captures all levels of a factor exposure", {
   expect_setequal(rownames(summ), c("treatmentlow", "treatmenthigh"))
   expect_equal(nrow(summ), 2)
 })
+
+.wald_bound <- function(mod, term = "exposure") {
+  sc <- summary(mod)$coefficients
+  est_col <- grep("Estimate", colnames(sc), value = TRUE)
+  if (length(est_col) == 0) est_col <- grep("^coef", colnames(sc), value = TRUE)
+  se_col <- grep("Std. Error", colnames(sc), value = TRUE)
+  if (length(se_col) == 0) se_col <- grep("^se", colnames(sc), value = TRUE)
+  row_idx <- grep(paste0("^", term), rownames(sc))[1]
+  est <- unname(sc[row_idx, est_col[1]])
+  se <- as.numeric(sc[row_idx, se_col[1]])
+  c(lower = est - qnorm(0.975) * se, upper = est + qnorm(0.975) * se)
+}
+
+test_that("model_summ applies an explicit Wald interval for every model class", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- match_cohort(ps)
+  bin <- fit_all_models(ps, m$data, "outcome", type = "binary")
+  cont <- fit_all_models(ps, m$data, "outcome", type = "continuous")
+
+  for (nm in names(bin$models)) {
+    summ <- model_summ(bin$models[[nm]], "exposure", type = "binary")
+    w <- exp(.wald_bound(bin$models[[nm]]))
+    expect_equal(unname(summ$lower[1]), unname(w["lower"]), tolerance = 1e-6, info = nm)
+    expect_equal(unname(summ$upper[1]), unname(w["upper"]), tolerance = 1e-6, info = nm)
+  }
+  for (nm in names(cont$models)) {
+    summ <- model_summ(cont$models[[nm]], "exposure", type = "continuous")
+    w <- .wald_bound(cont$models[[nm]])
+    expect_equal(unname(summ$lower[1]), unname(w["lower"]), tolerance = 1e-6, info = nm)
+    expect_equal(unname(summ$upper[1]), unname(w["upper"]), tolerance = 1e-6, info = nm)
+  }
+})
