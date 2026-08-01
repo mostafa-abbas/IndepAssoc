@@ -18,6 +18,7 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
   data <- match_obj$data
   if (!subgroup_var %in% names(data)) stop(paste("Subgroup variable", subgroup_var, "not found."))
   if (!outcome %in% names(data)) stop(paste("Outcome", outcome, "not found."))
+  type <- match.arg(type)
 
   if (!subgroup_var %in% match_obj$ps_model$covariates) {
     warning("Subgroup variable '", subgroup_var,
@@ -28,18 +29,20 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
   groups <- unique(data[[subgroup_var]])
   results <- lapply(groups, function(g) {
     sub_data <- data[data[[subgroup_var]] == g, ]
-    sub_match <- match_obj
-    sub_match$data <- sub_data
 
     tryCatch({
-      res <- fit_outcome(sub_match, outcome = outcome, type = type, ...)
+      res <- fit_outcome(data = sub_data,
+                         exposure = match_obj$ps_model$exposure,
+                         covariates = match_obj$ps_model$covariates,
+                         outcome = outcome, type = type,
+                         method = "regression", ...)
       data.frame(
         subgroup = as.character(g),
         n = nrow(sub_data),
-        estimate = res$tidy$estimate[1],
-        conf.low = res$tidy$conf.low[1],
-        conf.high = res$tidy$conf.high[1],
-        p.value = res$tidy$p.value[1],
+        estimate = res$estimate,
+        conf.low = res$conf_low,
+        conf.high = res$conf_high,
+        p.value = res$p_value,
         stringsAsFactors = FALSE
       )
     }, error = function(e) {
