@@ -12,7 +12,8 @@ run_pipeline(
   type = c("binary", "continuous"),
   caliper = 0.2,
   ratio = 1,
-  balance_threshold = 0.1
+  balance_threshold = 0.1,
+  methods = c("regression", "matching", "stratification", "iptw", "aipw")
 )
 }
 \arguments{
@@ -31,6 +32,10 @@ run_pipeline(
 \item{ratio}{Match ratio (default \code{1}).}
 
 \item{balance_threshold}{ASMD threshold (default \code{0.10}).}
+
+\item{methods}{Character vector of confounding-adjustment methods to run
+via \code{fit_outcome()} (default all five: \code{"regression"}, \code{"matching"},
+\code{"stratification"}, \code{"iptw"}, \code{"aipw"}).}
 }
 \value{
 A list of class \code{"IndepAssoc"} containing all pipeline results.

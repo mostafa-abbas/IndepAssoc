@@ -11,13 +11,17 @@
 #' @param caliper Caliper for matching (default `0.2`).
 #' @param ratio Match ratio (default `1`).
 #' @param balance_threshold ASMD threshold (default `0.10`).
+#' @param methods Character vector of confounding-adjustment methods to run
+#'   via `fit_outcome()` (default all five: `"regression"`, `"matching"`,
+#'   `"stratification"`, `"iptw"`, `"aipw"`).
 #'
 #' @return A list of class `"IndepAssoc"` containing all pipeline results.
 #'
 #' @export
 run_pipeline <- function(data, exposure, covariates, outcome,
                          type = c("binary", "continuous"),
-                         caliper = 0.2, ratio = 1, balance_threshold = 0.10) {
+                         caliper = 0.2, ratio = 1, balance_threshold = 0.10,
+                         methods = c("regression", "matching", "stratification", "iptw", "aipw")) {
   type <- match.arg(type)
 
   message("Step 1/8: Building propensity score model...")
@@ -50,6 +54,17 @@ run_pipeline <- function(data, exposure, covariates, outcome,
   balance_pre <- as.data.frame(balance$pre$Balance)
   balance_post <- as.data.frame(balance$post$Balance)
 
+  message("Step 6b: Running requested confounding-adjustment methods...")
+  all_fits <- fit_outcome(data = data, exposure = exposure, covariates = covariates,
+                          outcome = outcome, type = type, method = methods)
+  if (length(methods) == 1) all_fits <- setNames(list(all_fits), methods)
+  comparison <- do.call(rbind, lapply(names(all_fits), function(m) {
+    r <- all_fits[[m]]
+    data.frame(method = r$method, label = outcome, type = r$type,
+               estimate = r$estimate, conf_low = r$conf_low, conf_high = r$conf_high,
+               p_value = r$p_value, n = r$n, stringsAsFactors = FALSE)
+  }))
+
   message("Pipeline complete.")
 
   structure(
@@ -63,6 +78,7 @@ run_pipeline <- function(data, exposure, covariates, outcome,
       table_unmatched = tbl_unmatched,
       table_matched = tbl_matched,
       models = all_models,
+      comparison = comparison,
       stat_test = stat_test,
       outcome_type = type
     ),

@@ -135,3 +135,16 @@ test_that("fit_outcome aipw works for continuous outcome", {
   expect_true(is.finite(res$estimate))
   expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
 })
+
+test_that("fit_outcome returns one result per method", {
+  d <- simulate_test_cohort()
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary",
+                     method = c("regression", "matching", "stratification", "iptw", "aipw"))
+  expect_type(res, "list")
+  expect_named(res, c("regression", "matching", "stratification", "iptw", "aipw"))
+  for (m in names(res)) {
+    expect_equal(res[[m]]$method, m, info = m)
+    expect_true(is.finite(res[[m]]$estimate), info = m)
+  }
+})
