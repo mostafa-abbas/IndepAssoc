@@ -7,6 +7,12 @@
 
 ## 0.1.0.9000 (development)
 
+* New `fit_outcome()` five-method dispatcher (`regression`, `matching`,
+  `stratification`, `iptw`, `aipw`) returning a common tidy result; new
+  dependencies `survey` (IPTW robust SE) and `sandwich` (AIPW robust SE);
+  `run_pipeline(..., methods = ...)` now returns a `$comparison` table;
+  `subgroup_analysis()` now uses the dispatcher; new `plot_comparison()`
+  forest-plot helper.
 * Removed survival/time-to-event analysis: `km_logrank()` and its
   exports, NAMESPACE imports, and `time`/`event` columns from
   `example_cohort`. The `survival` dependency remains for

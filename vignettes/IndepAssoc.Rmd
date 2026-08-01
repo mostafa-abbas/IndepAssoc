@@ -173,6 +173,45 @@ models_cont <- fit_all_models(
 models_cont$summary_w
 ```
 
+### Compare All Confounding-Adjustment Methods
+
+Beyond regression on the matched cohort, `fit_outcome()` tests the exposure–outcome
+association under five confounding-adjustment methods that share a common tidy
+result: `regression` (full-sample adjusted GLM/LM), `matching` (fully adjusted on
+the matched cohort), `stratification` (Mantel–Haenszel quintiles for binary,
+inverse-variance pooling for continuous), `iptw` (stabilized inverse-probability
+weights with robust `svyglm` standard errors), and `aipw` (Bang & Robins
+augmented estimator). `run_pipeline(..., methods = ...)` runs them all and
+returns a single comparison table:
+
+```{r pipeline-comparison}
+result <- run_pipeline(
+  data = data,
+  exposure = "treatment",
+  covariates = c("age", "bmi", "smoker", "hypertension"),
+  outcome = "binary_outcome",
+  type = "binary",
+  methods = c("regression", "matching", "stratification", "iptw", "aipw")
+)
+
+result$comparison
+```
+
+All methods recover a positive association between treatment and the binary
+outcome (`estimate` > 1 on the odds-ratio scale). Agreement across the five
+methods — including the matched and weighted estimators that do not rely on the
+outcome-regression functional form — is a reassuring sign that the association
+is not an artifact of any single adjustment strategy. Large discrepancies
+between, say, the regression and matching estimates often indicate
+misspecification of the outcome model or poor overlap, and warrant closer
+inspection of the propensity-score distribution.
+
+The comparison table can be visualized directly:
+
+```{r pipeline-forest}
+plot_comparison(result$comparison)
+```
+
 ## Step 7: Paired Statistical Tests
 
 ### McNemar Test (Binary)
