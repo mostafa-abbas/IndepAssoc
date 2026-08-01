@@ -48,6 +48,12 @@
     no longer identical to `regression`; regression tests assert the
     estimates differ and that the model's `nobs` equals the matched cohort
     size.
+* New vignettes: `applying-five-methods.Rmd` runs all five methods on
+  `causaldata::nhefs` for a binary (`death`) and a continuous (`wt82_71`)
+  outcome; `lalonde-benchmark.Rmd` validates `matching` and `iptw` against
+  the Dehejia-Wahba experimental benchmark ($1,794) on `MatchIt::lalonde`.
+* `causaldata` added to `Suggests` (used only by the new vignettes; the core
+  test suite stays on the fast simulated cohort).
 * Deferred to Phase 2: `fit_outcome()` multi-method dispatcher
   (referenced by `subgroup_analysis()`, which returns `NA` rows until it
   exists).
