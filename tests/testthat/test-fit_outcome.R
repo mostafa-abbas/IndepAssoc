@@ -49,3 +49,14 @@ test_that("fit_outcome matching method returns a real estimate", {
   expect_true(res$n < nrow(d))
   expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
 })
+
+test_that("fit_outcome stratification method pools strata", {
+  d <- simulate_test_cohort()
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "stratification")
+  expect_equal(res$method, "stratification")
+  expect_true(res$estimate > 0)
+  expect_true(is.finite(res$p_value))
+  expect_null(res$model)
+  expect_equal(res$n, nrow(d))
+})

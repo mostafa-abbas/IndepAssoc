@@ -88,6 +88,44 @@ fit_outcome <- function(data, exposure, covariates, outcome,
   .fit_outcome_entry("matching", type, estimate, ci[1], ci[2], p_value, nrow(mdata), mod)
 }
 
+.fit_stratification <- function(data, exposure, covariates, outcome, type,
+                                n_strata = 5, ...) {
+  ps <- build_ps_model(data, exposure, covariates)
+  q <- stats::quantile(ps$data$.ps, probs = seq(0, 1, length.out = n_strata + 1), na.rm = TRUE)
+  q[1] <- -Inf; q[length(q)] <- Inf
+  strata <- cut(ps$data$.ps, breaks = q, include.lowest = TRUE, labels = FALSE)
+  d <- ps$data
+  d$.stratum <- strata
+
+  if (type == "binary") {
+    d$exposure_f <- factor(d[[exposure]], levels = sort(unique(d[[exposure]])))
+    d$outcome_f  <- factor(d[[outcome]],  levels = sort(unique(d[[outcome]])))
+    tbl <- stats::xtabs(~ d$exposure_f + d$outcome_f + d$.stratum)
+    mh <- tryCatch(
+      stats::mantelhaen.test(tbl),
+      error = function(e) stats::mantelhaen.test(tbl, correct = FALSE)
+    )
+    .fit_outcome_entry("stratification", type, as.numeric(mh$estimate),
+                       mh$conf.int[1], mh$conf.int[2], mh$p.value, nrow(d), NULL)
+  } else {
+    est_rows <- vapply(unique(d$.stratum), function(s) {
+      sub <- d[d$.stratum == s, ]
+      m <- stats::lm(stats::as.formula(paste(outcome, "~", exposure)), data = sub)
+      se <- summary(m)$coefficients[exposure, "Std. Error"]
+      c(est = unname(coef(m)[exposure]), se = se)
+    }, numeric(2))
+    keep <- is.finite(est_rows["se", ]) & est_rows["se", ] > 0
+    diffs <- est_rows[, keep, drop = FALSE]
+    if (ncol(diffs) == 0) stop("No stratum produced a valid variance for pooling.")
+    w <- 1 / diffs["se", ]^2
+    est <- sum(diffs["est", ] * w) / sum(w)
+    se_pool <- sqrt(1 / sum(w))
+    p_value <- 2 * stats::pnorm(-abs(est / se_pool))
+    ci <- c(est - stats::qnorm(0.975) * se_pool, est + stats::qnorm(0.975) * se_pool)
+    .fit_outcome_entry("stratification", type, est, ci[1], ci[2], p_value, nrow(d), NULL)
+  }
+}
+
 .fit_regression <- function(data, exposure, covariates, outcome, type, ...) {
   pred <- c(exposure, covariates)
   form <- stats::as.formula(paste(outcome, "~", paste(pred, collapse = " + ")))
