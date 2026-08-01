@@ -66,9 +66,10 @@ fit_outcome <- function(data, exposure, covariates, outcome,
   ps <- build_ps_model(data, exposure, covariates)
   m <- match_cohort(ps, caliper = caliper, ratio = ratio)
   mdata <- .ensure_match_num(m$data)
-  models <- suppressMessages(fit_all_models(ps, mdata, outcome, type = type))
-  mod <- models$models[[1]]  # "Fully adjusted logistic/linear regression"
+  pred <- c(exposure, covariates)
+  form <- stats::as.formula(paste(outcome, "~", paste(pred, collapse = " + ")))
   if (type == "binary") {
+    mod <- stats::glm(form, data = mdata, family = stats::binomial)
     sc <- summary(mod)$coefficients
     est <- unname(coef(mod)[exposure])
     se <- as.numeric(sc[grep(paste0("^", exposure), rownames(sc))[1], "Std. Error"])
@@ -77,6 +78,7 @@ fit_outcome <- function(data, exposure, covariates, outcome,
     ci <- c(exp(est - stats::qnorm(0.975) * se), exp(est + stats::qnorm(0.975) * se))
     estimate <- exp(est)
   } else {
+    mod <- stats::lm(form, data = mdata)
     sc <- summary(mod)$coefficients
     est <- unname(coef(mod)[exposure])
     se <- as.numeric(sc[grep(paste0("^", exposure), rownames(sc))[1], "Std. Error"])

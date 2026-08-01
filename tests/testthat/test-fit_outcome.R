@@ -39,8 +39,10 @@ test_that("fit_outcome validates inputs", {
                "not found")
 })
 
-test_that("fit_outcome matching method returns a real estimate", {
+test_that("fit_outcome matching uses the matched cohort, not the full data", {
   d <- simulate_test_cohort()
+  reg <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "regression")
   res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
                      type = "binary", method = "matching")
   expect_equal(res$method, "matching")
@@ -48,6 +50,9 @@ test_that("fit_outcome matching method returns a real estimate", {
   expect_true(is.finite(res$p_value))
   expect_true(res$n < nrow(d))
   expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
+  expect_false(isTRUE(all.equal(res$estimate, reg$estimate)))
+  expect_equal(stats::nobs(res$model), res$n)
+  expect_true(stats::nobs(res$model) < nrow(d))
 })
 
 test_that("fit_outcome stratification method pools strata", {
@@ -109,11 +114,16 @@ test_that("aipw recovers a known binary treatment effect", {
 test_that("fit_outcome matching works for continuous outcome", {
   d <- simulate_test_cohort()
   d$outcome_cont <- 50 + 2 * d$exposure + rnorm(nrow(d))
+  reg <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
+                     type = "continuous", method = "regression")
   res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
                      type = "continuous", method = "matching")
   expect_equal(res$method, "matching")
   expect_true(is.finite(res$estimate))
   expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
+  expect_false(isTRUE(all.equal(res$estimate, reg$estimate)))
+  expect_equal(stats::nobs(res$model), res$n)
+  expect_true(stats::nobs(res$model) < nrow(d))
 })
 
 test_that("fit_outcome stratification works for continuous outcome", {
