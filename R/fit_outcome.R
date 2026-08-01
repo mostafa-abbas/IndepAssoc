@@ -126,6 +126,37 @@ fit_outcome <- function(data, exposure, covariates, outcome,
   }
 }
 
+.fit_iptw <- function(data, exposure, covariates, outcome, type, ...) {
+  d <- data
+  p_denom_form <- stats::as.formula(paste(exposure, "~", paste(covariates, collapse = " + ")))
+  denom <- stats::predict(stats::glm(p_denom_form, data = d, family = stats::binomial), type = "response")
+  denom <- pmin(pmax(denom, 1e-6), 1 - 1e-6)
+  num <- mean(d[[exposure]])
+  sw <- ifelse(d[[exposure]] == 1, num / denom, (1 - num) / (1 - denom))
+  d$.sw <- sw
+  design <- survey::svydesign(ids = ~1, data = d, weights = ~.sw)
+  pred <- c(exposure, covariates)
+  form <- stats::as.formula(paste(outcome, "~", paste(pred, collapse = " + ")))
+  if (type == "binary") {
+    mod <- survey::svyglm(form, design = design, family = stats::quasibinomial)
+    sc <- summary(mod)$coefficients
+    est <- unname(coef(mod)[exposure])
+    se <- as.numeric(sc[grep(paste0("^", exposure), rownames(sc))[1], "Std. Error"])
+    p_value <- 2 * stats::pnorm(-abs(est / se))
+    ci <- c(exp(est - stats::qnorm(0.975) * se), exp(est + stats::qnorm(0.975) * se))
+    .fit_outcome_entry("iptw", type, exp(est), ci[1], ci[2], p_value, nrow(d), mod)
+  } else {
+    mod <- survey::svyglm(form, design = design)
+    sc <- summary(mod)$coefficients
+    est <- unname(coef(mod)[exposure])
+    se <- as.numeric(sc[grep(paste0("^", exposure), rownames(sc))[1], "Std. Error"])
+    df <- mod$df.residual
+    p_value <- 2 * stats::pt(-abs(est / se), df = df)
+    ci <- est + stats::qt(c(0.025, 0.975), df = df) * se
+    .fit_outcome_entry("iptw", type, est, ci[1], ci[2], p_value, nrow(d), mod)
+  }
+}
+
 .fit_regression <- function(data, exposure, covariates, outcome, type, ...) {
   pred <- c(exposure, covariates)
   form <- stats::as.formula(paste(outcome, "~", paste(pred, collapse = " + ")))
