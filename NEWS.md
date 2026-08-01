@@ -42,6 +42,12 @@
   warns when the subgroup variable was not part of the matching
   covariates; duplicated `match_num` handling consolidated into
   `.ensure_match_num()`.
+  * The `matching` method in `fit_outcome()` now fits the fully adjusted
+    `glm`/`lm` on the matched cohort instead of `fit_all_models()` model 1
+    (which was fit on the full unmatched cohort), so matching estimates are
+    no longer identical to `regression`; regression tests assert the
+    estimates differ and that the model's `nobs` equals the matched cohort
+    size.
 * Deferred to Phase 2: `fit_outcome()` multi-method dispatcher
   (referenced by `subgroup_analysis()`, which returns `NA` rows until it
   exists).
