@@ -82,3 +82,56 @@ test_that("fit_outcome iptw works for continuous outcome", {
   expect_true(is.finite(res$estimate))
   expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
 })
+
+test_that("fit_outcome aipw method returns a real estimate", {
+  d <- simulate_test_cohort()
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "aipw")
+  expect_equal(res$method, "aipw")
+  expect_true(res$estimate > 0)
+  expect_true(is.finite(res$p_value))
+  expect_s3_class(res$model, "glm")
+  expect_equal(res$n, nrow(d))
+  expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
+})
+
+test_that("aipw recovers a known binary treatment effect", {
+  set.seed(42)
+  n <- 2000
+  x <- rnorm(n)
+  a <- rbinom(n, 1, plogis(0.5 * x))
+  y <- rbinom(n, 1, plogis(-1 + 0.8 * a + 0.5 * x))
+  d <- data.frame(a = a, x = x, y = y)
+  res <- fit_outcome(d, "a", "x", "y", type = "binary", method = "aipw")
+  expect_true(abs(log(res$estimate) - 0.8) < 0.25)
+})
+
+test_that("fit_outcome matching works for continuous outcome", {
+  d <- simulate_test_cohort()
+  d$outcome_cont <- 50 + 2 * d$exposure + rnorm(nrow(d))
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
+                     type = "continuous", method = "matching")
+  expect_equal(res$method, "matching")
+  expect_true(is.finite(res$estimate))
+  expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
+})
+
+test_that("fit_outcome stratification works for continuous outcome", {
+  d <- simulate_test_cohort()
+  d$outcome_cont <- 50 + 2 * d$exposure + rnorm(nrow(d))
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
+                     type = "continuous", method = "stratification")
+  expect_equal(res$method, "stratification")
+  expect_true(is.finite(res$estimate))
+  expect_null(res$model)
+})
+
+test_that("fit_outcome aipw works for continuous outcome", {
+  d <- simulate_test_cohort()
+  d$outcome_cont <- 50 + 2 * d$exposure + rnorm(nrow(d))
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
+                     type = "continuous", method = "aipw")
+  expect_equal(res$method, "aipw")
+  expect_true(is.finite(res$estimate))
+  expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
+})

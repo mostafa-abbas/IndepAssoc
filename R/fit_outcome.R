@@ -157,6 +157,56 @@ fit_outcome <- function(data, exposure, covariates, outcome,
   }
 }
 
+.fit_aipw <- function(data, exposure, covariates, outcome, type, ...) {
+  d <- data
+  a <- d[[exposure]]
+
+  mu_form <- stats::as.formula(paste(outcome, "~", paste(c(exposure, covariates), collapse = " + ")))
+  if (type == "binary") {
+    mu_mod <- stats::glm(mu_form, data = d, family = stats::binomial)
+  } else {
+    mu_mod <- stats::lm(mu_form, data = d)
+  }
+
+  ps_form <- stats::as.formula(paste(exposure, "~", paste(covariates, collapse = " + ")))
+  ps_mod <- stats::glm(ps_form, data = d, family = stats::binomial)
+  p_x <- pmin(pmax(stats::predict(ps_mod, type = "response"), 1e-6), 1 - 1e-6)
+
+  d0 <- d; d0[[exposure]] <- 0
+  d1 <- d; d1[[exposure]] <- 1
+  if (type == "binary") {
+    mu0 <- stats::predict(mu_mod, newdata = d0, type = "response")
+    mu1 <- stats::predict(mu_mod, newdata = d1, type = "response")
+  } else {
+    mu0 <- stats::predict(mu_mod, newdata = d0)
+    mu1 <- stats::predict(mu_mod, newdata = d1)
+  }
+
+  # Augmented influence functions for E[Y(1)] and E[Y(0)]
+  if1 <- a / p_x * (d[[outcome]] - mu1) + mu1
+  if0 <- (1 - a) / (1 - p_x) * (d[[outcome]] - mu0) + mu0
+  est1 <- mean(if1)
+  est0 <- mean(if0)
+
+  if (type == "binary") {
+    # Marginal OR from augmented risks; delta-method SE on the log-OR scale
+    or <- (est1 / (1 - est1)) / (est0 / (1 - est0))
+    if_logor <- if1 / (est1 * (1 - est1)) - if0 / (est0 * (1 - est0))
+    se <- sqrt(sum((if_logor - mean(if_logor))^2) / (nrow(d) - 1) / nrow(d))
+    p_value <- 2 * stats::pnorm(-abs(log(or) / se))
+    ci <- c(exp(log(or) - stats::qnorm(0.975) * se), exp(log(or) + stats::qnorm(0.975) * se))
+    .fit_outcome_entry("aipw", type, or, ci[1], ci[2], p_value, nrow(d), mu_mod)
+  } else {
+    theta <- est1 - est0
+    if_diff <- if1 - if0
+    se <- sqrt(sum((if_diff - mean(if_diff))^2) / (nrow(d) - 1) / nrow(d))
+    df <- nrow(d) - length(covariates) - 1
+    p_value <- 2 * stats::pt(-abs(theta / se), df = df)
+    ci <- theta + stats::qt(c(0.025, 0.975), df = df) * se
+    .fit_outcome_entry("aipw", type, theta, ci[1], ci[2], p_value, nrow(d), mu_mod)
+  }
+}
+
 .fit_regression <- function(data, exposure, covariates, outcome, type, ...) {
   pred <- c(exposure, covariates)
   form <- stats::as.formula(paste(outcome, "~", paste(pred, collapse = " + ")))
