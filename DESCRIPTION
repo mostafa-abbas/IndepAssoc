@@ -22,7 +22,9 @@ Imports:
     lme4,
     plm,
     rstatix,
-    ggplot2
+    ggplot2,
+    sandwich,
+    survey
 Suggests:
     testthat (>= 3.0.0),
     knitr,

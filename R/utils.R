@@ -3,6 +3,8 @@
 #' @importFrom stats aggregate as.formula confint glm lm predict quantile wilcox.test
 #' @importFrom utils write.csv
 #' @importFrom survival clogit coxph
+#' @importFrom sandwich vcovHC
+#' @importFrom survey svydesign svyglm
 #' @keywords internal
 #' @noRd
 NULL
