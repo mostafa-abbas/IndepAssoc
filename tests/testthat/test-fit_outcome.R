@@ -1,0 +1,40 @@
+test_that("fit_outcome dispatches to regression for binary outcome", {
+  d <- simulate_test_cohort()
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "regression")
+  expect_type(res, "list")
+  expect_equal(res$method, "regression")
+  expect_equal(res$type, "binary")
+  expect_true(res$estimate > 0)
+  expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
+  expect_true(is.finite(res$p_value))
+  expect_s3_class(res$model, "glm")
+  expect_equal(res$n, nrow(d))
+})
+
+test_that("fit_outcome dispatches to regression for continuous outcome", {
+  d <- simulate_test_cohort()
+  d$outcome_cont <- 50 + 2 * d$exposure + rnorm(nrow(d))
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
+                     type = "continuous", method = "regression")
+  expect_equal(res$method, "regression")
+  expect_s3_class(res$model, "lm")
+  expect_true(res$estimate != 0)
+  expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
+})
+
+test_that("fit_outcome errors on unknown method", {
+  d <- simulate_test_cohort()
+  expect_error(fit_outcome(d, "exposure", "age", "outcome", type = "binary", method = "nope"),
+               "method")
+})
+
+test_that("fit_outcome validates inputs", {
+  d <- simulate_test_cohort()
+  expect_error(fit_outcome(d, "missing_exposure", "age", "outcome", type = "binary"),
+               "not found")
+  expect_error(fit_outcome(d, "exposure", c("age", "nope"), "outcome", type = "binary"),
+               "not found")
+  expect_error(fit_outcome(d, "exposure", "age", "missing_outcome", type = "binary"),
+               "not found")
+})
