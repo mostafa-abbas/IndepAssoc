@@ -57,3 +57,11 @@
 * Deferred to Phase 2: `fit_outcome()` multi-method dispatcher
   (referenced by `subgroup_analysis()`, which returns `NA` rows until it
   exists).
+* Added tests asserting all five methods recover the known simulated effect
+  (binary log-OR 0.5, continuous beta 2.0) through `run_pipeline()`, plus a
+  `lalonde` benchmark regression test (PSM lands closer to the $1,794
+  experimental ATT than IPTW).
+* `R CMD check` is now clean (0 errors, 0 warnings, 0 notes): declared the
+  `lmerTest` import, quoted NSE globals in `plot_love()`/`table_matched()`,
+  and documented why `coxph` remains imported (load-bearing via `clogit`'s
+  call rewriting). Version aligned to `0.1.0.9000`; package `README.md` added.
