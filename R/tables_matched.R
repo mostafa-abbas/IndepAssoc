@@ -34,7 +34,7 @@ table_matched <- function(match_obj, covariates) {
       data, by = exposure, include = cat_vars,
       statistic = list(gtsummary::all_categorical() ~ "{n} ({p}%)")
     )
-    tbl_cat <- gtsummary::add_p(tbl_cat, test = list(gtsummary::all_categorical() ~ "mcnemar.test"), group = strata)
+    tbl_cat <- gtsummary::add_p(tbl_cat, test = list(gtsummary::all_categorical() ~ "mcnemar.test"), group = "strata")
     tables[["cat"]] <- tbl_cat
   }
 
@@ -44,7 +44,7 @@ table_matched <- function(match_obj, covariates) {
       statistic = list(gtsummary::all_continuous() ~ "{median} ({p25}, {p75})"),
       digits = gtsummary::all_continuous() ~ 1
     )
-    tbl_cont <- gtsummary::add_p(tbl_cont, test = list(gtsummary::all_continuous() ~ "paired.wilcox.test"), group = strata)
+    tbl_cont <- gtsummary::add_p(tbl_cont, test = list(gtsummary::all_continuous() ~ "paired.wilcox.test"), group = "strata")
     tables[["cont"]] <- tbl_cont
   }
 

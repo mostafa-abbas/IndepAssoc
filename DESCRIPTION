@@ -20,6 +20,7 @@ Imports:
     gtsummary,
     stats,
     lme4,
+    lmerTest,
     plm,
     rstatix,
     ggplot2,

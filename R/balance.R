@@ -97,15 +97,16 @@ plot_love <- function(match_obj, threshold = 0.10,
   plot_df <- rbind(unmatched_df, matched_df)
   plot_df$Stage <- factor(plot_df$Stage, levels = c("Unmatched", "Matched"))
 
-  cov_order <- aggregate(ASMD ~ Covariate, data = plot_df[plot_df$Stage == "Unmatched", ], FUN = max)
-  cov_order <- cov_order$Covariate[order(-cov_order$ASMD)]
+  unmatched <- plot_df[plot_df$Stage == "Unmatched", ]
+  agg <- tapply(unmatched$ASMD, unmatched$Covariate, max)
+  cov_order <- names(agg)[order(-agg)]
   plot_df$Covariate <- factor(plot_df$Covariate, levels = cov_order)
 
   if (is.null(title)) {
     title <- "Covariate Balance: Unmatched vs Matched Cohorts"
   }
 
-  p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = Covariate, y = ASMD, fill = Stage)) +
+  p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = .data$Covariate, y = .data$ASMD, fill = .data$Stage)) +
     ggplot2::geom_bar(stat = "identity", position = ggplot2::position_dodge(width = 0.75), width = 0.65) +
     ggplot2::geom_hline(yintercept = threshold, linetype = "dashed", color = "grey40", linewidth = 0.6) +
     ggplot2::scale_fill_manual(values = c("Unmatched" = unmatched_color, "Matched" = matched_color)) +

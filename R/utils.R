@@ -1,3 +1,8 @@
+# NOTE: `coxph` is intentionally imported even though never called directly.
+# `survival::clogit()` rewrites its call into `coxph()` (`coxcall[[1]] <- as.name("coxph")`)
+# and evaluates it in the caller's frame, so `coxph` must be resolvable from this
+# package's namespace. Do not remove this import as "stale".
+
 #' IndepAssoc package-level imports
 #'
 #' @importFrom stats aggregate as.formula confint coef glm lm predict quantile setNames wilcox.test
