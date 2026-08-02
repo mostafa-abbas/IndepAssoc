@@ -23,6 +23,10 @@
 #' @export
 subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary", "continuous"), method = "regression", ...) {
   if (!inherits(match_obj, "IndepMatch")) stop("`match_obj` must be an IndepMatch object.")
+  if (length(method) != 1L) {
+    stop("`method` must be a single method name; got length ", length(method),
+         ". To compare methods, use `fit_outcome()` or `run_pipeline()`.")
+  }
 
   data <- match_obj$data
   if (!subgroup_var %in% names(data)) stop(paste("Subgroup variable", subgroup_var, "not found."))

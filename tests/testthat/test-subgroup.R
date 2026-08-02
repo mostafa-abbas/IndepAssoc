@@ -49,3 +49,13 @@ test_that("subgroup_analysis honors an explicit method", {
   expect_true(all(!is.na(out$estimate)))
   expect_error(subgroup_analysis(m, "outcome", "grp", method = "iptw"), NA)
 })
+
+test_that("subgroup_analysis errors on a vector method", {
+  d <- simulate_test_cohort()
+  d$grp <- sample(c("A", "B"), nrow(d), replace = TRUE)
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- match_cohort(ps)
+  expect_error(subgroup_analysis(m, "outcome", "grp",
+                                method = c("regression", "iptw")),
+               "single method")
+})
