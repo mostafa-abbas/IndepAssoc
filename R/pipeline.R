@@ -36,37 +36,37 @@ run_pipeline <- function(data, exposure, covariates, outcome,
                          methods = c("regression", "matching", "stratification", "iptw", "aipw")) {
   type <- match.arg(type)
 
-  message("Step 1/8: Building propensity score model...")
+  message("Step 1/9: Building propensity score model...")
   ps <- build_ps_model(data, exposure, covariates)
 
-  message("Step 2/8: Matching cohorts...")
+  message("Step 2/9: Matching cohorts...")
   matched <- match_cohort(ps, caliper = caliper, ratio = ratio)
 
-  message("Step 3/8: Checking balance...")
+  message("Step 3/9: Checking balance...")
   balance <- check_balance(matched, threshold = balance_threshold)
 
-  message("Step 4/8: Generating unmatched descriptive table...")
+  message("Step 4/9: Generating unmatched descriptive table...")
   tbl_unmatched <- table_unmatched(data, exposure, covariates)
 
-  message("Step 5/8: Generating matched descriptive table...")
+  message("Step 5/9: Generating matched descriptive table...")
   tbl_matched <- table_matched(matched, covariates)
 
-  message("Step 6/8: Fitting all outcome models (3 types)...")
+  message("Step 6/9: Fitting all outcome models (3 types)...")
   matched_data <- .ensure_match_num(matched$data)
   all_models <- fit_all_models(ps, matched_data, outcome, type = type)
 
-  message("Step 7/8: Running paired statistical tests...")
+  message("Step 7/9: Running paired statistical tests...")
   if (type == "binary") {
     stat_test <- mcnemar_test(matched_data, outcome, exposure)
   } else {
     stat_test <- paired_wilcoxon_test(matched_data, outcome, exposure)
   }
 
-  message("Step 8/8: Generating balance table...")
+  message("Step 8/9: Generating balance table...")
   balance_pre <- as.data.frame(balance$pre$Balance)
   balance_post <- as.data.frame(balance$post$Balance)
 
-  message("Step 6b: Running requested confounding-adjustment methods...")
+  message("Step 9/9: Running requested confounding-adjustment methods...")
   all_fits <- fit_outcome(data = data, exposure = exposure, covariates = covariates,
                           outcome = outcome, type = type, method = methods)
   if (length(methods) == 1) all_fits <- setNames(list(all_fits), methods)

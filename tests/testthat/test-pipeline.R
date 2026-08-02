@@ -39,3 +39,16 @@ test_that("run_pipeline returns a comparison table across methods", {
   expect_identical(names(res$comparison),
                    c("method", "label", "type", "estimate", "conf_low", "conf_high", "p_value", "n"))
 })
+
+test_that("run_pipeline prints sequentially numbered step messages in execution order", {
+  d <- simulate_test_cohort()
+  msgs <- testthat::capture_messages(
+    suppressWarnings(
+      run_pipeline(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                   type = "binary", methods = "regression")
+    )
+  )
+  steps <- unlist(regmatches(msgs, gregexpr("Step [0-9]+/[0-9]+", msgs)))
+  expect_false(any(grepl("Step 6b", msgs)))
+  expect_identical(steps, paste0("Step ", 1:9, "/9"))
+})
