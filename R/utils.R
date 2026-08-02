@@ -43,6 +43,7 @@ export_results <- function(result, output_dir = "output") {
   write.csv(result$balance_post, file.path(output_dir, "balance_check_matched.csv"))
   write.csv(result$models$summary_w, file.path(output_dir, paste0(result$outcome_type, "_regression_summary.csv")))
   write.csv(result$stat_test, file.path(output_dir, paste0("stat_test_", result$outcome_type, "_matched.csv")))
+  write.csv(result$comparison, file.path(output_dir, "comparison.csv"), row.names = FALSE)
 
   message("Results exported to: ", output_dir)
   invisible(output_dir)
