@@ -59,3 +59,16 @@ test_that("subgroup_analysis errors on a vector method", {
                                 method = c("regression", "iptw")),
                "single method")
 })
+
+test_that("subgroup_analysis warns and returns an NA row when a subgroup fails to fit", {
+  d <- simulate_test_cohort()
+  d$grp <- ifelse(seq_len(nrow(d)) <= 2, "B", "A")
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- match_cohort(ps)
+  expect_warning(
+    out <- subgroup_analysis(m, "outcome", "grp", method = "iptw"),
+    "Subgroup 'B' failed to fit"
+  )
+  expect_true(any(is.na(out$estimate)))
+  expect_identical(nrow(out), 2L)
+})

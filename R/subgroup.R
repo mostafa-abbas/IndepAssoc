@@ -59,6 +59,8 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
         stringsAsFactors = FALSE
       )
     }, error = function(e) {
+      warning("Subgroup '", as.character(g), "' failed to fit: ",
+              conditionMessage(e), call. = FALSE)
       data.frame(
         subgroup = as.character(g),
         n = nrow(sub_data),
