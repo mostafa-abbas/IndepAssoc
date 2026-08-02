@@ -26,3 +26,12 @@ A list of class \code{"IndepBalance"} with elements:
 Computes absolute standardized mean differences (ASMD) before and after
 matching using \code{cobalt::bal.tab()}.
 }
+\examples{
+data(example_cohort)
+ps <- build_ps_model(example_cohort, "exposure",
+                     c("age", "diabetes", "hypertension", "bmi"))
+matched <- match_cohort(ps)
+bal <- check_balance(matched, threshold = 0.10)
+bal$all_balanced
+
+}

@@ -16,6 +16,13 @@
 #'     \item{ps_model}{The input `IndepPSModel` object.}
 #'   }
 #'
+#' @examples
+#' data(example_cohort)
+#' ps <- build_ps_model(example_cohort, "exposure",
+#'                      c("age", "diabetes", "hypertension", "bmi"))
+#' matched <- match_cohort(ps, caliper = 0.2, ratio = 1)
+#' head(matched$data)
+#'
 #' @export
 match_cohort <- function(ps_model, method = "nearest", caliper = 0.2,
                          ratio = 1, replace = FALSE, distance = "logit") {

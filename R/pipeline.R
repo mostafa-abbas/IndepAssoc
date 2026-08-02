@@ -17,6 +17,18 @@
 #'
 #' @return A list of class `"IndepAssoc"` containing all pipeline results.
 #'
+#' @examples
+#' data(example_cohort)
+#' res <- run_pipeline(
+#'   data = example_cohort,
+#'   exposure = "exposure",
+#'   covariates = c("age", "diabetes", "hypertension", "bmi"),
+#'   outcome = "outcome_binary",
+#'   type = "binary",
+#'   methods = c("regression", "matching")
+#' )
+#' res$comparison
+#'
 #' @export
 run_pipeline <- function(data, exposure, covariates, outcome,
                          type = c("binary", "continuous"),

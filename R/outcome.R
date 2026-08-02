@@ -69,6 +69,14 @@ model_summ <- function(model, treatment_feature, type = c("binary", "continuous"
 #'
 #' @return A list of class `"IndepOutcomeModels"` with `$models`, `$summary`, `$summary_w`.
 #'
+#' @examples
+#' data(example_cohort)
+#' ps <- build_ps_model(example_cohort, "exposure",
+#'                      c("age", "diabetes", "hypertension", "bmi"))
+#' matched <- match_cohort(ps)
+#' models <- fit_all_models(ps, matched$data, "outcome_binary", type = "binary")
+#' models$summary_w
+#'
 #' @export
 fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "continuous")) {
   type <- match.arg(type)

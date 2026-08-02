@@ -9,6 +9,7 @@ subgroup_analysis(
   outcome,
   subgroup_var,
   type = c("binary", "continuous"),
+  method = "regression",
   ...
 )
 }
@@ -20,6 +21,9 @@ subgroup_analysis(
 \item{subgroup_var}{Character string naming the subgroup variable.}
 
 \item{type}{Outcome type (\code{"binary"}, \code{"continuous"}).}
+
+\item{method}{Confounding-adjustment method, passed to \code{fit_outcome()}
+(default \code{"regression"}).}
 
 \item{...}{Additional arguments passed to \code{fit_outcome()}.}
 }

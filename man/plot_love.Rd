@@ -30,3 +30,11 @@ A \code{ggplot} object (invisible).
 Creates a vertical bar chart comparing absolute standardized
 mean differences (ASMD) for each covariate before and after matching.
 }
+\examples{
+data(example_cohort)
+ps <- build_ps_model(example_cohort, "exposure",
+                     c("age", "diabetes", "hypertension", "bmi"))
+matched <- match_cohort(ps)
+plot_love(matched, threshold = 0.10)
+
+}

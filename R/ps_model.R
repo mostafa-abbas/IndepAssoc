@@ -16,6 +16,12 @@
 #'     \item{covariates}{Character vector of covariates used.}
 #'   }
 #'
+#' @examples
+#' data(example_cohort)
+#' ps <- build_ps_model(example_cohort, "exposure",
+#'                      c("age", "diabetes", "hypertension", "bmi"))
+#' summary(ps$model)$coefficients
+#'
 #' @export
 build_ps_model <- function(data, exposure, covariates, family = "binomial") {
   if (!is.data.frame(data)) stop("`data` must be a data.frame.")

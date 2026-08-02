@@ -8,9 +8,7 @@ fit_all_models(
   ps_model,
   matched_data,
   outcome,
-  type = c("binary", "continuous"),
-  covariates = NULL,
-  normalize_continuous = TRUE
+  type = c("binary", "continuous")
 )
 }
 \arguments{
@@ -21,10 +19,6 @@ fit_all_models(
 \item{outcome}{Character; outcome variable name.}
 
 \item{type}{\code{"binary"} or \code{"continuous"}.}
-
-\item{covariates}{Character vector of covariate names.}
-
-\item{normalize_continuous}{Logical; normalize continuous outcome (default TRUE).}
 }
 \value{
 A list of class \code{"IndepOutcomeModels"} with \verb{$models}, \verb{$summary}, \verb{$summary_w}.
@@ -36,4 +30,13 @@ Fits 3 regression models matching the published pipeline:
 \item Conditional (clogit/plm on matched data)
 \item Mixed effect (glmer/lmer on matched data)
 }
+}
+\examples{
+data(example_cohort)
+ps <- build_ps_model(example_cohort, "exposure",
+                     c("age", "diabetes", "hypertension", "bmi"))
+matched <- match_cohort(ps)
+models <- fit_all_models(ps, matched$data, "outcome_binary", type = "binary")
+models$summary_w
+
 }

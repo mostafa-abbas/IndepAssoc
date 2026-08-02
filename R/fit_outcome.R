@@ -13,6 +13,16 @@
 #' @return A named list with `method`, `type`, `estimate`, `conf_low`,
 #'   `conf_high`, `p_value`, `n`, and `model`. If `method` has length > 1,
 #'   a named list of such results.
+#'
+#' @examples
+#' data(example_cohort)
+#' res <- fit_outcome(example_cohort, "exposure",
+#'                    c("age", "diabetes", "hypertension", "bmi"),
+#'                    "outcome_binary", type = "binary",
+#'                    method = c("regression", "iptw"))
+#' res$regression$estimate
+#' res$iptw$estimate
+#'
 #' @export
 fit_outcome <- function(data, exposure, covariates, outcome,
                         type = c("binary", "continuous"),

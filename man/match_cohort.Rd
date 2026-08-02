@@ -37,3 +37,11 @@ A list of class \code{"IndepMatch"} with elements:
 \description{
 Performs propensity score matching via \code{MatchIt}.
 }
+\examples{
+data(example_cohort)
+ps <- build_ps_model(example_cohort, "exposure",
+                     c("age", "diabetes", "hypertension", "bmi"))
+matched <- match_cohort(ps, caliper = 0.2, ratio = 1)
+head(matched$data)
+
+}

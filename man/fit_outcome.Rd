@@ -39,3 +39,13 @@ a named list of such results.
 \description{
 Fit an Outcome Model with a Chosen Confounding-Adjustment Method
 }
+\examples{
+data(example_cohort)
+res <- fit_outcome(example_cohort, "exposure",
+                   c("age", "diabetes", "hypertension", "bmi"),
+                   "outcome_binary", type = "binary",
+                   method = c("regression", "iptw"))
+res$regression$estimate
+res$iptw$estimate
+
+}

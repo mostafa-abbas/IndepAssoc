@@ -28,3 +28,10 @@ A list of class \code{"IndepPSModel"} with elements:
 Fits a logistic regression model predicting exposure from covariates,
 then appends predicted propensity scores to the data.
 }
+\examples{
+data(example_cohort)
+ps <- build_ps_model(example_cohort, "exposure",
+                     c("age", "diabetes", "hypertension", "bmi"))
+summary(ps$model)$coefficients
+
+}

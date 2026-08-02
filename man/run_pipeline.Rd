@@ -44,3 +44,16 @@ A list of class \code{"IndepAssoc"} containing all pipeline results.
 Orchestrates the full pipeline: PS model, matching, balance check,
 descriptive tables, outcome models (all 4 types), and statistical tests.
 }
+\examples{
+data(example_cohort)
+res <- run_pipeline(
+  data = example_cohort,
+  exposure = "exposure",
+  covariates = c("age", "diabetes", "hypertension", "bmi"),
+  outcome = "outcome_binary",
+  type = "binary",
+  methods = c("regression", "matching")
+)
+res$comparison
+
+}

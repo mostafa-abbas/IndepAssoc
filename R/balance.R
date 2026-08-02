@@ -15,6 +15,14 @@
 #'     \item{all_balanced}{Logical; `TRUE` if all ASMDs < threshold after matching.}
 #'   }
 #'
+#' @examples
+#' data(example_cohort)
+#' ps <- build_ps_model(example_cohort, "exposure",
+#'                      c("age", "diabetes", "hypertension", "bmi"))
+#' matched <- match_cohort(ps)
+#' bal <- check_balance(matched, threshold = 0.10)
+#' bal$all_balanced
+#'
 #' @export
 check_balance <- function(match_obj, threshold = 0.10, plot = FALSE) {
   if (!inherits(match_obj, "IndepMatch")) stop("`match_obj` must be an IndepMatch object.")
@@ -60,6 +68,13 @@ check_balance <- function(match_obj, threshold = 0.10, plot = FALSE) {
 #' @param matched_color Color for matched bars (default `"#ED7D31"` orange).
 #'
 #' @return A `ggplot` object (invisible).
+#'
+#' @examples
+#' data(example_cohort)
+#' ps <- build_ps_model(example_cohort, "exposure",
+#'                      c("age", "diabetes", "hypertension", "bmi"))
+#' matched <- match_cohort(ps)
+#' plot_love(matched, threshold = 0.10)
 #'
 #' @export
 plot_love <- function(match_obj, threshold = 0.10,
