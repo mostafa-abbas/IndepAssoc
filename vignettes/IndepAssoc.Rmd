@@ -40,13 +40,14 @@ Here we walk through these steps using a simulated example dataset.
 ```{r load-packages}
 library(IndepAssoc)
 
-data <- read.csv(system.file("extdata/sample_psm_dataset.csv", package = "IndepAssoc"))
+data(example_cohort)
+data <- example_cohort
 head(data, 5)
 ```
 
-The dataset contains a binary treatment indicator (`treatment`), baseline
-covariates (`age`, `bmi`, `smoker`, `hypertension`), and two outcomes
-(`binary_outcome`, `numeric_outcome`).
+The dataset contains a binary exposure indicator (`exposure`), baseline
+covariates (`age`, `diabetes`, `hypertension`, `bmi`), and two outcomes
+(`outcome_binary`, `outcome_continuous`).
 
 ## Step 1: Build the Propensity Score Model
 
@@ -57,8 +58,8 @@ logistic regression.
 ```{r ps-model}
 ps <- build_ps_model(
   data = data,
-  exposure = "treatment",
-  covariates = c("age", "bmi", "smoker", "hypertension")
+  exposure = "exposure",
+  covariates = c("age", "diabetes", "hypertension", "bmi")
 )
 
 summary(ps$model)$coefficients
@@ -124,7 +125,7 @@ For the unmatched data, we use chi-square tests (categorical) and Wilcoxon
 rank-sum tests (continuous):
 
 ```{r table-unmatched}
-table_unmatched(data, "treatment", c("age", "bmi", "smoker", "hypertension"))
+table_unmatched(data, "exposure", c("age", "diabetes", "hypertension", "bmi"))
 ```
 
 ### Matched Data
@@ -133,7 +134,7 @@ For the matched data, we use paired tests — McNemar (categorical) and
 Wilcoxon signed-rank (continuous):
 
 ```{r table-matched}
-table_matched(matched, c("age", "bmi", "smoker", "hypertension"))
+table_matched(matched, c("age", "diabetes", "hypertension", "bmi"))
 ```
 
 ## Step 6: Estimate the Treatment Effect
@@ -147,7 +148,7 @@ the cardiac surgery literature (Benedetto et al., 2018):
 models_bin <- fit_all_models(
   ps_model = ps,
   matched_data = matched$data,
-  outcome = "binary_outcome",
+  outcome = "outcome_binary",
   type = "binary"
 )
 
@@ -166,7 +167,7 @@ The three models are:
 models_cont <- fit_all_models(
   ps_model = ps,
   matched_data = matched$data,
-  outcome = "numeric_outcome",
+  outcome = "outcome_continuous",
   type = "continuous"
 )
 
@@ -187,9 +188,9 @@ returns a single comparison table:
 ```{r pipeline-comparison}
 result <- run_pipeline(
   data = data,
-  exposure = "treatment",
-  covariates = c("age", "bmi", "smoker", "hypertension"),
-  outcome = "binary_outcome",
+  exposure = "exposure",
+  covariates = c("age", "diabetes", "hypertension", "bmi"),
+  outcome = "outcome_binary",
   type = "binary",
   methods = c("regression", "matching", "stratification", "iptw", "aipw")
 )
@@ -217,13 +218,13 @@ plot_comparison(result$comparison)
 ### McNemar Test (Binary)
 
 ```{r mcnemar}
-mcnemar_test(matched$data, "binary_outcome", "treatment")
+mcnemar_test(matched$data, "outcome_binary", "exposure")
 ```
 
 ### Paired Wilcoxon Test (Continuous)
 
 ```{r wilcoxon}
-paired_wilcoxon_test(matched$data, "numeric_outcome", "treatment")
+paired_wilcoxon_test(matched$data, "outcome_continuous", "exposure")
 ```
 
 ## Full Pipeline
@@ -233,9 +234,9 @@ All steps above can be executed in a single call:
 ```{r pipeline, eval=FALSE}
 result <- run_pipeline(
   data = data,
-  exposure = "treatment",
-  covariates = c("age", "bmi", "smoker", "hypertension"),
-  outcome = "binary_outcome",
+  exposure = "exposure",
+  covariates = c("age", "diabetes", "hypertension", "bmi"),
+  outcome = "outcome_binary",
   type = "binary"
 )
 
@@ -266,8 +267,8 @@ To report matching results in a manuscript, include:
 ### Example write-up
 
 > We used propensity score matching to estimate the association between
-> treatment and outcome while adjusting for age, BMI, smoking status, and
-> hypertension. A logistic regression model was used to estimate propensity
+> treatment and outcome while adjusting for age, diabetes, hypertension, and
+> BMI. A logistic regression model was used to estimate propensity
 > scores, and 1:1 nearest-neighbor matching without replacement was performed
 > with a caliper of 0.2 standard deviations of the logit propensity score.
 > After matching, all standardized mean differences for covariates were below
