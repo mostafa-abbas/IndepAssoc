@@ -9,6 +9,11 @@
 #'
 #' @return A `gtsummary` table object.
 #'
+#' @examples
+#' data(example_cohort)
+#' table_unmatched(example_cohort, "exposure",
+#'                 c("age", "diabetes", "hypertension", "bmi"))
+#'
 #' @export
 table_unmatched <- function(data, exposure, covariates) {
   if (!is.data.frame(data)) stop("`data` must be a data.frame.")

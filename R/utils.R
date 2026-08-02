@@ -35,6 +35,20 @@ NULL
 #'
 #' @return Invisibly returns the output directory path.
 #' @export
+#' @examples
+#' data(example_cohort)
+#' res <- run_pipeline(
+#'   data = example_cohort,
+#'   exposure = "exposure",
+#'   covariates = c("age", "diabetes", "hypertension", "bmi"),
+#'   outcome = "outcome_binary",
+#'   type = "binary",
+#'   methods = "regression"
+#' )
+#' out_dir <- tempfile("indepassoc_export_")
+#' export_results(res, output_dir = out_dir)
+#' list.files(out_dir)
+#' unlink(out_dir, recursive = TRUE)
 export_results <- function(result, output_dir = "output") {
   if (!inherits(result, "IndepAssoc")) stop("`result` must be an IndepAssoc object.")
   if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)

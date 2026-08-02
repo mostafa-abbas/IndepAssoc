@@ -14,3 +14,16 @@
 \description{
 Summary of an IndepAssoc pipeline result
 }
+\examples{
+data(example_cohort)
+res <- run_pipeline(
+  data = example_cohort,
+  exposure = "exposure",
+  covariates = c("age", "diabetes", "hypertension", "bmi"),
+  outcome = "outcome_continuous",
+  type = "continuous",
+  methods = "regression"
+)
+summary(res)
+
+}

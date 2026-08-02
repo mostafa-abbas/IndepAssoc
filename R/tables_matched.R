@@ -8,6 +8,13 @@
 #'
 #' @return A `gtsummary` table object.
 #'
+#' @examples
+#' data(example_cohort)
+#' ps <- build_ps_model(example_cohort, "exposure",
+#'                      c("age", "diabetes", "hypertension", "bmi"))
+#' matched <- match_cohort(ps)
+#' table_matched(matched, c("age", "diabetes", "hypertension", "bmi"))
+#'
 #' @export
 table_matched <- function(match_obj, covariates) {
   if (!inherits(match_obj, "IndepMatch")) stop("`match_obj` must be an IndepMatch object.")

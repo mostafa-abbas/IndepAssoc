@@ -8,6 +8,17 @@
 #'
 #' @return A `ggplot` object (invisible).
 #' @export
+#' @examples
+#' data(example_cohort)
+#' res <- run_pipeline(
+#'   data = example_cohort,
+#'   exposure = "exposure",
+#'   covariates = c("age", "diabetes", "hypertension", "bmi"),
+#'   outcome = "outcome_binary",
+#'   type = "binary",
+#'   methods = c("regression", "iptw")
+#' )
+#' plot_comparison(res$comparison, log_scale = TRUE)
 plot_comparison <- function(comparison, log_scale = TRUE) {
   if (!is.data.frame(comparison)) stop("`comparison` must be a data.frame.")
   need <- c("method", "estimate", "conf_low", "conf_high")

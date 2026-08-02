@@ -103,6 +103,18 @@ run_pipeline <- function(data, exposure, covariates, outcome,
 #' @param x An `IndepAssoc` object from `run_pipeline()`.
 #' @param ... Additional arguments (ignored).
 #'
+#' @examples
+#' data(example_cohort)
+#' res <- run_pipeline(
+#'   data = example_cohort,
+#'   exposure = "exposure",
+#'   covariates = c("age", "diabetes", "hypertension", "bmi"),
+#'   outcome = "outcome_binary",
+#'   type = "binary",
+#'   methods = "regression"
+#' )
+#' print(res)
+#'
 #' @export
 print.IndepAssoc <- function(x, ...) {
   cat("IndepAssoc Pipeline Result\n")
@@ -121,6 +133,18 @@ print.IndepAssoc <- function(x, ...) {
 #'
 #' @param object An `IndepAssoc` object from `run_pipeline()`.
 #' @param ... Additional arguments passed to `print.IndepAssoc()`.
+#'
+#' @examples
+#' data(example_cohort)
+#' res <- run_pipeline(
+#'   data = example_cohort,
+#'   exposure = "exposure",
+#'   covariates = c("age", "diabetes", "hypertension", "bmi"),
+#'   outcome = "outcome_continuous",
+#'   type = "continuous",
+#'   methods = "regression"
+#' )
+#' summary(res)
 #'
 #' @export
 summary.IndepAssoc <- function(object, ...) {

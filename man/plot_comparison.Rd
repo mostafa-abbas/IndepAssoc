@@ -20,3 +20,15 @@ A \code{ggplot} object (invisible).
 \description{
 Forest Plot of Method Comparison Results
 }
+\examples{
+data(example_cohort)
+res <- run_pipeline(
+  data = example_cohort,
+  exposure = "exposure",
+  covariates = c("age", "diabetes", "hypertension", "bmi"),
+  outcome = "outcome_binary",
+  type = "binary",
+  methods = c("regression", "iptw")
+)
+plot_comparison(res$comparison, log_scale = TRUE)
+}

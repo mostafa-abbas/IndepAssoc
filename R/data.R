@@ -15,4 +15,8 @@
 #'   \item{outcome_binary}{Binary outcome (0/1).}
 #'   \item{outcome_continuous}{Continuous outcome.}
 #' }
+#'
+#' @examples
+#' data(example_cohort)
+#' str(example_cohort)
 "example_cohort"

@@ -19,3 +19,11 @@ A data frame with Wilcoxon test results.
 \description{
 Paired Wilcoxon Test on Matched Data
 }
+\examples{
+data(example_cohort)
+ps <- build_ps_model(example_cohort, "exposure",
+                     c("age", "diabetes", "hypertension", "bmi"))
+matched <- match_cohort(ps)
+paired_wilcoxon_test(matched$data, "outcome_continuous", "exposure")
+
+}

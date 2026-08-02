@@ -6,6 +6,13 @@
 #'
 #' @return A data frame with McNemar test results.
 #'
+#' @examples
+#' data(example_cohort)
+#' ps <- build_ps_model(example_cohort, "exposure",
+#'                      c("age", "diabetes", "hypertension", "bmi"))
+#' matched <- match_cohort(ps)
+#' mcnemar_test(matched$data, "outcome_binary", "exposure")
+#'
 #' @export
 mcnemar_test <- function(matched_data, outcome, exposure) {
   matched_data <- .ensure_match_num(matched_data)
@@ -45,6 +52,13 @@ mcnemar_test <- function(matched_data, outcome, exposure) {
 #' @param exposure Character; exposure variable name.
 #'
 #' @return A data frame with Wilcoxon test results.
+#'
+#' @examples
+#' data(example_cohort)
+#' ps <- build_ps_model(example_cohort, "exposure",
+#'                      c("age", "diabetes", "hypertension", "bmi"))
+#' matched <- match_cohort(ps)
+#' paired_wilcoxon_test(matched$data, "outcome_continuous", "exposure")
 #'
 #' @export
 paired_wilcoxon_test <- function(matched_data, outcome, exposure) {

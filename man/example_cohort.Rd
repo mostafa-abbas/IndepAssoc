@@ -25,4 +25,8 @@ for demonstrating the \code{IndepAssoc} pipeline. Contains a binary exposure
 (e.g., sex), several baseline covariates, a binary outcome, and a
 continuous outcome.
 }
+\examples{
+data(example_cohort)
+str(example_cohort)
+}
 \keyword{datasets}

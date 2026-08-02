@@ -20,3 +20,9 @@ A \code{gtsummary} table object.
 Produces a summary table of covariates by exposure group using
 chi-square (categorical) or Wilcoxon rank-sum (continuous) tests.
 }
+\examples{
+data(example_cohort)
+table_unmatched(example_cohort, "exposure",
+                c("age", "diabetes", "hypertension", "bmi"))
+
+}

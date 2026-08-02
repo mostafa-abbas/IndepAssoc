@@ -13,6 +13,13 @@
 #' @return A data frame with one row per subgroup level, containing
 #'   subgroup name, n, estimate, CI, and p-value.
 #'
+#' @examples
+#' data(example_cohort)
+#' ps <- build_ps_model(example_cohort, "exposure",
+#'                      c("age", "diabetes", "hypertension", "bmi"))
+#' matched <- match_cohort(ps)
+#' subgroup_analysis(matched, "outcome_binary", "diabetes", type = "binary")
+#'
 #' @export
 subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary", "continuous"), method = "regression", ...) {
   if (!inherits(match_obj, "IndepMatch")) stop("`match_obj` must be an IndepMatch object.")

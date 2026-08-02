@@ -19,3 +19,11 @@ A data frame with McNemar test results.
 \description{
 McNemar Test on Matched Data
 }
+\examples{
+data(example_cohort)
+ps <- build_ps_model(example_cohort, "exposure",
+                     c("age", "diabetes", "hypertension", "bmi"))
+matched <- match_cohort(ps)
+mcnemar_test(matched$data, "outcome_binary", "exposure")
+
+}

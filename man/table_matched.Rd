@@ -18,3 +18,11 @@ A \code{gtsummary} table object.
 Produces a summary table for matched data using paired tests:
 McNemar (categorical) or Wilcoxon signed-rank (continuous).
 }
+\examples{
+data(example_cohort)
+ps <- build_ps_model(example_cohort, "exposure",
+                     c("age", "diabetes", "hypertension", "bmi"))
+matched <- match_cohort(ps)
+table_matched(matched, c("age", "diabetes", "hypertension", "bmi"))
+
+}

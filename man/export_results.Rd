@@ -17,3 +17,18 @@ Invisibly returns the output directory path.
 \description{
 Saves all pipeline outputs to CSV files in the specified directory.
 }
+\examples{
+data(example_cohort)
+res <- run_pipeline(
+  data = example_cohort,
+  exposure = "exposure",
+  covariates = c("age", "diabetes", "hypertension", "bmi"),
+  outcome = "outcome_binary",
+  type = "binary",
+  methods = "regression"
+)
+out_dir <- tempfile("indepassoc_export_")
+export_results(res, output_dir = out_dir)
+list.files(out_dir)
+unlink(out_dir, recursive = TRUE)
+}

@@ -34,3 +34,11 @@ subgroup name, n, estimate, CI, and p-value.
 \description{
 Repeats \code{fit_outcome()} within each level of a subgroup variable.
 }
+\examples{
+data(example_cohort)
+ps <- build_ps_model(example_cohort, "exposure",
+                     c("age", "diabetes", "hypertension", "bmi"))
+matched <- match_cohort(ps)
+subgroup_analysis(matched, "outcome_binary", "diabetes", type = "binary")
+
+}

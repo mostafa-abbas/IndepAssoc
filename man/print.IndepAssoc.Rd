@@ -14,3 +14,16 @@
 \description{
 Print an IndepAssoc pipeline result
 }
+\examples{
+data(example_cohort)
+res <- run_pipeline(
+  data = example_cohort,
+  exposure = "exposure",
+  covariates = c("age", "diabetes", "hypertension", "bmi"),
+  outcome = "outcome_binary",
+  type = "binary",
+  methods = "regression"
+)
+print(res)
+
+}
