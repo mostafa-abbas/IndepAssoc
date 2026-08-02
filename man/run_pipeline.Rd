@@ -42,7 +42,7 @@ A list of class \code{"IndepAssoc"} containing all pipeline results.
 }
 \description{
 Orchestrates the full pipeline: PS model, matching, balance check,
-descriptive tables, outcome models (all 4 types), and statistical tests.
+descriptive tables, outcome models (3 types), and statistical tests.
 }
 \examples{
 data(example_cohort)
