@@ -66,14 +66,11 @@ model_summ <- function(model, treatment_feature, type = c("binary", "continuous"
 #' @param matched_data Matched data frame from `match_cohort()`.
 #' @param outcome Character; outcome variable name.
 #' @param type `"binary"` or `"continuous"`.
-#' @param covariates Character vector of covariate names.
-#' @param normalize_continuous Logical; normalize continuous outcome (default TRUE).
 #'
 #' @return A list of class `"IndepOutcomeModels"` with `$models`, `$summary`, `$summary_w`.
 #'
 #' @export
-fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "continuous"),
-                           covariates = NULL, normalize_continuous = TRUE) {
+fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "continuous")) {
   type <- match.arg(type)
   exposure <- ps_model$exposure
   full_data <- ps_model$data

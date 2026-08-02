@@ -87,3 +87,8 @@ test_that("fit_all_models errors on missing outcome", {
   m <- match_cohort(ps)
   expect_error(fit_all_models(ps, m$data, "fake_outcome", type = "binary"), "not found")
 })
+
+test_that("fit_all_models has no dead parameters", {
+  expect_false("covariates" %in% names(formals(fit_all_models)))
+  expect_false("normalize_continuous" %in% names(formals(fit_all_models)))
+})
