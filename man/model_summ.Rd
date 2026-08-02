@@ -9,4 +9,9 @@ model_summ(model, treatment_feature, type = c("binary", "continuous"))
 \description{
 Summarize a glm/lm/clogit model for the treatment effect
 }
+\examples{
+fit <- glm(outcome_binary ~ exposure + age,
+           data = example_cohort, family = "binomial")
+IndepAssoc:::model_summ(fit, "exposure", type = "binary")
+}
 \keyword{internal}

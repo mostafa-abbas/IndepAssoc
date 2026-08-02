@@ -9,4 +9,7 @@ normalize(x)
 \description{
 Normalize a numeric vector (min-max)
 }
+\examples{
+IndepAssoc:::normalize(c(0, 5, 10))
+}
 \keyword{internal}

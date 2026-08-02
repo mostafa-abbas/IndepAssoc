@@ -12,4 +12,9 @@
 use profile likelihood), so it does not guarantee a Wald interval. Compute
 the Wald interval explicitly from \verb{coef +/- qnorm(0.975) * SE}.
 }
+\examples{
+fit <- glm(outcome_binary ~ exposure + age,
+           data = example_cohort, family = "binomial")
+IndepAssoc:::.wald_confint(fit, "exposure")
+}
 \keyword{internal}

@@ -1,4 +1,6 @@
 #' Normalize a numeric vector (min-max)
+#' @examples
+#' IndepAssoc:::normalize(c(0, 5, 10))
 #' @keywords internal
 normalize <- function(x) {
   rng <- range(x, na.rm = TRUE)
@@ -7,6 +9,10 @@ normalize <- function(x) {
 }
 
 #' Summarize a glm/lm/clogit model for the treatment effect
+#' @examples
+#' fit <- glm(outcome_binary ~ exposure + age,
+#'            data = example_cohort, family = "binomial")
+#' IndepAssoc:::model_summ(fit, "exposure", type = "binary")
 #' @keywords internal
 model_summ <- function(model, treatment_feature, type = c("binary", "continuous")) {
   type <- match.arg(type)
@@ -38,6 +44,10 @@ model_summ <- function(model, treatment_feature, type = c("binary", "continuous"
 #' (`glm`/`lmer` use profile likelihood, `lm` uses t-quantiles, `clogit`/`plm`
 #' use profile likelihood), so it does not guarantee a Wald interval. Compute
 #' the Wald interval explicitly from `coef +/- qnorm(0.975) * SE`.
+#' @examples
+#' fit <- glm(outcome_binary ~ exposure + age,
+#'            data = example_cohort, family = "binomial")
+#' IndepAssoc:::.wald_confint(fit, "exposure")
 #' @keywords internal
 .wald_confint <- function(model, rows) {
   summ_coeff <- summary(model)$coefficients
