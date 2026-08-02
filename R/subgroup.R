@@ -6,13 +6,15 @@
 #' @param outcome Character string naming the outcome variable.
 #' @param subgroup_var Character string naming the subgroup variable.
 #' @param type Outcome type (`"binary"`, `"continuous"`).
+#' @param method Confounding-adjustment method, passed to `fit_outcome()`
+#'   (default `"regression"`).
 #' @param ... Additional arguments passed to `fit_outcome()`.
 #'
 #' @return A data frame with one row per subgroup level, containing
 #'   subgroup name, n, estimate, CI, and p-value.
 #'
 #' @export
-subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary", "continuous"), ...) {
+subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary", "continuous"), method = "regression", ...) {
   if (!inherits(match_obj, "IndepMatch")) stop("`match_obj` must be an IndepMatch object.")
 
   data <- match_obj$data
@@ -35,14 +37,14 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
                          exposure = match_obj$ps_model$exposure,
                          covariates = match_obj$ps_model$covariates,
                          outcome = outcome, type = type,
-                         method = "regression", ...)
+                         method = method, ...)
       data.frame(
         subgroup = as.character(g),
         n = nrow(sub_data),
         estimate = res$estimate,
-        conf.low = res$conf_low,
-        conf.high = res$conf_high,
-        p.value = res$p_value,
+        conf_low = res$conf_low,
+        conf_high = res$conf_high,
+        p_value = res$p_value,
         stringsAsFactors = FALSE
       )
     }, error = function(e) {
@@ -50,9 +52,9 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
         subgroup = as.character(g),
         n = nrow(sub_data),
         estimate = NA_real_,
-        conf.low = NA_real_,
-        conf.high = NA_real_,
-        p.value = NA_real_,
+        conf_low = NA_real_,
+        conf_high = NA_real_,
+        p_value = NA_real_,
         stringsAsFactors = FALSE
       )
     })
