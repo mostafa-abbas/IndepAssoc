@@ -1,0 +1,163 @@
+---
+title: "Validating the Methods on the RHC Benchmark Data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Validating the Methods on the RHC Benchmark Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+## Introduction
+
+The simulated examples in the package vignette prove the pipeline runs; this
+vignette validates the five confounding-adjustment methods on a real,
+well-known observational dataset. The RHC (Right Heart Catheterization) study
+collected data on 5735 critically ill adults enrolled in the SUPPORT trial;
+Connors et al. (1996, *JAMA*) found that right heart catheterization was
+associated with increased mortality and increased use of resources.
+
+Our comparison against that literature is strictly directional: RHC is
+associated with harm in the literature, and we check whether all five methods
+agree in direction. It is not an exact-value match to any published point
+estimate.
+
+The binary exposure is `swang1` (1 = RHC). We analyze two outcomes with the
+package's five methods — outcome regression, matching, stratification, IPTW,
+and AIPW: `dth30`, the true 30-day mortality (binary), and `los`, the length of
+stay in days (continuous).
+
+```{r data}
+rhc_ok <- FALSE
+rhc_path <- NULL
+candidates <- c(
+  file.path("..", "rhc_data", "rhc.csv"), # vignettes/ working dir during build
+  file.path("rhc_data", "rhc.csv"), # repo-root-relative, interactive
+  "/home/mostafa/my-coding-project/rhc_data/rhc.csv" # developer machine
+)
+for (cand in candidates) {
+  if (file.exists(cand)) {
+    rhc_path <- cand
+    break
+  }
+}
+if (is.null(rhc_path)) {
+  dest <- file.path(tempdir(), "rhc.csv")
+  dl_ok <- tryCatch(
+    suppressWarnings(download.file("https://hbiostat.org/data/repo/rhc.csv",
+                                   dest, quiet = TRUE, mode = "wb")),
+    error = function(e) 1L
+  )
+  if (identical(as.integer(dl_ok), 0L) && file.exists(dest)) {
+    rhc_path <- dest
+  }
+}
+if (is.null(rhc_path)) {
+  message("The RHC data file could not be found locally and the download ",
+          "from https://hbiostat.org/data/repo/rhc.csv failed; ",
+          "the analysis chunks below are skipped.")
+} else {
+  rhc_ok <- TRUE
+}
+```
+
+## Data preparation
+
+```{r preprocessing, eval = rhc_ok}
+library(IndepAssoc)
+
+rhc <- prepare_rhc_data(rhc_path)
+nrow(rhc$data)
+length(rhc$covariates)
+table(rhc$data$swang1)
+sum(complete.cases(rhc$data[, rhc$covariates]))
+```
+
+`prepare_rhc_data()` returns a cleaned data frame with n = 5735 rows and a
+48-column covariate vector. The exposure counts are 2184 RHC patients and 3551
+controls, and complete-case analysis on the 48-covariate set retains the full
+5735 rows: `adld3p` and `urin1` are excluded from the covariate set because
+their missingness would collapse the sample. The raw CSV stores the `cat2`
+category "None" as the literal text `"NA"`; the helper recodes that to `"None"`
+before converting the remaining literal `"NA"` strings to real missing values.
+
+Note the distinction between the two binary outcomes in the raw data: `death`
+is a longer-term all-cause outcome, whereas `dth30` is the true 30-day
+mortality. This vignette reports `dth30`.
+
+## Binary outcome: 30-day mortality (dth30)
+
+```{r binary-pipeline, eval = rhc_ok}
+# We set a fixed random seed (1) before running the pipeline so the matching
+# step is reproducible; see `?run_pipeline`.
+set.seed(1)
+res30 <- run_pipeline(rhc$data, "swang1", rhc$covariates, "dth30",
+                      type = "binary")
+res30$comparison
+```
+
+Here `estimate` is the adjusted odds ratio for 30-day mortality associated with
+RHC. All five methods — outcome regression, matching, stratification, IPTW, and
+AIPW — find RHC associated with *increased* 30-day mortality, with odds ratios
+near 1.3 and confidence intervals that exclude 1. The convergence across five
+functionally different adjustment strategies (those that model the outcome
+directly and those that model treatment assignment) is directionally consistent
+with Connors et al. (1996) and the later RHC reanalysis literature: the harm
+direction is reproduced by every method. The comparison table is the primary
+evidence for or against this independent association.
+
+This comparison is directional and qualitative — RHC is associated with harm —
+not an exact match to any specific published point estimate.
+
+```{r binary-forest, eval = rhc_ok}
+plot_comparison(res30$comparison, log_scale = TRUE)
+```
+
+## Continuous outcome: length of stay (los)
+
+```{r continuous-pipeline, eval = rhc_ok}
+# `los` (discharge date minus admission date) has one missing value; drop it
+# before running the pipeline so the complete-case sample is n = 5734.
+rhc_cc <- rhc$data[!is.na(rhc$data$los), ]
+nrow(rhc_cc)
+
+# We set a fixed random seed (1) before running the pipeline so the matching
+# step is reproducible; see `?run_pipeline`.
+set.seed(1)
+reslos <- run_pipeline(rhc_cc, "swang1", rhc$covariates, "los",
+                       type = "continuous")
+reslos$comparison
+```
+
+Here `estimate` is the adjusted mean difference in length of stay (days)
+associated with RHC. All five methods find RHC associated with a longer stay,
+roughly +3 to +4 days, with confidence intervals that exclude 0. The outcome
+`los` is derived as discharge date minus admission date and has a single
+missing value; dropping that row leaves the complete-case sample of n = 5734
+used here. As with the mortality analysis, this association is directional only
+— it is not an exact match to any published point estimate.
+
+```{r continuous-forest, eval = rhc_ok}
+plot_comparison(reslos$comparison, log_scale = FALSE)
+```
+
+## Caveat
+
+This is a confounder-adjusted association under the standard
+no-unmeasured-confounding assumption, not a proven causal effect.
+
+## References
+
+- Connors, A.F., Speroff, T., Dawson, N.V., et al. (1996). The Effectiveness of
+  Right Heart Catheterization in the Initial Care of Critically Ill Patients.
+  *JAMA*, 276(11), pp.889-897.
+- The RHC data are distributed with the `Hmisc` package's `rhc` dataset and
+  mirrored at https://hbiostat.org/data/repo/rhc.csv.
