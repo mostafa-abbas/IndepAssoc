@@ -22,3 +22,12 @@ text \code{"NA"}, and codes the \code{swang1} exposure and the \code{death}/\cod
 outcomes as text. These quirks are resolved here so downstream analysis
 receives a typed, numeric-encoded data frame.
 }
+\examples{
+tmp <- tempfile(fileext = ".csv")
+write.csv(data.frame(ptid = "p1", cat2 = "None", swang1 = "RHC",
+                     dth30 = "Yes", death = "Yes",
+                     sadmdte = "11142", dschdte = "11151"),
+          tmp)
+prepare_rhc_data(tmp)
+
+}

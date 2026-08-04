@@ -30,6 +30,15 @@
 #'   `covariates`, a character vector of the 48 covariate column names.
 #'
 #' @importFrom utils read.csv
+#'
+#' @examples
+#' tmp <- tempfile(fileext = ".csv")
+#' write.csv(data.frame(ptid = "p1", cat2 = "None", swang1 = "RHC",
+#'                      dth30 = "Yes", death = "Yes",
+#'                      sadmdte = "11142", dschdte = "11151"),
+#'           tmp)
+#' prepare_rhc_data(tmp)
+#'
 #' @export
 prepare_rhc_data <- function(path) {
   raw <- read.csv(path, colClasses = "character", na.strings = NULL,
