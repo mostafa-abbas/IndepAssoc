@@ -65,6 +65,15 @@ model_summ <- function(model, treatment_feature, type = c("binary", "continuous"
   )
 }
 
+# Conditional logistic regression stratified by matched pair. Shared by
+# fit_all_models() ("Conditional logit") and fit_outcome()'s "matching"
+# method so the two code paths cannot drift apart. Requires `data` to carry a
+# numeric `match_num` column and a numeric 0/1 `outcome`.
+.fit_conditional_logit <- function(data, exposure, outcome) {
+  form <- stats::as.formula(paste(outcome, "~", exposure, "+ survival::strata(match_num)"))
+  survival::clogit(form, data = data)
+}
+
 #' Fit All 3 Outcome Models
 #'
 #' Fits 3 regression models matching the published pipeline:
@@ -110,8 +119,7 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
     model_all_form <- as.formula(paste("label ~", paste(pred_features, collapse = " + ")))
     fully_adjusted <- glm(model_all_form, data = full_data, family = "binomial")
 
-    cond_form <- as.formula(paste("label ~", exposure, "+ survival::strata(match_num)"))
-    conditional <- survival::clogit(cond_form, data = matched_data)
+    conditional <- .fit_conditional_logit(matched_data, exposure, "label")
 
     mixed_form <- as.formula(paste("label ~", exposure, "+ (1 | match_num)"))
     mixed_effect <- lme4::glmer(mixed_form, family = stats::binomial, data = matched_data)

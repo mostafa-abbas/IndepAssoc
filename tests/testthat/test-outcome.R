@@ -92,3 +92,13 @@ test_that("fit_all_models has no dead parameters", {
   expect_false("covariates" %in% names(formals(fit_all_models)))
   expect_false("normalize_continuous" %in% names(formals(fit_all_models)))
 })
+
+test_that("fit_all_models conditional logit is built by the shared helper", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- match_cohort(ps)
+  cond <- fit_all_models(ps, m$data, "outcome", type = "binary")$models[["Conditional logit"]]
+  expected <- IndepAssoc:::.fit_conditional_logit(m$data, "exposure", "outcome")
+  expect_equal(cond$coefficients, expected$coefficients)
+  expect_equal(cond$loglik, expected$loglik)
+})
