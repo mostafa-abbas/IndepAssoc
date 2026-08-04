@@ -122,7 +122,19 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
     conditional <- .fit_conditional_logit(matched_data, exposure, "label")
 
     mixed_form <- as.formula(paste("label ~", exposure, "+ (1 | match_num)"))
-    mixed_effect <- lme4::glmer(mixed_form, family = stats::binomial, data = matched_data)
+    # lme4::checkResponse() throws "Response is constant" when the matched
+    # cohort's binary outcome has fewer than 2 unique values (a degenerate
+    # matched cohort whose outcome is all 0, all 1, or empty). glm() and
+    # clogit() tolerate this, so only the mixed-effects model can fail; it is
+    # deliberately skipped (NA row) rather than halting the whole pipeline.
+    mixed_effect <- tryCatch(
+      lme4::glmer(mixed_form, family = stats::binomial, data = matched_data),
+      error = function(e) {
+        warning("Mixed effect logistic failed to fit: ",
+                conditionMessage(e), call. = FALSE)
+        NULL
+      }
+    )
 
     models <- list(
       "Fully adjusted logistic" = fully_adjusted,
@@ -138,8 +150,17 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
     conditional <- plm::plm(cond_form, model = "within", effect = "individual", data = panel_data)
 
     mixed_form <- as.formula(paste("label ~", exposure, "+ (1 | match_num)"))
-    mixed_effect <- lme4::lmer(mixed_form, data = matched_data)
-    mixed_effect <- lmerTest::as_lmerModLmerTest(mixed_effect)
+    mixed_effect <- tryCatch(
+      {
+        fit <- lme4::lmer(mixed_form, data = matched_data)
+        lmerTest::as_lmerModLmerTest(fit)
+      },
+      error = function(e) {
+        warning("Mixed effect linear regression failed to fit: ",
+                conditionMessage(e), call. = FALSE)
+        NULL
+      }
+    )
 
     models <- list(
       "Fully adjusted linear regression" = fully_adjusted,
@@ -149,6 +170,27 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
   }
 
   model_summaries <- lapply(names(models), function(nn) {
+    if (is.null(models[[nn]])) {
+      if (type == "binary") {
+        return(data.frame(
+          label = outcome,
+          Model = nn,
+          OR = NA_real_,
+          CI_95 = NA_character_,
+          p = NA_real_,
+          stringsAsFactors = FALSE
+        ))
+      }
+      return(data.frame(
+        label = outcome,
+        Model = nn,
+        SC = NA_real_,
+        CI_95 = NA_character_,
+        SC_CI_95 = NA_character_,
+        p = NA_real_,
+        stringsAsFactors = FALSE
+      ))
+    }
     res <- model_summ(models[[nn]], treatment_feature = exposure, type = type)
     res$label <- outcome
     res$Model <- nn
