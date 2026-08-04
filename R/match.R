@@ -1,3 +1,11 @@
+# Known follow-ups (filed at Phase 3 merge review; not blocking, do not fix silently):
+# 1. `match_cohort(..., replace = TRUE)` errors with "Matched data must contain
+#    'match_num' or 'strata' column.": `MatchIt::match.data()` does not return a
+#    `subclass`/`strata` column for matching with replacement, so
+#    `.ensure_match_num()` fails downstream. File a separate fix if
+#    replacement matching is ever needed (the `replace` parameter is exposed
+#    but currently unusable).
+
 #' Match Cohort Using Propensity Scores
 #'
 #' Performs propensity score matching via `MatchIt`.
