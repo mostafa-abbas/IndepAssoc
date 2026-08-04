@@ -9,7 +9,8 @@
 #'   `"stratification"`, `"iptw"`, `"aipw"`. If a vector, returns a list
 #'   of results, one per method. `"matching"` is propensity-score matching
 #'   with conditional-logit (binary) / within-pair (continuous) estimation.
-#' @param ... Passed to the per-method estimators.
+#' @param ... Passed to the per-method estimators. `seed` is accepted by the
+#'   matching method for reproducible matching.
 #'
 #' @details For `method = "matching"`, binary outcomes must be coded as
 #'   numeric 0/1 (the conditional-logit estimator strata on the matched pair).
@@ -76,9 +77,9 @@ fit_outcome <- function(data, exposure, covariates, outcome,
 }
 
 .fit_matching <- function(data, exposure, covariates, outcome, type,
-                          caliper = 0.2, ratio = 1, ...) {
+                          caliper = 0.2, ratio = 1, seed = NULL, ...) {
   ps <- build_ps_model(data, exposure, covariates)
-  m <- match_cohort(ps, caliper = caliper, ratio = ratio)
+  m <- match_cohort(ps, caliper = caliper, ratio = ratio, seed = seed)
   mdata <- .ensure_match_num(m$data)
   if (type == "binary") {
     # Conditional logistic regression stratified by matched pair — the

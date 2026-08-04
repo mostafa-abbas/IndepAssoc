@@ -30,7 +30,8 @@ fit_outcome(
 of results, one per method. \code{"matching"} is propensity-score matching
 with conditional-logit (binary) / within-pair (continuous) estimation.}
 
-\item{...}{Passed to the per-method estimators.}
+\item{...}{Passed to the per-method estimators. \code{seed} is accepted by the
+matching method for reproducible matching.}
 }
 \value{
 A named list with \code{method}, \code{type}, \code{estimate}, \code{conf_low},

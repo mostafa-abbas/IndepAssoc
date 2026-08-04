@@ -10,7 +10,8 @@ match_cohort(
   caliper = 0.2,
   ratio = 1,
   replace = FALSE,
-  distance = "logit"
+  distance = "logit",
+  seed = NULL
 )
 }
 \arguments{
@@ -25,6 +26,10 @@ match_cohort(
 \item{replace}{Whether to match with replacement. Default \code{FALSE}.}
 
 \item{distance}{PS distance metric. Default \code{"logit"}.}
+
+\item{seed}{Integer passed to \code{set.seed()} before matching; required for
+reproducible matching when tie-breaking or MatchIt internals consume
+randomness. Default \code{NULL} (no seeding).}
 }
 \value{
 A list of class \code{"IndepMatch"} with elements:

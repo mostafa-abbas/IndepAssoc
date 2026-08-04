@@ -17,6 +17,15 @@
 #'   matching with conditional-logit (binary) / within-pair (continuous)
 #'   estimation; because matching draws on the data, results are reproducible
 #'   only when a fixed seed is set before the call.
+#' @param seed Integer passed to `set.seed()` at the top of the pipeline. A
+#'   fixed seed makes the whole run — including the step-2 matching and the
+#'   step-9 `"matching"` method — reproducible from a single value. Default
+#'   `NULL` (no seeding).
+#'
+#' @details Whenever `"matching"` is among the requested `methods`, a fixed
+#'   `seed` is required for reproducible results. Pass the same `seed` value to
+#'   `run_pipeline()` rather than setting a seed mid-pipeline, so the step-2
+#'   matching and the step-9 `"matching"` method both draw on it.
 #'
 #' @return A list of class `"IndepAssoc"` containing all pipeline results.
 #'
@@ -36,8 +45,11 @@
 run_pipeline <- function(data, exposure, covariates, outcome,
                          type = c("binary", "continuous"),
                          caliper = 0.2, ratio = 1, balance_threshold = 0.10,
-                         methods = c("regression", "matching", "stratification", "iptw", "aipw")) {
+                         methods = c("regression", "matching", "stratification", "iptw", "aipw"),
+                         seed = NULL) {
   type <- match.arg(type)
+
+  if (!is.null(seed)) set.seed(seed)
 
   message("Step 1/9: Building propensity score model...")
   ps <- build_ps_model(data, exposure, covariates)

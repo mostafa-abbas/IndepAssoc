@@ -8,6 +8,9 @@
 #' @param ratio Number of control matches per treated unit. Default `1`.
 #' @param replace Whether to match with replacement. Default `FALSE`.
 #' @param distance PS distance metric. Default `"logit"`.
+#' @param seed Integer passed to `set.seed()` before matching; required for
+#'   reproducible matching when tie-breaking or MatchIt internals consume
+#'   randomness. Default `NULL` (no seeding).
 #'
 #' @return A list of class `"IndepMatch"` with elements:
 #'   \describe{
@@ -25,7 +28,8 @@
 #'
 #' @export
 match_cohort <- function(ps_model, method = "nearest", caliper = 0.2,
-                         ratio = 1, replace = FALSE, distance = "logit") {
+                         ratio = 1, replace = FALSE, distance = "logit",
+                         seed = NULL) {
   if (!inherits(ps_model, "IndepPSModel")) stop("`ps_model` must be an IndepPSModel object.")
 
   data <- ps_model$data
@@ -33,6 +37,8 @@ match_cohort <- function(ps_model, method = "nearest", caliper = 0.2,
 
   formula_str <- paste(exposure, "~", paste(ps_model$covariates, collapse = " + "))
   formula <- as.formula(formula_str)
+
+  if (!is.null(seed)) set.seed(seed)
 
   m <- MatchIt::matchit(
     formula,

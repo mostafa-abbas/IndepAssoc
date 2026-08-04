@@ -13,7 +13,8 @@ run_pipeline(
   caliper = 0.2,
   ratio = 1,
   balance_threshold = 0.1,
-  methods = c("regression", "matching", "stratification", "iptw", "aipw")
+  methods = c("regression", "matching", "stratification", "iptw", "aipw"),
+  seed = NULL
 )
 }
 \arguments{
@@ -39,6 +40,11 @@ via \code{fit_outcome()} (default all five: \code{"regression"}, \code{"matching
 matching with conditional-logit (binary) / within-pair (continuous)
 estimation; because matching draws on the data, results are reproducible
 only when a fixed seed is set before the call.}
+
+\item{seed}{Integer passed to \code{set.seed()} at the top of the pipeline. A
+fixed seed makes the whole run — including the step-2 matching and the
+step-9 \code{"matching"} method — reproducible from a single value. Default
+\code{NULL} (no seeding).}
 }
 \value{
 A list of class \code{"IndepAssoc"} containing all pipeline results.
@@ -46,6 +52,12 @@ A list of class \code{"IndepAssoc"} containing all pipeline results.
 \description{
 Orchestrates the full pipeline: PS model, matching, balance check,
 descriptive tables, outcome models (3 types), and statistical tests.
+}
+\details{
+Whenever \code{"matching"} is among the requested \code{methods}, a fixed
+\code{seed} is required for reproducible results. Pass the same \code{seed} value to
+\code{run_pipeline()} rather than setting a seed mid-pipeline, so the step-2
+matching and the step-9 \code{"matching"} method both draw on it.
 }
 \examples{
 data(example_cohort)
