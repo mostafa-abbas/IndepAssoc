@@ -54,6 +54,8 @@ if (!lalonde_ok) {
 ```{r benchmark-pipeline, eval = lalonde_ok}
 library(IndepAssoc)
 
+# We set a fixed random seed (1) before running the pipeline so the matching
+# step is reproducible; see `?run_pipeline`.
 set.seed(1)
 result <- run_pipeline(
   data = lalonde,

@@ -55,6 +55,8 @@ if (!nhefs_ok) {
 ```{r binary-pipeline, eval = nhefs_ok}
 library(IndepAssoc)
 
+# We set a fixed random seed (1) before running the pipeline so the matching
+# step is reproducible; see `?run_pipeline`.
 set.seed(1)
 result_death <- run_pipeline(
   data = nhefs,
@@ -91,6 +93,8 @@ Here `nhefs_cc` contains only the 1566 complete cases (the 63 rows with missing
 `wt82_71` are excluded; the restriction is stated here for transparency).
 
 ```{r continuous-pipeline, eval = nhefs_ok}
+# We set a fixed random seed (1) before running the pipeline so the matching
+# step is reproducible; see `?run_pipeline`.
 set.seed(1)
 result_wt <- run_pipeline(
   data = nhefs_cc,

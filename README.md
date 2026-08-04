@@ -57,3 +57,10 @@ res$comparison
 4 0.0028681300 500
 5 0.0029297046 500
 ```
+
+## Reproducibility
+
+Matching-based results draw on the random number generator, so a fixed seed is
+required to reproduce them. Set it explicitly — `run_pipeline(..., seed = N)`
+or, for direct matching, `match_cohort(..., seed = N)` — and reuse the same
+seed value to obtain identical results.
