@@ -27,7 +27,7 @@ synthetic_rhc <- function() {
 
 .rhc_excluded <- function() {
   c("ptid", "swang1", "death", "dth30", "sadmdte", "dschdte", "dthdte",
-    "lstctdte", "adld3p", "urin1", "cat1", "cat2", "ca", "t3d30", "los")
+    "lstctdte", "adld3p", "urin1", "t3d30", "surv2md1", "los")
 }
 
 test_that("prepare_rhc_data drops the write.csv row-names column", {
@@ -113,7 +113,6 @@ test_that("prepare_rhc_data builds the covariate vector from the exclusion list"
   excluded <- .rhc_excluded()
   expect_false(any(excluded %in% res$covariates))
   expect_true(all(c("age", "sex", "meanbp1") %in% res$covariates))
-  expect_equal(length(res$covariates), ncol(res$data) - length(excluded))
   expect_setequal(res$covariates, setdiff(names(res$data), excluded))
 })
 
@@ -125,13 +124,17 @@ test_that("prepare_rhc_data reproduces the real RHC preprocessing findings", {
   expect_equal(nrow(rhc$data), 5735)
   expect_equal(ncol(rhc$data), 63)
   expect_false("" %in% names(rhc$data))
-  expect_equal(length(rhc$covariates), 48)
+  expect_equal(length(rhc$covariates), 50)
   expect_true(is.numeric(rhc$data$swang1))
   expect_equal(sum(rhc$data$swang1), 2184)
   expect_true(is.numeric(rhc$data$dth30))
   expect_true(is.numeric(rhc$data$death))
   expect_true(is.numeric(rhc$data$los))
   expect_false(any(is.na(rhc$data$cat2)))
+  expect_true("cat1" %in% rhc$covariates)
+  expect_true("cat2" %in% rhc$covariates)
+  expect_true("ca" %in% rhc$covariates)
+  expect_false("surv2md1" %in% rhc$covariates)
   complete <- rhc$data[stats::complete.cases(rhc$data[, rhc$covariates]), ]
   expect_equal(nrow(complete), 5735)
 })

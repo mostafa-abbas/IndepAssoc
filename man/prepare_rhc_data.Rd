@@ -11,11 +11,11 @@ prepare_rhc_data(path)
 }
 \value{
 A list with two elements: \code{data}, the cleaned data frame, and
-\code{covariates}, a character vector of the 48 covariate column names.
+\code{covariates}, a character vector of the 50 covariate column names.
 }
 \description{
 Reads a raw RHC (Right Heart Catheterization) CSV and returns a cleaned
-data frame plus the 48-column covariate vector. The raw file carries a
+data frame plus the 50-column covariate vector. The raw file carries a
 \code{write.csv} row-names column named \code{""}, stores the \code{cat2} category "None"
 as the literal text \code{"NA"}, stores every other missing value as the literal
 text \code{"NA"}, and codes the \code{swang1} exposure and the \code{death}/\code{dth30}

@@ -7,17 +7,19 @@
 
 # Excluded from the covariate vector: the patient id, the exposure, both
 # outcomes, the admission/discharge/event dates, adld3p and urin1 (excessive
-# missingness collapses complete-case n from 5735 to ~634), the diagnosis
-# categories (cat1/cat2/ca), t3d30 (collinear with the dth30 outcome), and the
-# derived los.
+# missingness collapses complete-case n from 5735 to ~634), t3d30 (collinear
+# with the dth30 outcome), surv2md1 (the SUPPORT model's predicted 2-month
+# survival probability -- a model-derived composite of the other covariates,
+# not a raw confounder; excluded to avoid double adjustment, matching the
+# reference manual analysis), and the derived los.
 .rhc_excluded <- c("ptid", "swang1", "death", "dth30", "sadmdte", "dschdte",
-                   "dthdte", "lstctdte", "adld3p", "urin1", "cat1", "cat2",
-                   "ca", "t3d30", "los")
+                   "dthdte", "lstctdte", "adld3p", "urin1", "t3d30",
+                   "surv2md1", "los")
 
 #' Prepare the RHC dataset for analysis
 #'
 #' Reads a raw RHC (Right Heart Catheterization) CSV and returns a cleaned
-#' data frame plus the 48-column covariate vector. The raw file carries a
+#' data frame plus the 50-column covariate vector. The raw file carries a
 #' `write.csv` row-names column named `""`, stores the `cat2` category "None"
 #' as the literal text `"NA"`, stores every other missing value as the literal
 #' text `"NA"`, and codes the `swang1` exposure and the `death`/`dth30`
@@ -27,7 +29,7 @@
 #' @param path Character; path to the RHC CSV file.
 #'
 #' @return A list with two elements: `data`, the cleaned data frame, and
-#'   `covariates`, a character vector of the 48 covariate column names.
+#'   `covariates`, a character vector of the 50 covariate column names.
 #'
 #' @importFrom utils read.csv
 #'
