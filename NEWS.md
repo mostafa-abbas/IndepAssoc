@@ -1,4 +1,4 @@
-# IndepAssoc (unreleased)
+# IndepAssoc 0.2.0 (2026-08-04)
 
 * BREAKING: `fit_outcome(..., method = "matching")` now uses the estimator the
   source papers used: conditional logistic regression (`survival::clogit`)
