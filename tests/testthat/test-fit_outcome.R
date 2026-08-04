@@ -51,8 +51,42 @@ test_that("fit_outcome matching uses the matched cohort, not the full data", {
   expect_true(res$n < nrow(d))
   expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
   expect_false(isTRUE(all.equal(res$estimate, reg$estimate)))
-  expect_equal(stats::nobs(res$model), res$n)
-  expect_true(stats::nobs(res$model) < nrow(d))
+  # matching is now a conditional-logit analysis: model is clogit, and
+  # res$n counts matched observations (pairs * 2). clogit (a coxph) stores
+  # no model frame; the pair count comes from xlevels of the strata term.
+  expect_s3_class(res$model, "clogit")
+  expect_equal(res$n, length(res$model$xlevels[["strata(match_num)"]]) * 2)
+})
+
+test_that("fit_outcome matching (binary) is numerically identical to fit_all_models conditional logit", {
+  d <- simulate_test_cohort()
+  # Same seed before both calls: build_ps_model() consumes no RNG, so both
+  # paths match the identical cohort and must agree exactly.
+  set.seed(1)
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "matching")
+  set.seed(1)
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- match_cohort(ps)
+  fam <- fit_all_models(ps, m$data, "outcome", type = "binary")
+  # summary_w$OR is rounded to 2 dp; compare the unrounded clogit coefficient
+  or_clogit <- unname(exp(stats::coef(fam$models[["Conditional logit"]])[["exposure"]]))
+  expect_equal(res$estimate, or_clogit, tolerance = 1e-8)
+})
+
+test_that("fit_outcome matching (continuous) uses a within-pair estimator", {
+  d <- simulate_test_cohort()
+  d$outcome_cont <- 50 + 2 * d$exposure + rnorm(nrow(d))
+  set.seed(1)
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
+                     type = "continuous", method = "matching")
+  set.seed(1)
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- match_cohort(ps)
+  pair_fit <- stats::lm(outcome_cont ~ exposure + factor(match_num), data = m$data)
+  expect_equal(res$estimate, unname(stats::coef(pair_fit)["exposure"]), tolerance = 1e-8)
+  expect_s3_class(res$model, "lm")
+  expect_true("match_num" %in% all.vars(stats::formula(res$model)))
 })
 
 test_that("fit_outcome stratification method pools strata", {

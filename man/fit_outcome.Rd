@@ -27,7 +27,8 @@ fit_outcome(
 
 \item{method}{One or more of \code{"regression"}, \code{"matching"},
 \code{"stratification"}, \code{"iptw"}, \code{"aipw"}. If a vector, returns a list
-of results, one per method.}
+of results, one per method. \code{"matching"} is propensity-score matching
+with conditional-logit (binary) / within-pair (continuous) estimation.}
 
 \item{...}{Passed to the per-method estimators.}
 }
@@ -38,6 +39,10 @@ a named list of such results.
 }
 \description{
 Fit an Outcome Model with a Chosen Confounding-Adjustment Method
+}
+\details{
+For \code{method = "matching"}, binary outcomes must be coded as
+numeric 0/1 (the conditional-logit estimator strata on the matched pair).
 }
 \examples{
 data(example_cohort)

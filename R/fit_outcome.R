@@ -7,8 +7,12 @@
 #' @param type Outcome type: `"binary"` or `"continuous"`.
 #' @param method One or more of `"regression"`, `"matching"`,
 #'   `"stratification"`, `"iptw"`, `"aipw"`. If a vector, returns a list
-#'   of results, one per method.
+#'   of results, one per method. `"matching"` is propensity-score matching
+#'   with conditional-logit (binary) / within-pair (continuous) estimation.
 #' @param ... Passed to the per-method estimators.
+#'
+#' @details For `method = "matching"`, binary outcomes must be coded as
+#'   numeric 0/1 (the conditional-logit estimator strata on the matched pair).
 #'
 #' @return A named list with `method`, `type`, `estimate`, `conf_low`,
 #'   `conf_high`, `p_value`, `n`, and `model`. If `method` has length > 1,
@@ -76,18 +80,25 @@ fit_outcome <- function(data, exposure, covariates, outcome,
   ps <- build_ps_model(data, exposure, covariates)
   m <- match_cohort(ps, caliper = caliper, ratio = ratio)
   mdata <- .ensure_match_num(m$data)
-  pred <- c(exposure, covariates)
-  form <- stats::as.formula(paste(outcome, "~", paste(pred, collapse = " + ")))
   if (type == "binary") {
-    mod <- stats::glm(form, data = mdata, family = stats::binomial)
-    sc <- summary(mod)$coefficients
-    est <- unname(coef(mod)[exposure])
-    se <- as.numeric(sc[grep(paste0("^", exposure), rownames(sc))[1], "Std. Error"])
-    z <- est / se
-    p_value <- 2 * stats::pnorm(-abs(z))
-    ci <- c(exp(est - stats::qnorm(0.975) * se), exp(est + stats::qnorm(0.975) * se))
-    estimate <- exp(est)
+    # Conditional logistic regression stratified by matched pair — the
+    # estimator the source papers used. Conditioning on the pair controls for
+    # any confounder constant within a pair. Shared with fit_all_models()'s
+    # "Conditional logit" model via .fit_conditional_logit().
+    mod <- .fit_conditional_logit(mdata, exposure, outcome)
+    summ <- model_summ(mod, treatment_feature = exposure, type = "binary")
+    estimate <- as.numeric(summ$OR[1])
+    ci <- c(as.numeric(summ$lower[1]), as.numeric(summ$upper[1]))
+    p_value <- as.numeric(summ$`Pr(>|z|)`[1])
+    .fit_outcome_entry("matching", type, estimate, ci[1], ci[2], p_value, nrow(mdata), mod)
   } else {
+    # Within-pair fixed-effects linear model on the matched cohort (match_num
+    # as a stratifying term). Equivalent to the within estimator used by
+    # fit_all_models()'s "Conditional linear regression" (plm, model="within"),
+    # but on the original outcome scale. Covariates are omitted because pair
+    # fixed effects absorb pair-constant confounding and matching balances the
+    # covariates within pairs.
+    form <- stats::as.formula(paste(outcome, "~", exposure, "+ factor(match_num)"))
     mod <- stats::lm(form, data = mdata)
     sc <- summary(mod)$coefficients
     est <- unname(coef(mod)[exposure])
@@ -95,9 +106,8 @@ fit_outcome <- function(data, exposure, covariates, outcome,
     df <- mod$df.residual
     p_value <- 2 * stats::pt(-abs(est / se), df = df)
     ci <- est + stats::qt(c(0.025, 0.975), df = df) * se
-    estimate <- est
+    .fit_outcome_entry("matching", type, est, ci[1], ci[2], p_value, nrow(mdata), mod)
   }
-  .fit_outcome_entry("matching", type, estimate, ci[1], ci[2], p_value, nrow(mdata), mod)
 }
 
 .fit_stratification <- function(data, exposure, covariates, outcome, type,
