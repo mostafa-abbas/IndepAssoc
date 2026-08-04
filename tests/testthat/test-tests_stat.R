@@ -29,3 +29,16 @@ test_that("mcnemar_test returns a numeric p.value", {
   expect_type(res$p.value, "double")
   expect_true(!is.na(res$p.value))
 })
+
+test_that("mcnemar_test degrades gracefully on a constant response", {
+  set.seed(7)
+  md <- data.frame(
+    exposure = rep(c(0, 1), 50),
+    outcome = 0L,
+    match_num = rep(1:50, each = 2)
+  )
+  expect_warning(res <- mcnemar_test(md, "outcome", "exposure"),
+                 "McNemar test failed to fit")
+  expect_true(is.na(res$statistic))
+  expect_true(is.na(res$p.value))
+})

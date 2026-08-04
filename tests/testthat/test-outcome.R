@@ -118,3 +118,21 @@ test_that("fit_all_models degrades gracefully when the mixed-effect response is 
   expect_equal(nrow(fam$summary_w), 3)
   expect_false(any(is.na(fam$summary_w[fam$summary_w$Model == "Fully adjusted logistic", "OR"])))
 })
+
+test_that("fit_all_models degrades gracefully when the continuous response is constant", {
+  d <- simulate_test_cohort()
+  d$outcome_cont <- 5
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- match_cohort(ps)
+  expect_warning(fam <- fit_all_models(ps, m$data, "outcome_cont", type = "continuous"),
+                 "failed to fit")
+  expect_false(is.null(fam$models[["Fully adjusted linear regression"]]))
+  cond_row <- fam$summary_w[fam$summary_w$Model == "Conditional linear regression", ]
+  me_row <- fam$summary_w[fam$summary_w$Model == "Mixed effect linear regression", ]
+  expect_true(is.na(cond_row$SC))
+  expect_true(is.na(cond_row$p))
+  expect_true(is.na(me_row$SC))
+  expect_true(is.na(me_row$p))
+  expect_equal(nrow(fam$summary_w), 3)
+  expect_false(any(is.na(fam$summary_w[fam$summary_w$Model == "Fully adjusted linear regression", "SC"])))
+})
