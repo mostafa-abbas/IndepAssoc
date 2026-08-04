@@ -66,3 +66,26 @@ test_that("run_pipeline completes on a constant binary response", {
   ))
   expect_s3_class(res, "IndepAssoc")
 })
+
+test_that("run_pipeline with a fixed seed is reproducible", {
+  d <- simulate_test_cohort()
+  r1 <- suppressWarnings(suppressMessages(run_pipeline(
+    d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+    type = "binary", methods = c("regression", "matching"), seed = 1)))
+  r2 <- suppressWarnings(suppressMessages(run_pipeline(
+    d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+    type = "binary", methods = c("regression", "matching"), seed = 1)))
+  expect_identical(r1$comparison, r2$comparison)
+  expect_identical(r1$matched_data$match_num, r2$matched_data$match_num)
+})
+
+test_that("run_pipeline applies the seed at the top (RNG state check)", {
+  d <- simulate_test_cohort()
+  runif(1)
+  set.seed(42)
+  expected <- .Random.seed
+  invisible(suppressWarnings(suppressMessages(run_pipeline(
+    d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+    type = "binary", methods = c("regression", "matching"), seed = 42))))
+  expect_identical(.Random.seed, expected)
+})

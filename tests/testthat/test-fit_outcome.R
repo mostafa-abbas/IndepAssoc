@@ -192,3 +192,26 @@ test_that("fit_outcome returns one result per method", {
     expect_true(is.finite(res[[m]]$estimate), info = m)
   }
 })
+
+test_that("fit_outcome matching applies a seed (RNG state check)", {
+  d <- simulate_test_cohort()
+  runif(1)
+  set.seed(42)
+  expected <- .Random.seed
+  set.seed(999)
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "matching", seed = 42)
+  expect_identical(.Random.seed, expected)
+  expect_equal(res$method, "matching")
+})
+
+test_that("fit_outcome matching with seed = NULL does not seed", {
+  d <- simulate_test_cohort()
+  runif(1)
+  set.seed(999)
+  pre <- .Random.seed
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "matching", seed = NULL)
+  expect_identical(.Random.seed, pre)
+  expect_equal(res$method, "matching")
+})
