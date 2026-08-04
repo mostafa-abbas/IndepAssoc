@@ -8,6 +8,26 @@
   estimates therefore change (corrected) for existing `matching` users.
   The conditional-logit fit is shared with `fit_all_models()`'s "Conditional
   logit" model so the two paths cannot drift apart.
+* `fit_all_models()` no longer crashes the pipeline when a matched subset's
+  outcome is constant (single-valued): degenerating models degrade to `NA`
+  results with a warning instead of erroring, and `run_pipeline()` still
+  returns comparison rows for the models that fit. (Surfaced by the RHC data,
+  where a longer-term mortality coding can collapse to a constant response in
+  matched subsets; the RHC vignette therefore uses `dth30`, the true 30-day
+  mortality.)
+* New `seed` parameter on `run_pipeline()`, `match_cohort()`, and
+  `fit_outcome()`: when non-`NULL` it is applied before matching so results are
+  reproducible. `?run_pipeline` documents that a seed is required to reproduce
+  matching-based results.
+* New exported `prepare_rhc_data()` helper: encodes the RHC CSV's preprocessing
+  quirks (a `write.csv` row-names column, the `cat2` literal `"NA"` that really
+  means the "None" category, literal `"NA"` missingness, text-to-numeric
+  recodes of `swang1`/`dth30`/`death`, a derived `los`, and no `cost` column)
+  and returns a 50-column covariate vector. New network-guarded vignette
+  `vignettes/rhc-validation.Rmd` runs all five methods on `dth30` and `los`
+  with a fixed seed; all five find RHC associated with increased 30-day
+  mortality and longer length of stay, directionally consistent with
+  Connors et al. (1996).
 
 # IndepAssoc 0.1.0 (2026-08-01)
 
