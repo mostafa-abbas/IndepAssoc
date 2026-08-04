@@ -102,3 +102,19 @@ test_that("fit_all_models conditional logit is built by the shared helper", {
   expect_equal(cond$coefficients, expected$coefficients)
   expect_equal(cond$loglik, expected$loglik)
 })
+
+test_that("fit_all_models degrades gracefully when the mixed-effect response is constant", {
+  d <- simulate_test_cohort()
+  d$outcome <- 0L
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- match_cohort(ps)
+  expect_warning(fam <- fit_all_models(ps, m$data, "outcome", type = "binary"), "failed to fit")
+  expect_null(fam$models[["Mixed effect logistic"]])
+  expect_false(is.null(fam$models[["Fully adjusted logistic"]]))
+  expect_false(is.null(fam$models[["Conditional logit"]]))
+  me_row <- fam$summary_w[fam$summary_w$Model == "Mixed effect logistic", ]
+  expect_true(is.na(me_row$OR))
+  expect_true(is.na(me_row$p))
+  expect_equal(nrow(fam$summary_w), 3)
+  expect_false(any(is.na(fam$summary_w[fam$summary_w$Model == "Fully adjusted logistic", "OR"])))
+})
