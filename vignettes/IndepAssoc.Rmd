@@ -176,10 +176,11 @@ models_cont$summary_w
 
 ### Compare All Confounding-Adjustment Methods
 
-Beyond regression on the matched cohort, `fit_outcome()` tests the exposure–outcome
+Beyond the three regression models above, `fit_outcome()` tests the exposure–outcome
 association under five confounding-adjustment methods that share a common tidy
-result: `regression` (full-sample adjusted GLM/LM), `matching` (fully adjusted on
-the matched cohort), `stratification` (Mantel–Haenszel quintiles for binary,
+result: `regression` (full-sample adjusted GLM/LM), `matching` (propensity-score
+matching with conditional-logit (binary) / within-pair (continuous) estimation),
+`stratification` (Mantel–Haenszel quintiles for binary,
 inverse-variance pooling for continuous), `iptw` (stabilized inverse-probability
 weights with robust `sandwich` (`vcovHC`) standard errors), and `aipw` (Bang & Robins
 augmented estimator). `run_pipeline(..., methods = ...)` runs them all and

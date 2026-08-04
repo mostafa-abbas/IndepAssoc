@@ -39,18 +39,21 @@ res <- run_pipeline(
 )
 res$comparison
 ```
-# The comparison table shows all five methods' estimates:
+# The comparison table shows all five methods' estimates. Here `matching` is
+# propensity-score matching with conditional-logit/paired estimation (conditional
+# logistic regression stratified by matched pair for binary outcomes, a within-pair
+# fixed-effects linear model for continuous outcomes).
 ```
           method              label       type estimate  conf_low conf_high
 1     regression outcome_continuous continuous 1.537680 0.5942670  2.481092
-2       matching outcome_continuous continuous 1.537638 0.4432817  2.631995
+2       matching outcome_continuous continuous 2.146948 0.9511478  3.342748
 3 stratification outcome_continuous continuous 1.581406 0.4542341  2.708577
 4           iptw outcome_continuous continuous 1.483272 0.5107104  2.455833
 5           aipw outcome_continuous continuous 1.484582 0.5090073  2.460157
-      p_value   n
-1 0.001450697 500
-2 0.006035606 324
-3 0.005963138 500
-4 0.002868130 500
-5 0.002929705 500
+       p_value   n
+1 0.0014506971 500
+2 0.0005131617 324
+3 0.0059631379 500
+4 0.0028681300 500
+5 0.0029297046 500
 ```

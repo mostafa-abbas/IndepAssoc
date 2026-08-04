@@ -33,9 +33,10 @@ the known $1,794 benchmark is a standard sanity check: methods that land near
 the benchmark are doing the adjustment job well on real, messy data.
 
 This vignette applies the two propensity-score methods the benchmark is
-designed to validate — `matching` (1:1 nearest-neighbor PSM with a 0.2 caliper)
-and `iptw` (stabilized inverse-probability weights) — to `re78` (earnings in
-1978, continuous outcome), with the standard covariate set.
+designed to validate — `matching` (1:1 nearest-neighbor PSM with a 0.2 caliper
+and within-pair (paired) estimation) and `iptw` (stabilized inverse-probability
+weights) — to `re78` (earnings in 1978, continuous outcome), with the standard
+covariate set.
 
 ```{r data}
 lalonde_ok <- requireNamespace("MatchIt", quietly = TRUE)
@@ -72,7 +73,7 @@ associated with the NSW program. The experimental benchmark is $1,794.
 plot_comparison(result$comparison, log_scale = FALSE)
 ```
 
-Interpretation — the propensity-score matching estimate ($1,511) lands close
+Interpretation — the propensity-score matching estimate ($1,572) lands close
 to the experimental benchmark of $1,794, while the IPTW estimate ($791)
 deviates further — a pattern that
 mirrors the original Dehejia & Wahba finding that PSM recovers the experimental

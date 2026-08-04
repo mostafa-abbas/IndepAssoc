@@ -1,3 +1,14 @@
+# IndepAssoc (unreleased)
+
+* BREAKING: `fit_outcome(..., method = "matching")` now uses the estimator the
+  source papers used: conditional logistic regression (`survival::clogit`)
+  stratified by matched pair for binary outcomes, and a within-pair
+  fixed-effects linear model for continuous outcomes. Previously it fit a
+  plain covariate-adjusted regression on the matched cohort. Binary-outcome
+  estimates therefore change (corrected) for existing `matching` users.
+  The conditional-logit fit is shared with `fit_all_models()`'s "Conditional
+  logit" model so the two paths cannot drift apart.
+
 # IndepAssoc 0.1.0 (2026-08-01)
 
 * Confounder-adjusted association testing via propensity-score methods for

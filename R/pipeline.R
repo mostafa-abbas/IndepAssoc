@@ -13,7 +13,10 @@
 #' @param balance_threshold ASMD threshold (default `0.10`).
 #' @param methods Character vector of confounding-adjustment methods to run
 #'   via `fit_outcome()` (default all five: `"regression"`, `"matching"`,
-#'   `"stratification"`, `"iptw"`, `"aipw"`).
+#'   `"stratification"`, `"iptw"`, `"aipw"`). `"matching"` is propensity-score
+#'   matching with conditional-logit (binary) / within-pair (continuous)
+#'   estimation; because matching draws on the data, results are reproducible
+#'   only when a fixed seed is set before the call.
 #'
 #' @return A list of class `"IndepAssoc"` containing all pipeline results.
 #'

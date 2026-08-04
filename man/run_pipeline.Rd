@@ -35,7 +35,10 @@ run_pipeline(
 
 \item{methods}{Character vector of confounding-adjustment methods to run
 via \code{fit_outcome()} (default all five: \code{"regression"}, \code{"matching"},
-\code{"stratification"}, \code{"iptw"}, \code{"aipw"}).}
+\code{"stratification"}, \code{"iptw"}, \code{"aipw"}). \code{"matching"} is propensity-score
+matching with conditional-logit (binary) / within-pair (continuous)
+estimation; because matching draws on the data, results are reproducible
+only when a fixed seed is set before the call.}
 }
 \value{
 A list of class \code{"IndepAssoc"} containing all pipeline results.
