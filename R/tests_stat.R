@@ -21,7 +21,21 @@ mcnemar_test <- function(matched_data, outcome, exposure) {
   matched_data$label <- as.character(matched_data[[outcome]])
 
   mcnemar_formula <- as.formula(paste("label ~", exposure, "| match_num"))
-  test_res <- rstatix::pairwise_mcnemar_test(matched_data, mcnemar_formula)
+  # rstatix::pairwise_mcnemar_test() -> stats::mcnemar.test() throws "'x' must
+  # be square with at least two rows and columns" when the discordant table is
+  # degenerate (constant binary outcome); degrade to a warning + NA row instead
+  # of halting the pipeline.
+  test_res <- tryCatch(
+    rstatix::pairwise_mcnemar_test(matched_data, mcnemar_formula),
+    error = function(e) {
+      warning("McNemar test failed to fit: ", conditionMessage(e), call. = FALSE)
+      data.frame(
+        statistic = NA_real_,
+        p = NA_real_,
+        stringsAsFactors = FALSE
+      )
+    }
+  )
 
   treatment_vals <- unique(matched_data[[exposure]])
   n_per_group <- sapply(treatment_vals, function(v) sum(matched_data[[exposure]] == v))

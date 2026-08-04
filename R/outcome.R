@@ -170,7 +170,24 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
   }
 
   model_summaries <- lapply(names(models), function(nn) {
-    if (is.null(models[[nn]])) {
+    # summary(model) can still throw on a constant response even when the fit
+    # succeeded (e.g. summary.plm() raises "Lapack routine dgesv: system is
+    # exactly singular" when every response value is identical); treat the
+    # summary failure like a missing model so the NA row below is produced and
+    # the pipeline continues.
+    res <- if (is.null(models[[nn]])) {
+      NULL
+    } else {
+      tryCatch(
+        model_summ(models[[nn]], treatment_feature = exposure, type = type),
+        error = function(e) {
+          warning("Summary for model '", nn, "' failed to fit: ",
+                  conditionMessage(e), ". Returning NA for this model.", call. = FALSE)
+          NULL
+        }
+      )
+    }
+    if (is.null(res)) {
       if (type == "binary") {
         return(data.frame(
           label = outcome,
@@ -191,7 +208,6 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
         stringsAsFactors = FALSE
       ))
     }
-    res <- model_summ(models[[nn]], treatment_feature = exposure, type = type)
     res$label <- outcome
     res$Model <- nn
 
