@@ -19,8 +19,8 @@ test_that(".ensure_match_num errors without match_num or strata", {
 
 test_that("export_results writes comparison.csv", {
   d <- simulate_test_cohort()
-  res <- run_pipeline(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
-                      type = "binary", methods = c("regression", "iptw", "aipw"))
+  res <- suppressWarnings(run_pipeline(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                      type = "binary", methods = c("regression", "iptw", "aipw")))
   out_dir <- tempfile("indepassoc_export_")
   on.exit(unlink(out_dir, recursive = TRUE), add = TRUE)
   export_results(res, output_dir = out_dir)

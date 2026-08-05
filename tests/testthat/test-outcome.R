@@ -1,7 +1,7 @@
 test_that("fit_all_models has no mislabeled doubly robust model", {
   d <- simulate_test_cohort()
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
-  m <- match_cohort(ps)
+  m <- suppressWarnings(match_cohort(ps))
   bin <- fit_all_models(ps, m$data, "outcome", type = "binary")
   cont <- fit_all_models(ps, m$data, "outcome", type = "continuous")
   expect_false(any(grepl("Doubly robust", names(bin$models))))
@@ -52,7 +52,7 @@ test_that("model_summ captures all levels of a factor exposure", {
 test_that("model_summ applies an explicit Wald interval for every model class", {
   d <- simulate_test_cohort()
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
-  m <- match_cohort(ps)
+  m <- suppressWarnings(match_cohort(ps))
   bin <- fit_all_models(ps, m$data, "outcome", type = "binary")
   cont <- fit_all_models(ps, m$data, "outcome", type = "continuous")
 
@@ -73,7 +73,7 @@ test_that("model_summ applies an explicit Wald interval for every model class", 
 test_that("fit_all_models returns IndepOutcomeModels for binary outcome", {
   d <- simulate_test_cohort()
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
-  m <- match_cohort(ps)
+  m <- suppressWarnings(match_cohort(ps))
   res <- fit_all_models(ps, m$data, "outcome", type = "binary")
   expect_s3_class(res, "IndepOutcomeModels")
   expect_equal(res$type, "binary")
@@ -84,7 +84,7 @@ test_that("fit_all_models returns IndepOutcomeModels for binary outcome", {
 test_that("fit_all_models errors on missing outcome", {
   d <- simulate_test_cohort()
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
-  m <- match_cohort(ps)
+  m <- suppressWarnings(match_cohort(ps))
   expect_error(fit_all_models(ps, m$data, "fake_outcome", type = "binary"), "not found")
 })
 
@@ -96,7 +96,7 @@ test_that("fit_all_models has no dead parameters", {
 test_that("fit_all_models conditional logit is built by the shared helper", {
   d <- simulate_test_cohort()
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
-  m <- match_cohort(ps)
+  m <- suppressWarnings(match_cohort(ps))
   cond <- fit_all_models(ps, m$data, "outcome", type = "binary")$models[["Conditional logit"]]
   expected <- IndepAssoc:::.fit_conditional_logit(m$data, "exposure", "outcome")
   expect_equal(cond$coefficients, expected$coefficients)
@@ -107,8 +107,18 @@ test_that("fit_all_models degrades gracefully when the mixed-effect response is 
   d <- simulate_test_cohort()
   d$outcome <- 0L
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
-  m <- match_cohort(ps)
-  expect_warning(fam <- fit_all_models(ps, m$data, "outcome", type = "binary"), "failed to fit")
+  m <- suppressWarnings(match_cohort(ps))
+  expect_warning(
+    withCallingHandlers(
+      fam <- fit_all_models(ps, m$data, "outcome", type = "binary"),
+      warning = function(w) {
+        if (!grepl("failed to fit", conditionMessage(w), fixed = TRUE)) {
+          invokeRestart("muffleWarning")
+        }
+      }
+    ),
+    "failed to fit"
+  )
   expect_null(fam$models[["Mixed effect logistic"]])
   expect_false(is.null(fam$models[["Fully adjusted logistic"]]))
   expect_false(is.null(fam$models[["Conditional logit"]]))
@@ -123,9 +133,19 @@ test_that("fit_all_models degrades gracefully when the continuous response is co
   d <- simulate_test_cohort()
   d$outcome_cont <- 5
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
-  m <- match_cohort(ps)
-  expect_warning(fam <- fit_all_models(ps, m$data, "outcome_cont", type = "continuous"),
-                 "failed to fit")
+  m <- suppressWarnings(match_cohort(ps))
+  saw_failed <- FALSE
+  expect_warning(
+    withCallingHandlers(
+      fam <- fit_all_models(ps, m$data, "outcome_cont", type = "continuous"),
+      warning = function(w) {
+        is_failed <- grepl("failed to fit", conditionMessage(w), fixed = TRUE)
+        if (!is_failed || saw_failed) invokeRestart("muffleWarning")
+        if (is_failed) saw_failed <<- TRUE
+      }
+    ),
+    "failed to fit"
+  )
   expect_false(is.null(fam$models[["Fully adjusted linear regression"]]))
   cond_row <- fam$summary_w[fam$summary_w$Model == "Conditional linear regression", ]
   me_row <- fam$summary_w[fam$summary_w$Model == "Mixed effect linear regression", ]

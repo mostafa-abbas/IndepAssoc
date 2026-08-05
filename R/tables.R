@@ -23,8 +23,8 @@ table_unmatched <- function(data, exposure, covariates) {
 
   tbl <- gtsummary::tbl_summary(
     data,
-    by = exposure,
-    include = vars,
+    by = tidyselect::all_of(exposure),
+    include = tidyselect::all_of(vars),
     statistic = list(
       gtsummary::all_categorical() ~ "{n} ({p}%)",
       gtsummary::all_continuous() ~ "{median} ({p25}, {p75})"

@@ -1,4 +1,4 @@
-# IndepAssoc (unreleased)
+# IndepAssoc 0.3.0 (2026-08-05)
 
 * Data architecture: raw-data generation is consolidated in `data-raw/`
   (`simulate_example_cohort.R`, `prepare_rhc.R`); the cleaned RHC cohort now
@@ -14,6 +14,12 @@
 * Documentation tone pass across README, NEWS, and help pages: direct,
   clinical framing focused on confounder control and the trade-offs among
   the five adjustment methods.
+* Test suite now runs with zero warnings: `tbl_summary()` calls use
+  `tidyselect::all_of()` for external-vector selectors (removing the
+  tidyselect 1.1.0 deprecation, `tidyselect` added to Imports), `tbl_merge()`
+  merges quietly, and incidental statistical warnings (MatchIt unmatched
+  treated units, non-convergence, singular variance) are suppressed or
+  explicitly expected in the tests. Still `FAIL 0 | WARN 0 | SKIP 0 | PASS 268`.
 
 # IndepAssoc 0.2.0 (2026-08-04)
 

@@ -43,8 +43,8 @@ test_that("fit_outcome matching uses the matched cohort, not the full data", {
   d <- simulate_test_cohort()
   reg <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
                      type = "binary", method = "regression")
-  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
-                     type = "binary", method = "matching")
+  res <- suppressWarnings(fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "matching"))
   expect_equal(res$method, "matching")
   expect_true(res$estimate > 0)
   expect_true(is.finite(res$p_value))
@@ -63,11 +63,11 @@ test_that("fit_outcome matching (binary) is numerically identical to fit_all_mod
   # Same seed before both calls: build_ps_model() consumes no RNG, so both
   # paths match the identical cohort and must agree exactly.
   set.seed(1)
-  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
-                     type = "binary", method = "matching")
+  res <- suppressWarnings(fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "matching"))
   set.seed(1)
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
-  m <- match_cohort(ps)
+  m <- suppressWarnings(match_cohort(ps))
   fam <- fit_all_models(ps, m$data, "outcome", type = "binary")
   # summary_w$OR is rounded to 2 dp; compare the unrounded clogit coefficient
   or_clogit <- unname(exp(stats::coef(fam$models[["Conditional logit"]])[["exposure"]]))
@@ -78,11 +78,11 @@ test_that("fit_outcome matching (continuous) uses a within-pair estimator", {
   d <- simulate_test_cohort()
   d$outcome_cont <- 50 + 2 * d$exposure + rnorm(nrow(d))
   set.seed(1)
-  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
-                     type = "continuous", method = "matching")
+  res <- suppressWarnings(fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
+                     type = "continuous", method = "matching"))
   set.seed(1)
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
-  m <- match_cohort(ps)
+  m <- suppressWarnings(match_cohort(ps))
   pair_fit <- stats::lm(outcome_cont ~ exposure + factor(match_num), data = m$data)
   expect_equal(res$estimate, unname(stats::coef(pair_fit)["exposure"]), tolerance = 1e-8)
   expect_s3_class(res$model, "lm")
@@ -150,8 +150,8 @@ test_that("fit_outcome matching works for continuous outcome", {
   d$outcome_cont <- 50 + 2 * d$exposure + rnorm(nrow(d))
   reg <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
                      type = "continuous", method = "regression")
-  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
-                     type = "continuous", method = "matching")
+  res <- suppressWarnings(fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
+                     type = "continuous", method = "matching"))
   expect_equal(res$method, "matching")
   expect_true(is.finite(res$estimate))
   expect_true(res$conf_low < res$estimate && res$estimate < res$conf_high)
@@ -182,9 +182,9 @@ test_that("fit_outcome aipw works for continuous outcome", {
 
 test_that("fit_outcome returns one result per method", {
   d <- simulate_test_cohort()
-  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+  res <- suppressWarnings(fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
                      type = "binary",
-                     method = c("regression", "matching", "stratification", "iptw", "aipw"))
+                     method = c("regression", "matching", "stratification", "iptw", "aipw")))
   expect_type(res, "list")
   expect_named(res, c("regression", "matching", "stratification", "iptw", "aipw"))
   for (m in names(res)) {
@@ -199,8 +199,8 @@ test_that("fit_outcome matching applies a seed (RNG state check)", {
   set.seed(42)
   expected <- .Random.seed
   set.seed(999)
-  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
-                     type = "binary", method = "matching", seed = 42)
+  res <- suppressWarnings(fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "matching", seed = 42))
   expect_identical(.Random.seed, expected)
   expect_equal(res$method, "matching")
 })
@@ -210,8 +210,8 @@ test_that("fit_outcome matching with seed = NULL does not seed", {
   runif(1)
   set.seed(999)
   pre <- .Random.seed
-  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
-                     type = "binary", method = "matching", seed = NULL)
+  res <- suppressWarnings(fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "matching", seed = NULL))
   expect_identical(.Random.seed, pre)
   expect_equal(res$method, "matching")
 })

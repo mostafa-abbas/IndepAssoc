@@ -38,7 +38,7 @@ table_matched <- function(match_obj, covariates) {
 
   if (length(cat_vars) > 0) {
     tbl_cat <- gtsummary::tbl_summary(
-      data, by = exposure, include = cat_vars,
+      data, by = tidyselect::all_of(exposure), include = tidyselect::all_of(cat_vars),
       statistic = list(gtsummary::all_categorical() ~ "{n} ({p}%)")
     )
     tbl_cat <- gtsummary::add_p(tbl_cat, test = list(gtsummary::all_categorical() ~ "mcnemar.test"), group = "strata")
@@ -47,7 +47,7 @@ table_matched <- function(match_obj, covariates) {
 
   if (length(cont_vars) > 0) {
     tbl_cont <- gtsummary::tbl_summary(
-      data, by = exposure, include = cont_vars,
+      data, by = tidyselect::all_of(exposure), include = tidyselect::all_of(cont_vars),
       statistic = list(gtsummary::all_continuous() ~ "{median} ({p25}, {p75})"),
       digits = gtsummary::all_continuous() ~ 1
     )
@@ -59,5 +59,5 @@ table_matched <- function(match_obj, covariates) {
     return(tables[[1]])
   }
 
-  gtsummary::tbl_merge(tables)
+  gtsummary::tbl_merge(tables, quiet = TRUE)
 }
