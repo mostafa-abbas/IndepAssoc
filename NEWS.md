@@ -1,3 +1,20 @@
+# IndepAssoc (unreleased)
+
+* Data architecture: raw-data generation is consolidated in `data-raw/`
+  (`simulate_example_cohort.R`, `prepare_rhc.R`); the cleaned RHC cohort now
+  ships as the bundled, documented `rhc_sample` dataset (a list of the 5735-row
+  data frame and its 50-column covariate vector) so vignettes and tests run
+  offline and deterministically. The redundant `rhc_data/` folders were
+  removed and `prepare_rhc_data()` moved to `R/data_helpers.R`.
+* Vignettes reorganized into three: `indepassoc-quickstart.Rmd`,
+  `causal-benchmarks.Rmd` (NHEFS and Lalonde), and `rhc-validation.Rmd`
+  (Connors et al. RHC benchmark). The RHC vignette now loads the bundled
+  dataset and keeps its directional comparison against Connors et al. (1996)
+  with the standard no-unmeasured-confounding caveat.
+* Documentation tone pass across README, NEWS, and help pages: direct,
+  clinical framing focused on confounder control and the trade-offs among
+  the five adjustment methods.
+
 # IndepAssoc 0.2.0 (2026-08-04)
 
 * BREAKING: `fit_outcome(..., method = "matching")` now uses the estimator the
