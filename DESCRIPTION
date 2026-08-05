@@ -3,8 +3,8 @@ Title: Confounder-Adjusted Independent Association Testing via Propensity Score
     Methods
 Version: 0.2.0
 Authors@R: 
-    person("Mostafa", "Elshamy", role = c("aut", "cre"),
-           email = "mostafa@example.com")
+    person("Mostafa", "Hamza", role = c("aut", "cre"),
+           email = "mostafa.mn.abbas@gmail.com")
 Description: Generalizes a propensity-score-based analysis pipeline for
     retrospective cohort studies. Answers whether a risk factor or exposure
     is independently associated with an outcome after adjusting for
