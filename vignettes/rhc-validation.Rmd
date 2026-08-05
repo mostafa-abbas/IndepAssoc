@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE
 )
+library(IndepAssoc)
 ```
 
 ## Introduction
@@ -37,63 +38,30 @@ package's five methods — outcome regression, matching, stratification, IPTW,
 and AIPW: `dth30`, the true 30-day mortality (binary), and `los`, the length of
 stay in days (continuous).
 
-```{r data}
-rhc_ok <- FALSE
-rhc_path <- NULL
-candidates <- c(
-  file.path("..", "rhc_data", "rhc.csv"), # vignettes/ working dir during build
-  file.path("rhc_data", "rhc.csv"), # repo-root-relative, interactive
-  "/home/mostafa/my-coding-project/rhc_data/rhc.csv" # developer machine
-)
-for (cand in candidates) {
-  if (file.exists(cand)) {
-    rhc_path <- cand
-    break
-  }
-}
-if (is.null(rhc_path)) {
-  dest <- file.path(tempdir(), "rhc.csv")
-  dl_ok <- tryCatch(
-    suppressWarnings(download.file("https://hbiostat.org/data/repo/rhc.csv",
-                                   dest, quiet = TRUE, mode = "wb")),
-    error = function(e) 1L
-  )
-  if (identical(as.integer(dl_ok), 0L) && file.exists(dest)) {
-    rhc_path <- dest
-  }
-}
-if (is.null(rhc_path)) {
-  message("The RHC data file could not be found locally and the download ",
-          "from https://hbiostat.org/data/repo/rhc.csv failed; ",
-          "the analysis chunks below are skipped.")
-} else {
-  rhc_ok <- TRUE
-}
-```
-
 ## Data preparation
 
-```{r preprocessing, eval = rhc_ok}
-library(IndepAssoc)
-
-rhc <- prepare_rhc_data(rhc_path)
-nrow(rhc$data)
-length(rhc$covariates)
-table(rhc$data$swang1)
-sum(complete.cases(rhc$data[, rhc$covariates]))
+```{r preprocessing}
+data(rhc_sample)
+rhc <- rhc_sample$data
+covariates <- rhc_sample$covariates
+nrow(rhc)
+length(covariates)
+table(rhc$swang1)
+sum(stats::complete.cases(rhc[, covariates]))
 ```
 
-`prepare_rhc_data()` returns a cleaned data frame with n = 5735 rows and a
-50-column covariate vector. The exposure counts are 2184 RHC patients and 3551
-controls, and complete-case analysis on the 50-covariate set retains the full
-5735 rows: `adld3p` and `urin1` are excluded from the covariate set because
-their missingness would collapse the sample. The raw CSV stores the `cat2`
-category "None" as the literal text `"NA"`; the helper recodes that to `"None"`
-before converting the remaining literal `"NA"` strings to real missing values.
-The covariate vector includes the primary and secondary disease categories
-(`cat1`, `cat2`) and cancer status (`ca`) — standard confounders in the RHC
-literature — and excludes `surv2md1` (a SUPPORT-model survival probability
-derived from the other covariates, not a raw confounder).
+The dataset ships with the package as `rhc_sample`, the cleaned cohort produced
+by `prepare_rhc_data()`: n = 5735 rows and a 50-column covariate vector. The
+exposure counts are 2184 RHC patients and 3551 controls, and complete-case
+analysis on the 50-covariate set retains the full 5735 rows: `adld3p` and
+`urin1` are excluded from the covariate set because their missingness would
+collapse the sample. The raw file stores the `cat2` category "None" as the
+literal text `"NA"`; the helper recodes that to `"None"` before converting the
+remaining literal `"NA"` strings to real missing values. The covariate vector
+includes the primary and secondary disease categories (`cat1`, `cat2`) and
+cancer status (`ca`) — standard confounders in the RHC literature — and
+excludes `surv2md1` (a SUPPORT-model survival probability derived from the
+other covariates, not a raw confounder).
 
 Note the distinction between the two binary outcomes in the raw data: `death`
 is a longer-term all-cause outcome, whereas `dth30` is the true 30-day
@@ -101,11 +69,11 @@ mortality. This vignette reports `dth30`.
 
 ## Binary outcome: 30-day mortality (dth30)
 
-```{r binary-pipeline, eval = rhc_ok}
+```{r binary-pipeline}
 # We set a fixed random seed (1) before running the pipeline so the matching
 # step is reproducible; see `?run_pipeline`.
 set.seed(1)
-res30 <- run_pipeline(rhc$data, "swang1", rhc$covariates, "dth30",
+res30 <- run_pipeline(rhc, "swang1", covariates, "dth30",
                       type = "binary")
 res30$comparison
 ```
@@ -123,22 +91,22 @@ primary evidence for or against this independent association.
 This comparison is directional and qualitative — RHC is associated with harm —
 not an exact match to any specific published point estimate.
 
-```{r binary-forest, eval = rhc_ok}
+```{r binary-forest}
 plot_comparison(res30$comparison, log_scale = TRUE)
 ```
 
 ## Continuous outcome: length of stay (los)
 
-```{r continuous-pipeline, eval = rhc_ok}
+```{r continuous-pipeline}
 # `los` (discharge date minus admission date) has one missing value; drop it
 # before running the pipeline so the complete-case sample is n = 5734.
-rhc_cc <- rhc$data[!is.na(rhc$data$los), ]
+rhc_cc <- rhc[!is.na(rhc$los), ]
 nrow(rhc_cc)
 
 # We set a fixed random seed (1) before running the pipeline so the matching
 # step is reproducible; see `?run_pipeline`.
 set.seed(1)
-reslos <- run_pipeline(rhc_cc, "swang1", rhc$covariates, "los",
+reslos <- run_pipeline(rhc_cc, "swang1", covariates, "los",
                        type = "continuous")
 reslos$comparison
 ```
@@ -151,7 +119,7 @@ missing value; dropping that row leaves the complete-case sample of n = 5734
 used here. As with the mortality analysis, this association is directional only
 — it is not an exact match to any published point estimate.
 
-```{r continuous-forest, eval = rhc_ok}
+```{r continuous-forest}
 plot_comparison(reslos$comparison, log_scale = FALSE)
 ```
 
@@ -165,5 +133,6 @@ no-unmeasured-confounding assumption, not a proven causal effect.
 - Connors, A.F., Speroff, T., Dawson, N.V., et al. (1996). The Effectiveness of
   Right Heart Catheterization in the Initial Care of Critically Ill Patients.
   *JAMA*, 276(11), pp.889-897.
-- The RHC data are distributed with the `Hmisc` package's `rhc` dataset and
-  mirrored at https://hbiostat.org/data/repo/rhc.csv.
+- The RHC data ship with the package as `rhc_sample`; they originate from the
+  `Hmisc` package's `rhc` dataset and are mirrored at
+  https://hbiostat.org/data/repo/rhc.csv.
