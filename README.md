@@ -22,6 +22,21 @@ devtools::install()
 
 `causaldata` and `MatchIt` are needed for the vignettes.
 
+## Datasets
+
+Two datasets ship with the package:
+
+- `example_cohort` — a simulated 500-row cohort with a known treatment effect,
+  for quick runs of the full pipeline.
+- `rhc_sample` — the cleaned Right Heart Catheterization (RHC) cohort from the
+  SUPPORT study (5735 rows, 50 confounders), the basis of the `rhc-validation`
+  vignette. It is a confounder-adjusted association benchmark, not a proof of
+  causality (see `?rhc_sample`).
+
+Both are lazy-loaded via `data()`; the raw-generation scripts live in
+`data-raw/` (`simulate_example_cohort.R`, `prepare_rhc.R`) and are excluded
+from the installed package.
+
 ## Example
 
 ```r
