@@ -1,8 +1,8 @@
 ---
-title: "IndepAssoc: Confounder-Adjusted Association Testing via Propensity Score Methods"
+title: "IndepAssoc: A Quick-Start Guide"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{IndepAssoc: Confounder-Adjusted Association Testing via Propensity Score Methods}
+  %\VignetteIndexEntry{IndepAssoc: A Quick-Start Guide}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -213,6 +213,40 @@ The comparison table can be visualized directly:
 ```{r pipeline-forest}
 plot_comparison(result$comparison)
 ```
+
+## Choosing an adjustment method
+
+The five methods answer the same question — is the exposure independently
+associated with the outcome after adjusting for the measured confounders? —
+but reach the answer by different routes, and the right choice depends on the
+data and the question:
+
+- **Regression** models the outcome directly with all confounders included.
+  Efficient and familiar, but the estimate depends on the outcome-model
+  functional form, and it extrapolates where propensity scores have poor
+  overlap.
+- **Matching** discards poorly overlaid units, so inference stays close to the
+  data; it answers the treatment-on-the-treated question and is the estimator
+  used in the source cardiac-surgery papers. Cost: fewer units and no benefit
+  from observations that do not overlap.
+- **Stratification** groups patients into propensity-score strata (quintiles)
+  and pools within-stratum contrasts. Simple and transparent, but residual
+  confounding within strata is a real risk when the score's discriminating
+  power is high.
+- **IPTW** reweights the sample to mimic a randomized comparison. It uses all
+  units, but very small weights on poorly overlaid patients can inflate
+  variance and invite model sensitivity.
+- **AIPW** combines an outcome model with a treatment model so the estimate
+  stays consistent if only one of the two is correctly specified. Doubly
+  robust, and the natural choice when both models are plausible.
+
+In practice: run all five through `run_pipeline()` and read the comparison
+table. Agreement across methods that model the outcome directly (regression,
+AIPW) and those that model treatment assignment (matching, stratification,
+IPTW) is evidence the association is not an artifact of any single adjustment
+strategy. Disagreement flags misspecification or poor overlap, not a vote —
+inspect the propensity-score distribution and the balance tables before
+trusting any single estimate.
 
 ## Step 7: Paired Statistical Tests
 
