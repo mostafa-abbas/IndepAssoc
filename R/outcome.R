@@ -13,12 +13,18 @@ normalize <- function(x) {
 #' fit <- glm(outcome_binary ~ exposure + age,
 #'            data = example_cohort, family = "binomial")
 #' IndepAssoc:::model_summ(fit, "exposure", type = "binary")
+#' @details The exposure's coefficient rows are selected by exact name match,
+#'   or — for a factor exposure — by the factor levels recovered from the
+#'   model frame (`<feature><level>`), never by substring matching, so a
+#'   covariate whose name shares the exposure name as a prefix cannot steal
+#'   the row. A multi-level factor exposure returns one row per
+#'   non-reference level. A treatment with no coefficient row in the model
+#'   errors rather than silently selecting a different term.
 #' @keywords internal
 model_summ <- function(model, treatment_feature, type = c("binary", "continuous")) {
   type <- match.arg(type)
   summ_coeff <- as.data.frame(summary(model)$coefficients)
-  row_treat <- grep(paste0("^", treatment_feature), rownames(summ_coeff), value = TRUE)
-  if (length(row_treat) == 0) row_treat <- rownames(summ_coeff)[2]
+  row_treat <- .match_treatment_rows(model, treatment_feature)
   summ_coeff <- summ_coeff[row_treat, , drop = FALSE]
 
   summ_confint <- .wald_confint(model, row_treat)
@@ -36,6 +42,30 @@ model_summ <- function(model, treatment_feature, type = c("binary", "continuous"
   }
 
   summ
+}
+
+# Match the coefficient rows belonging to the treatment term.
+#
+# Exact name match first; a factor exposure expands to one row per
+# non-reference level (`<feature><level>`) and is resolved against the
+# factor levels recovered from the model frame, never by substring-matching
+# coefficient names. Errors if the treatment has no coefficient row,
+# instead of silently picking a different term.
+.match_treatment_rows <- function(model, treatment_feature) {
+  rownm <- rownames(summary(model)$coefficients)
+  exact <- rownm == treatment_feature
+  if (any(exact)) return(rownm[exact])
+
+  mf <- tryCatch(model.frame(model), error = function(e) NULL)
+  if (!is.null(mf) && treatment_feature %in% names(mf) &&
+      is.factor(mf[[treatment_feature]])) {
+    levels <- levels(mf[[treatment_feature]])
+    expanded <- paste0(treatment_feature, levels[-1])
+    rows <- rownm[rownm %in% expanded]
+    if (length(rows) > 0) return(rows)
+  }
+
+  stop("No coefficient row found for treatment feature '", treatment_feature, "'.")
 }
 
 #' Explicit Wald confidence interval for a fitted model's coefficients

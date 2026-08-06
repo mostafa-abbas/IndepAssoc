@@ -1,5 +1,16 @@
 # IndepAssoc (development)
 
+* `model_summ()` (used by `fit_outcome()` and `fit_all_models()`) now selects
+  the treatment's coefficient rows by exact name match, or — for a factor
+  exposure — by the factor levels recovered from the model frame
+  (`<feature><level>`), instead of substring-matching coefficient names. A
+  covariate whose name shares the exposure name as a prefix (e.g. `age_group`
+  alongside exposure `age`) can no longer steal the treatment row. A treatment
+  with no coefficient row in the model now errors with `No coefficient row
+  found for treatment feature '<name>'` instead of silently returning the
+  second coefficient (typically the intercept-adjusted row). **Behavior
+  change** for models where the exposure term was missing or its name was
+  shadowed by a prefix-colliding covariate.
 * `table_unmatched()` and `table_matched()` now validate `covariates` against
   the data, stopping with `Covariates not found: <name>` when given an
   unknown covariate name — the same behavior and message format as

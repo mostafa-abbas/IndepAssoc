@@ -37,6 +37,42 @@ test_that("model_summ captures all levels of a factor exposure", {
   expect_equal(nrow(summ), 2)
 })
 
+test_that("model_summ picks the exact exposure row, not a prefix-colliding covariate", {
+  set.seed(5)
+  d <- data.frame(
+    outcome = rbinom(200, 1, 0.4),
+    age_group = rnorm(200),
+    age = rnorm(200)
+  )
+  fit <- glm(outcome ~ age_group + age, data = d, family = "binomial")
+  summ <- model_summ(fit, "age", type = "binary")
+  expect_equal(rownames(summ), "age")
+  expect_equal(unname(summ$OR[1]), unname(exp(coef(fit)["age"])), tolerance = 1e-8)
+})
+
+test_that("model_summ errors clearly when the treatment is not in the model", {
+  set.seed(6)
+  d <- data.frame(
+    outcome = rbinom(100, 1, 0.4),
+    exposure = rbinom(100, 1, 0.5)
+  )
+  fit <- glm(outcome ~ exposure, data = d, family = "binomial")
+  expect_error(model_summ(fit, "not_in_model", type = "binary"),
+               "No coefficient row found")
+})
+
+test_that("model_summ handles a two-level factor exposure", {
+  set.seed(7)
+  d <- data.frame(
+    outcome = rbinom(200, 1, 0.4),
+    grp = factor(sample(c("A", "B"), 200, replace = TRUE)),
+    age = rnorm(200)
+  )
+  fit <- glm(outcome ~ grp + age, data = d, family = "binomial")
+  summ <- model_summ(fit, "grp", type = "binary")
+  expect_equal(rownames(summ), "grpB")
+})
+
 .wald_bound <- function(mod, term = "exposure") {
   sc <- summary(mod)$coefficients
   est_col <- grep("Estimate", colnames(sc), value = TRUE)
