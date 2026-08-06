@@ -1,3 +1,28 @@
+# IndepAssoc (development)
+
+* `paired_wilcoxon_test()` no longer crashes on continuous outcomes with
+  missing values (e.g. `rhc_sample$los`): descriptive quantiles now use
+  `na.rm = TRUE`, and strata (pairs) missing an observed outcome on either
+  side are dropped before the paired test, with the number dropped reported
+  via a `message()`.
+* `paired_wilcoxon_test()` now supports many:1 matching (`ratio > 1`): the
+  outcome is averaged over the multiple controls within each stratum before
+  differencing, so every matched row contributes to the test. Previously the
+  extra control rows were silently discarded (on `rhc_sample` at `ratio = 2`,
+  566 of 2,251 control rows went unused with no warning). **Behavior change**
+  for `ratio > 1` cohorts.
+* `mcnemar_test()` now uses the Cochran-Mantel-Haenszel test
+  (`stats::mantelhaen.test()`) over per-stratum 2x2 tables instead of
+  `rstatix::pairwise_mcnemar_test()`. For 1:1 matching this is identical to
+  McNemar's test, and it generalizes correctly to many:1 matching (which
+  previously returned a silent `NA` result). **Behavior change** for
+  `ratio > 1` cohorts and for cohorts with missing outcomes.
+* `mcnemar_test()` now validates that the outcome is binary coded 0/1 and the
+  exposure is binary, and excludes rows with missing outcomes from the test
+  (reported via a `message()`), instead of misclassifying missing values as a
+  third outcome level.
+* `rstatix` removed from Imports (no longer used).
+
 # IndepAssoc 0.3.0 (2026-08-05)
 
 * Data architecture: raw-data generation is consolidated in `data-raw/`

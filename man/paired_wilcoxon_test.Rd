@@ -11,13 +11,23 @@ paired_wilcoxon_test(matched_data, outcome, exposure)
 
 \item{outcome}{Character; continuous outcome variable name.}
 
-\item{exposure}{Character; exposure variable name.}
+\item{exposure}{Character; binary exposure variable name.}
 }
 \value{
 A data frame with Wilcoxon test results.
 }
 \description{
-Paired Wilcoxon Test on Matched Data
+Paired signed-rank test comparing a continuous \code{outcome} between the two
+levels of \code{exposure} within matched strata. For 1:1 matching each stratum
+contributes its treated and control value directly; for many:1 (ratio > 1)
+matching the outcome is first averaged over the multiple controls within
+each stratum, so every matched row contributes to the test.
+}
+\details{
+Strata (pairs) missing an observed outcome on either side of the
+pair cannot contribute to the paired comparison and are dropped; the
+number dropped is reported via a \code{message()}. Descriptive quantiles are
+computed with \code{na.rm = TRUE}.
 }
 \examples{
 data(example_cohort)

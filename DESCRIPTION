@@ -22,7 +22,6 @@ Imports:
     lme4,
     lmerTest,
     plm,
-    rstatix,
     ggplot2,
     rlang,
     sandwich,
