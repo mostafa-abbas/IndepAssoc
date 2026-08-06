@@ -1,5 +1,22 @@
 # IndepAssoc (development)
 
+* `utils` is now declared in `DESCRIPTION` `Imports` (it was used via
+  `utils::read.csv`/`write.csv`/`tail` in `R/data_helpers.R`, `R/utils.R`,
+  and `R/tests_stat.R` but not listed). No behavior change. Note: `R CMD
+  check` does not flag this on current R because `utils` is a recommended
+  package, so this is a hygiene/future-proofing fix rather than a check
+  cleanup.
+* `subgroup_analysis()` no longer passes the full covariate set (including
+  the subgroup variable itself) into each subgroup's model. The subgroup
+  variable is constant within a subgroup, so keeping it made `glm()` error
+  with "contrasts can be applied only to factors with 2 or more levels" and
+  every adjustment method returned all-`NA` rows. The subgroup variable is
+  now dropped from the covariate set (with a `message()`), so subgroup
+  analyses complete with real estimates. The `matching` method also now
+  strips MatchIt output columns (`distance`/`weights`/`subclass`) before
+  re-matching a subgroup, avoiding a "distance is already the name of a
+  variable" collision. **Behavior change** for subgroup analyses where the
+  subgroup variable is also a matching covariate.
 * `paired_wilcoxon_test()` no longer crashes on continuous outcomes with
   missing values (e.g. `rhc_sample$los`): descriptive quantiles now use
   `na.rm = TRUE`, and strata (pairs) missing an observed outcome on either

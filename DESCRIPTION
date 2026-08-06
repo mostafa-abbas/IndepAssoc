@@ -25,7 +25,8 @@ Imports:
     ggplot2,
     rlang,
     sandwich,
-    tidyselect
+    tidyselect,
+    utils
 Suggests:
     causaldata,
     testthat (>= 3.0.0),
