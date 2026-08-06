@@ -33,7 +33,13 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
   if (!outcome %in% names(data)) stop(paste("Outcome", outcome, "not found."))
   type <- match.arg(type)
 
-  if (!subgroup_var %in% match_obj$ps_model$covariates) {
+  covariates <- match_obj$ps_model$covariates
+  if (subgroup_var %in% covariates) {
+    covariates <- setdiff(covariates, subgroup_var)
+    message("Subgroup variable '", subgroup_var,
+            "' removed from the covariate set for subgroup models because ",
+            "it is constant within each subgroup.")
+  } else {
     warning("Subgroup variable '", subgroup_var,
             "' was not part of the covariates used for matching; ",
             "paired tests within subgroups may not be valid.")
@@ -46,7 +52,7 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
     tryCatch({
       res <- fit_outcome(data = sub_data,
                          exposure = match_obj$ps_model$exposure,
-                         covariates = match_obj$ps_model$covariates,
+                         covariates = covariates,
                          outcome = outcome, type = type,
                          method = method, ...)
       data.frame(

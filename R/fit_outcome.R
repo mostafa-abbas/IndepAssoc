@@ -78,6 +78,10 @@ fit_outcome <- function(data, exposure, covariates, outcome,
 
 .fit_matching <- function(data, exposure, covariates, outcome, type,
                           caliper = 0.2, ratio = 1, seed = NULL, ...) {
+  drop_cols <- intersect(c("distance", "weights", "subclass"), names(data))
+  if (length(drop_cols) > 0) {
+    data <- data[, setdiff(names(data), drop_cols), drop = FALSE]
+  }
   ps <- build_ps_model(data, exposure, covariates)
   m <- match_cohort(ps, caliper = caliper, ratio = ratio, seed = seed)
   mdata <- .ensure_match_num(m$data)

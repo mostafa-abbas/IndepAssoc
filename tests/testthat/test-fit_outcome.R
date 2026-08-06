@@ -205,6 +205,18 @@ test_that("fit_outcome matching applies a seed (RNG state check)", {
   expect_equal(res$method, "matching")
 })
 
+test_that("fit_outcome matching re-matches already-matched data without a distance collision", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- suppressWarnings(match_cohort(ps))
+  expect_true(all(c("distance", "weights", "subclass") %in% names(m$data)))
+  res <- suppressWarnings(fit_outcome(m$data, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "matching"))
+  expect_equal(res$method, "matching")
+  expect_true(is.finite(res$estimate))
+  expect_true(all(is.finite(c(res$conf_low, res$conf_high, res$p_value))))
+})
+
 test_that("fit_outcome matching with seed = NULL does not seed", {
   d <- simulate_test_cohort()
   runif(1)

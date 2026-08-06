@@ -60,6 +60,25 @@ test_that("subgroup_analysis errors on a vector method", {
                "single method")
 })
 
+test_that("subgroup_analysis drops a constant subgroup_var from the covariate set", {
+  d <- simulate_test_cohort()
+  d$grp <- factor(sample(c("A", "B"), nrow(d), replace = TRUE))
+  covs <- c("age", "diabetes", "hypertension", "grp")
+  ps <- build_ps_model(d, "exposure", covs)
+  m <- suppressWarnings(match_cohort(ps))
+
+  for (meth in c("regression", "matching", "stratification", "iptw", "aipw")) {
+    out <- NULL
+    expect_message(
+      out <- suppressWarnings(subgroup_analysis(m, "outcome", "grp", method = meth)),
+      "removed from the covariate set",
+      info = meth
+    )
+    expect_true(all(!is.na(out$estimate)), info = meth)
+    expect_equal(nrow(out), length(unique(d$grp)), info = meth)
+  }
+})
+
 test_that("subgroup_analysis warns and returns an NA row when a subgroup fails to fit", {
   d <- simulate_test_cohort()
   d$grp <- ifelse(seq_len(nrow(d)) <= 2, "B", "A")
