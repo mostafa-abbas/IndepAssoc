@@ -12,8 +12,17 @@
 #' @param ... Passed to the per-method estimators. `seed` is accepted by the
 #'   matching method for reproducible matching.
 #'
-#' @details For `method = "matching"`, binary outcomes must be coded as
-#'   numeric 0/1 (the conditional-logit estimator strata on the matched pair).
+#' @details `"regression"` adjusts for covariates directly in the outcome
+#'   model. `"matching"` is propensity-score matching with conditional-logit
+#'   (binary) / within-pair (continuous) estimation. `"stratification"`
+#'   stratifies on the propensity score. `"iptw"` is a marginal structural
+#'   model: the outcome model regresses on the exposure only, weighted by
+#'   stabilized inverse probability of treatment weights, with robust
+#'   sandwich standard errors — confounding is controlled by the weights
+#'   alone. `"aipw"` is a doubly-robust augmented estimator (Bang & Robins)
+#'   that models both the outcome and the propensity score. For
+#'   `method = "matching"`, binary outcomes must be coded as numeric 0/1
+#'   (the conditional-logit estimator strata on the matched pair).
 #'
 #' @return A named list with `method`, `type`, `estimate`, `conf_low`,
 #'   `conf_high`, `p_value`, `n`, and `model`. If `method` has length > 1,
@@ -161,8 +170,7 @@ fit_outcome <- function(data, exposure, covariates, outcome,
   num <- mean(d[[exposure]])
   sw <- ifelse(d[[exposure]] == 1, num / denom, (1 - num) / (1 - denom))
   d$.sw <- sw
-  pred <- c(exposure, covariates)
-  form <- stats::as.formula(paste(outcome, "~", paste(pred, collapse = " + ")))
+  form <- stats::as.formula(paste(outcome, "~", exposure))
   if (type == "binary") {
     mod <- stats::glm(form, data = d, family = stats::quasibinomial, weights = d$.sw)
     est <- unname(coef(mod)[exposure])

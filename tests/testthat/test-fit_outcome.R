@@ -170,6 +170,20 @@ test_that("fit_outcome stratification works for continuous outcome", {
   expect_null(res$model)
 })
 
+test_that("fit_outcome iptw is a marginal structural model (outcome ~ exposure only)", {
+  d <- simulate_test_cohort()
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome",
+                     type = "binary", method = "iptw")
+  expect_setequal(all.vars(formula(res$model)), c("exposure", "outcome"))
+  expect_false(any(c("age", "diabetes", "hypertension") %in% all.vars(formula(res$model))))
+
+  d$outcome_cont <- 50 + 2 * d$exposure + rnorm(nrow(d))
+  res_cont <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "outcome_cont",
+                          type = "continuous", method = "iptw")
+  expect_setequal(all.vars(formula(res_cont$model)), c("exposure", "outcome_cont"))
+  expect_false(any(c("age", "diabetes", "hypertension") %in% all.vars(formula(res_cont$model))))
+})
+
 test_that("fit_outcome aipw works for continuous outcome", {
   d <- simulate_test_cohort()
   d$outcome_cont <- 50 + 2 * d$exposure + rnorm(nrow(d))

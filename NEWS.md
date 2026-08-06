@@ -1,5 +1,16 @@
 # IndepAssoc (development)
 
+* `fit_outcome(..., method = "iptw")` is now a plain marginal structural
+  model: the outcome model regresses on the exposure only (`outcome ~
+  exposure`), weighted by the existing stabilized inverse probability of
+  treatment weights, with robust `sandwich` standard errors. Previously it
+  regressed the outcome on the exposure *and* the full covariate set on top
+  of weighting, which duplicated `aipw`'s doubly-robust role. `iptw` now
+  controls confounding through the weights alone and is genuinely distinct
+  from `aipw` (the Bang & Robins augmented estimator). **Behavior change**:
+  `iptw` binary and continuous estimates change for all existing users.
+  Known-effect simulation tests confirm `iptw` still recovers the known
+  effect within the existing tolerances.
 * `utils` is now declared in `DESCRIPTION` `Imports` (it was used via
   `utils::read.csv`/`write.csv`/`tail` in `R/data_helpers.R`, `R/utils.R`,
   and `R/tests_stat.R` but not listed). No behavior change. Note: `R CMD

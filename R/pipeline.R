@@ -16,7 +16,10 @@
 #'   `"stratification"`, `"iptw"`, `"aipw"`). `"matching"` is propensity-score
 #'   matching with conditional-logit (binary) / within-pair (continuous)
 #'   estimation; because matching draws on the data, results are reproducible
-#'   only when a fixed seed is set before the call.
+#'   only when a fixed seed is set before the call. `"iptw"` is a marginal
+#'   structural model (outcome regressed on the exposure only, weighted by
+#'   stabilized inverse probability weights) and `"aipw"` is a doubly-robust
+#'   augmented estimator.
 #' @param seed Integer passed to `set.seed()` at the top of the pipeline. A
 #'   fixed seed makes the whole run — including the step-2 matching and the
 #'   step-9 `"matching"` method — reproducible from a single value. Default

@@ -42,8 +42,17 @@ a named list of such results.
 Fit an Outcome Model with a Chosen Confounding-Adjustment Method
 }
 \details{
-For \code{method = "matching"}, binary outcomes must be coded as
-numeric 0/1 (the conditional-logit estimator strata on the matched pair).
+\code{"regression"} adjusts for covariates directly in the outcome
+model. \code{"matching"} is propensity-score matching with conditional-logit
+(binary) / within-pair (continuous) estimation. \code{"stratification"}
+stratifies on the propensity score. \code{"iptw"} is a marginal structural
+model: the outcome model regresses on the exposure only, weighted by
+stabilized inverse probability of treatment weights, with robust
+sandwich standard errors — confounding is controlled by the weights
+alone. \code{"aipw"} is a doubly-robust augmented estimator (Bang & Robins)
+that models both the outcome and the propensity score. For
+\code{method = "matching"}, binary outcomes must be coded as numeric 0/1
+(the conditional-logit estimator strata on the matched pair).
 }
 \examples{
 data(example_cohort)

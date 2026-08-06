@@ -39,7 +39,10 @@ via \code{fit_outcome()} (default all five: \code{"regression"}, \code{"matching
 \code{"stratification"}, \code{"iptw"}, \code{"aipw"}). \code{"matching"} is propensity-score
 matching with conditional-logit (binary) / within-pair (continuous)
 estimation; because matching draws on the data, results are reproducible
-only when a fixed seed is set before the call.}
+only when a fixed seed is set before the call. \code{"iptw"} is a marginal
+structural model (outcome regressed on the exposure only, weighted by
+stabilized inverse probability weights) and \code{"aipw"} is a doubly-robust
+augmented estimator.}
 
 \item{seed}{Integer passed to \code{set.seed()} at the top of the pipeline. A
 fixed seed makes the whole run — including the step-2 matching and the
