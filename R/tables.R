@@ -18,7 +18,11 @@
 table_unmatched <- function(data, exposure, covariates) {
   if (!is.data.frame(data)) stop("`data` must be a data.frame.")
 
-  vars <- intersect(covariates, names(data))
+  missing_covs <- setdiff(covariates, names(data))
+  if (length(missing_covs) > 0) {
+    stop(paste("Covariates not found:", paste(missing_covs, collapse = ", ")))
+  }
+  vars <- covariates
   if (length(vars) == 0) stop("No valid covariates found in data.")
 
   tbl <- gtsummary::tbl_summary(

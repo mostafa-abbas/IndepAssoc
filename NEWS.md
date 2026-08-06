@@ -1,5 +1,12 @@
 # IndepAssoc (development)
 
+* `table_unmatched()` and `table_matched()` now validate `covariates` against
+  the data, stopping with `Covariates not found: <name>` when given an
+  unknown covariate name — the same behavior and message format as
+  `build_ps_model()` and `fit_outcome()`. Previously they silently dropped
+  bogus names via `intersect()`, quietly changing which covariates were
+  summarized. **Behavior change**: a typo'd covariate name now errors instead
+  of being silently ignored in these two functions.
 * `fit_outcome(..., method = "iptw")` is now a plain marginal structural
   model: the outcome model regresses on the exposure only (`outcome ~
   exposure`), weighted by the existing stabilized inverse probability of

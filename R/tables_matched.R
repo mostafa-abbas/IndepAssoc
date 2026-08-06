@@ -21,7 +21,11 @@ table_matched <- function(match_obj, covariates) {
 
   data <- match_obj$data
   exposure <- match_obj$ps_model$exposure
-  vars <- intersect(covariates, names(data))
+  missing_covs <- setdiff(covariates, names(data))
+  if (length(missing_covs) > 0) {
+    stop(paste("Covariates not found:", paste(missing_covs, collapse = ", ")))
+  }
+  vars <- covariates
 
   if (length(vars) == 0) stop("No valid covariates found in matched data.")
   if (!"strata" %in% names(data)) {
