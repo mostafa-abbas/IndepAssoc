@@ -70,3 +70,65 @@ match_cohort <- function(ps_model, method = "nearest", caliper = 0.2,
     class = "IndepMatch"
   )
 }
+
+#' Summarize Balance Before and After Propensity Score Matching
+#'
+#' Fits a propensity score model with `MatchIt::matchit()` and returns the
+#' standardized balance summary tables for the full (unmatched) and matched
+#' samples, mirroring the structure produced by the standalone PSM analysis
+#' scripts (`match_summ$all`, `match_summ$matched`).
+#'
+#' @param data Data frame containing the cohort.
+#' @param exposure Character; binary exposure variable name.
+#' @param covariates Character vector of covariate names.
+#' @param caliper Caliper width passed to `MatchIt::matchit()`. Default `0.20`.
+#' @param ... Additional arguments passed to `MatchIt::matchit()`
+#'   (e.g. `method`, `ratio`, `replace`).
+#'
+#' @return A list with:
+#'   \describe{
+#'     \item{match_summ}{List with `all` and `matched` data frames from
+#'       `summary(matchit(...), standardize = TRUE)`; covariate names are the
+#'       row names and each table carries a `Std. Mean Diff.` column.}
+#'     \item{Data_all}{The input data frame unchanged.}
+#'     \item{Data_matched}{The matched subset with a `match_num` column.}
+#'   }
+#'
+#' @examples
+#' data(example_cohort)
+#' res <- find_matching_data_summary(
+#'   example_cohort,
+#'   "exposure",
+#'   c("age", "diabetes", "hypertension", "bmi")
+#' )
+#' head(res$match_summ$all)
+#'
+#' @export
+find_matching_data_summary <- function(data, exposure, covariates,
+                                       caliper = 0.20, ...) {
+  formula <- stats::as.formula(
+    paste(exposure, "~", paste(covariates, collapse = " + "))
+  )
+  m <- MatchIt::matchit(formula, data = data, caliper = caliper, ...)
+  s <- base::summary(m, standardize = TRUE)
+
+  match_summ_all <- as.data.frame(s$sum.all)
+  match_summ_matched <- as.data.frame(s$sum.matched)
+
+  b <- as.data.frame(m$match.matrix)
+  colnames(b) <- "matched_unit"
+  b$matched_unit <- as.character(b$matched_unit)
+  b$treated_unit <- rownames(b)
+  c <- b[!is.na(b$matched_unit), ]
+  c$match_num <- seq_len(nrow(c))
+  data$match_num <- NA
+  data[as.character(c$matched_unit), "match_num"] <- c$match_num
+  data[as.character(c$treated_unit), "match_num"] <- c$match_num
+  m_data <- data[!is.na(data$match_num), ]
+
+  list(
+    match_summ = list(all = match_summ_all, matched = match_summ_matched),
+    Data_all = data,
+    Data_matched = m_data
+  )
+}
