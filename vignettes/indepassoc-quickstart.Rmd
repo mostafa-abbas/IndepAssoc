@@ -106,11 +106,21 @@ cat("All balanced:", balance$all_balanced, "\n")
 
 ### Love Plot
 
-The Love plot visualizes absolute standardized mean differences (ASMD) for each
-covariate before and after matching:
+`run_pipeline()` returns the ASMD chart as part of its result. The
+`balance_plot` element visualizes absolute standardized mean differences (ASMD)
+for each covariate before and after matching:
 
 ```{r love-plot, fig.width=8, fig.height=5}
-plot_love(matched, threshold = 0.10)
+result <- run_pipeline(
+  data = data,
+  exposure = "exposure",
+  covariates = c("age", "diabetes", "hypertension", "bmi"),
+  outcome = "outcome_binary",
+  type = "binary",
+  methods = "regression"
+)
+
+result$balance_plot
 ```
 
 Blue bars represent the unmatched cohort and orange bars represent the matched

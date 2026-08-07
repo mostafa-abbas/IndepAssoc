@@ -50,7 +50,10 @@ step-9 \code{"matching"} method — reproducible from a single value. Default
 \code{NULL} (no seeding).}
 }
 \value{
-A list of class \code{"IndepAssoc"} containing all pipeline results.
+A list of class \code{"IndepAssoc"} containing all pipeline results,
+including \code{balance_plot} — the \code{ggplot} chart of absolute standardized mean
+differences (ASMD) for unadjusted vs. matched cohorts, produced by
+\code{plot_asmd_balance()} at the \code{balance_threshold} used.
 }
 \description{
 Orchestrates the full pipeline: PS model, matching, balance check,
@@ -61,6 +64,9 @@ Whenever \code{"matching"} is among the requested \code{methods}, a fixed
 \code{seed} is required for reproducible results. Pass the same \code{seed} value to
 \code{run_pipeline()} rather than setting a seed mid-pipeline, so the step-2
 matching and the step-9 \code{"matching"} method both draw on it.
+
+The ASMD balance chart is returned as \code{result$balance_plot} for you to print
+or save; \code{print()} does not render it.
 }
 \examples{
 data(example_cohort)

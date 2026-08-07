@@ -174,3 +174,7 @@ test_that("plot_asmd_balance warns and returns an empty shell when no covariates
   expect_s3_class(p, "ggplot")
   expect_equal(nrow(p$data), 0)
 })
+
+test_that("plot_love is removed; plot_asmd_balance is the single ASMD plot function", {
+  expect_false("plot_love" %in% getNamespaceExports("IndepAssoc"))
+})

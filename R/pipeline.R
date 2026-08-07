@@ -30,7 +30,13 @@
 #'   `run_pipeline()` rather than setting a seed mid-pipeline, so the step-2
 #'   matching and the step-9 `"matching"` method both draw on it.
 #'
-#' @return A list of class `"IndepAssoc"` containing all pipeline results.
+#' The ASMD balance chart is returned as `result$balance_plot` for you to print
+#' or save; `print()` does not render it.
+#'
+#' @return A list of class `"IndepAssoc"` containing all pipeline results,
+#'   including `balance_plot` — the `ggplot` chart of absolute standardized mean
+#'   differences (ASMD) for unadjusted vs. matched cohorts, produced by
+#'   `plot_asmd_balance()` at the `balance_threshold` used.
 #'
 #' @examples
 #' data(example_cohort)
@@ -83,6 +89,10 @@ run_pipeline <- function(data, exposure, covariates, outcome,
   message("Step 8/9: Generating balance table...")
   balance_pre <- as.data.frame(balance$pre$Balance)
   balance_post <- as.data.frame(balance$post$Balance)
+  balance_plot <- plot_asmd_balance(
+    list(balance_pre = balance_pre, balance_post = balance_post),
+    threshold = balance_threshold
+  )
 
   message("Step 9/9: Running requested confounding-adjustment methods...")
   all_fits <- fit_outcome(data = data, exposure = exposure, covariates = covariates,
@@ -105,6 +115,7 @@ run_pipeline <- function(data, exposure, covariates, outcome,
       balance = balance,
       balance_pre = balance_pre,
       balance_post = balance_post,
+      balance_plot = balance_plot,
       table_unmatched = tbl_unmatched,
       table_matched = tbl_matched,
       models = all_models,

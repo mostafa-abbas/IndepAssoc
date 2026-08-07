@@ -89,3 +89,61 @@ test_that("run_pipeline applies the seed at the top (RNG state check)", {
     type = "binary", methods = c("regression", "matching"), seed = 42))))
   expect_identical(.Random.seed, expected)
 })
+
+test_that("run_pipeline result includes balance_plot with one bar per covariate and stage", {
+  data(example_cohort)
+  res <- suppressWarnings(suppressMessages(run_pipeline(
+    data = example_cohort,
+    exposure = "exposure",
+    covariates = c("age", "diabetes", "hypertension", "bmi"),
+    outcome = "outcome_binary",
+    type = "binary",
+    methods = "regression",
+    seed = 1
+  )))
+
+  expect_true("balance_plot" %in% names(res))
+  p <- res$balance_plot
+  expect_s3_class(p, "ggplot")
+
+  all_vars <- rownames(res$balance_pre)
+  keep <- !all_vars %in% c("distance", "propensity scores", "(Intercept)") &
+    !is.na(all_vars)
+  pre_asmd <- abs(as.numeric(res$balance_pre[["Diff.Un"]]))
+  post_asmd <- abs(as.numeric(res$balance_post[["Diff.Adj"]]))
+  keep_vars <- all_vars[keep][!(is.na(pre_asmd[keep]) & is.na(post_asmd[keep]))]
+
+  expect_equal(sort(levels(p$data$Variable)), sort(keep_vars))
+  expect_equal(nrow(p$data), 2 * length(keep_vars))
+})
+
+test_that("run_pipeline balance_plot reflects a non-default balance_threshold on rhc_sample", {
+  data(rhc_sample)
+  res <- suppressWarnings(suppressMessages(run_pipeline(
+    data = rhc_sample$data,
+    exposure = "swang1",
+    covariates = rhc_sample$covariates,
+    outcome = "dth30",
+    type = "binary",
+    methods = "regression",
+    balance_threshold = 0.15,
+    seed = 42
+  )))
+
+  p <- res$balance_plot
+  expect_s3_class(p, "ggplot")
+
+  all_vars <- rownames(res$balance_pre)
+  keep <- !all_vars %in% c("distance", "propensity scores", "(Intercept)") &
+    !is.na(all_vars)
+  pre_asmd <- abs(as.numeric(res$balance_pre[["Diff.Un"]]))
+  post_asmd <- abs(as.numeric(res$balance_post[["Diff.Adj"]]))
+  keep_vars <- all_vars[keep][!(is.na(pre_asmd[keep]) & is.na(post_asmd[keep]))]
+
+  expect_equal(sort(levels(p$data$Variable)), sort(keep_vars))
+  expect_equal(nrow(p$data), 2 * length(keep_vars))
+
+  built <- ggplot2::ggplot_build(p)
+  hline_layer <- built$data[[2]]
+  expect_equal(unique(hline_layer$yintercept), 0.15)
+})

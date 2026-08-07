@@ -1,5 +1,14 @@
 # IndepAssoc (development)
 
+* `run_pipeline()` now returns `result$balance_plot`: the grouped-bar ASMD chart
+  (unadjusted vs. matched) produced by `plot_asmd_balance()` at the
+  `balance_threshold` used. The plot is returned, not auto-rendered — print or
+  save it yourself.
+* Removed the exported `plot_love()` (and its man page). `plot_asmd_balance()`,
+  which `run_pipeline()$balance_plot` uses, is now the package's single ASMD
+  comparison plot. **Breaking change** for anyone calling `plot_love()` directly;
+  pass a `run_pipeline()` result (or `find_matching_data_summary()` /
+  `check_balance()` output) to `plot_asmd_balance()` instead.
 * `match_cohort()` now fails fast with a clear message when called with
   `replace = TRUE`: matching with replacement does not return a match-pair
   identifier from `MatchIt::match.data()`, which the paired downstream
