@@ -98,16 +98,19 @@ test_that("plot_asmd_balance plots absolute values", {
 })
 
 test_that("plot_asmd_balance filters non-covariate rows", {
-  all_tab <- data.frame("Std. Mean Diff." = c(0.5, 0.3, 0.1),
-                        row.names = c("distance", "age", "diabetes"),
+  all_tab <- data.frame("Std. Mean Diff." = c(0.5, 0.3, 0.1, 0.4, 0.2),
+                        row.names = c("distance", "age", "diabetes",
+                                      "propensity scores", "(Intercept)"),
                         check.names = FALSE)
-  matched_tab <- data.frame("Std. Mean Diff." = c(0.1, 0.05, 0.02),
-                            row.names = c("distance", "age", "diabetes"),
+  matched_tab <- data.frame("Std. Mean Diff." = c(0.1, 0.05, 0.02, 0.08, 0.03),
+                            row.names = c("distance", "age", "diabetes",
+                                          "propensity scores", "(Intercept)"),
                             check.names = FALSE)
   res <- list(match_summ = list(all = all_tab, matched = matched_tab))
 
   p <- plot_asmd_balance(res)
-  expect_false("distance" %in% levels(p$data$Variable))
+  expect_false(any(c("distance", "propensity scores", "(Intercept)") %in%
+                     levels(p$data$Variable)))
   expect_true(all(c("age", "diabetes") %in% levels(p$data$Variable)))
 })
 
@@ -122,6 +125,20 @@ test_that("plot_asmd_balance preserves unmatched variable order", {
 
   p <- plot_asmd_balance(res)
   expect_equal(levels(p$data$Variable), c("age", "bmi"))
+})
+
+test_that("plot_asmd_balance drops covariates with NA in both cohorts but keeps NA-in-one", {
+  all_tab <- data.frame("Std. Mean Diff." = c(0.2, NA, NA),
+                        row.names = c("age", "bmi", "wasted_var"),
+                        check.names = FALSE)
+  matched_tab <- data.frame("Std. Mean Diff." = c(0.01, 0.05, NA),
+                            row.names = c("age", "bmi", "wasted_var"),
+                            check.names = FALSE)
+  res <- list(match_summ = list(all = all_tab, matched = matched_tab))
+
+  p <- plot_asmd_balance(res)
+  expect_false("wasted_var" %in% levels(p$data$Variable))
+  expect_true(all(c("age", "bmi") %in% levels(p$data$Variable)))
 })
 
 test_that("plot_asmd_balance uses the manuscript colors and threshold line", {
