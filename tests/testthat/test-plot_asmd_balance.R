@@ -47,9 +47,9 @@ test_that(".asmd_tables falls back to the first numeric column", {
 
 test_that("plot_asmd_balance returns a ggplot from find_matching_data_summary output", {
   d <- simulate_test_cohort()
-  res <- find_matching_data_summary(
+  res <- suppressWarnings(find_matching_data_summary(
     d, "exposure", c("age", "diabetes", "hypertension")
-  )
+  ))
   p <- plot_asmd_balance(res)
   expect_s3_class(p, "ggplot")
   expect_equal(levels(p$data$Cohort), c("Unadjusted", "Matched"))
@@ -126,9 +126,9 @@ test_that("plot_asmd_balance preserves unmatched variable order", {
 
 test_that("plot_asmd_balance uses the manuscript colors and threshold line", {
   d <- simulate_test_cohort()
-  res <- find_matching_data_summary(
+  res <- suppressWarnings(find_matching_data_summary(
     d, "exposure", c("age", "diabetes", "hypertension")
-  )
+  ))
   p <- plot_asmd_balance(res, threshold = 0.10)
 
   fill_scale <- p$scales$get_scales("fill")
