@@ -50,3 +50,21 @@ test_that("match_cohort without a seed leaves RNG state unchanged (current behav
   m2 <- suppressWarnings(match_cohort(ps))
   expect_identical(m1$data$match_num, m2$data$match_num)
 })
+
+test_that("match_cohort(replace = TRUE) fails immediately with a clear message", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+
+  err <- tryCatch(match_cohort(ps, replace = TRUE), error = function(e) e)
+  expect_s3_class(err, "simpleError")
+  expect_match(conditionMessage(err), "does not support replace = TRUE")
+  expect_false(grepl("match_num or strata", conditionMessage(err)))
+})
+
+test_that("match_cohort(replace = FALSE) still matches exactly as before", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- suppressWarnings(match_cohort(ps, replace = FALSE))
+  expect_s3_class(m, "IndepMatch")
+  expect_true(nrow(m$data) > 0)
+})

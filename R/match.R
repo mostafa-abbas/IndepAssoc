@@ -1,10 +1,8 @@
-# Known follow-ups (filed at Phase 3 merge review; not blocking, do not fix silently):
-# 1. `match_cohort(..., replace = TRUE)` errors with "Matched data must contain
-#    'match_num' or 'strata' column.": `MatchIt::match.data()` does not return a
-#    `subclass`/`strata` column for matching with replacement, so
-#    `.ensure_match_num()` fails downstream. File a separate fix if
-#    replacement matching is ever needed (the `replace` parameter is exposed
-#    but currently unusable).
+# `match_cohort()` rejects `replace = TRUE` up front (see the guard inside the
+# function): `MatchIt::match.data()` does not return a match-pair identifier for
+# matching with replacement, which every downstream paired function requires.
+# Use `find_matching_data_summary()` for replacement matching instead — it
+# supports `replace`/`ratio > 1` on its own terms.
 
 #' Match Cohort Using Propensity Scores
 #'
@@ -14,11 +12,19 @@
 #' @param method Matching method passed to `MatchIt::matchit()`. Default `"nearest"`.
 #' @param caliper Caliper width in SD of logit(PS). Default `0.2`.
 #' @param ratio Number of control matches per treated unit. Default `1`.
-#' @param replace Whether to match with replacement. Default `FALSE`.
+#' @param replace Whether to match with replacement. Only `FALSE` is supported;
+#'   `TRUE` errors immediately (see Details). Default `FALSE`.
 #' @param distance PS distance metric. Default `"logit"`.
 #' @param seed Integer passed to `set.seed()` before matching; required for
 #'   reproducible matching when tie-breaking or MatchIt internals consume
 #'   randomness. Default `NULL` (no seeding).
+#'
+#' @details
+#' `replace = TRUE` is not supported: matching with replacement produces no
+#' match-pair identifier from `MatchIt::match.data()`, which the paired
+#' downstream functions (balance tables, paired tests, and the conditional-logit
+#' matching estimator) all require. Pass `replace = FALSE` (the default), or use
+#' `find_matching_data_summary()` when replacement matching is needed.
 #'
 #' @return A list of class `"IndepMatch"` with elements:
 #'   \describe{
@@ -39,6 +45,18 @@ match_cohort <- function(ps_model, method = "nearest", caliper = 0.2,
                          ratio = 1, replace = FALSE, distance = "logit",
                          seed = NULL) {
   if (!inherits(ps_model, "IndepPSModel")) stop("`ps_model` must be an IndepPSModel object.")
+
+  if (isTRUE(replace)) {
+    stop(
+      "match_cohort() does not support replace = TRUE: ",
+      "MatchIt::match.data() does not return a match-pair identifier for ",
+      "matching with replacement, which every downstream paired function ",
+      "(balance tables, paired tests, conditional-logit matching estimator) ",
+      "requires. Use find_matching_data_summary() if you need matching with ",
+      "replacement, or file a request to extend match_cohort() to support it ",
+      "end-to-end."
+    )
+  }
 
   data <- ps_model$data
   exposure <- ps_model$exposure

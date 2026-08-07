@@ -1,5 +1,13 @@
 # IndepAssoc (development)
 
+* `match_cohort()` now fails fast with a clear message when called with
+  `replace = TRUE`: matching with replacement does not return a match-pair
+  identifier from `MatchIt::match.data()`, which the paired downstream
+  functions (balance tables, paired tests, conditional-logit matching
+  estimator) all require. Previously this surfaced later as the confusing
+  `Matched data must contain 'match_num' or 'strata' column.` error. Use
+  `find_matching_data_summary()` when replacement matching is needed. **Behavior
+  change** for calls passing `replace = TRUE`.
 * New `find_matching_data_summary()`: fits a propensity score model with
   `MatchIt::matchit()` and returns the standardized balance summary tables
   (`match_summ$all`/`match_summ$matched`, with a `Std. Mean Diff.` column)

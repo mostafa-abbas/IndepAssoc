@@ -23,7 +23,8 @@ match_cohort(
 
 \item{ratio}{Number of control matches per treated unit. Default \code{1}.}
 
-\item{replace}{Whether to match with replacement. Default \code{FALSE}.}
+\item{replace}{Whether to match with replacement. Only \code{FALSE} is supported;
+\code{TRUE} errors immediately (see Details). Default \code{FALSE}.}
 
 \item{distance}{PS distance metric. Default \code{"logit"}.}
 
@@ -41,6 +42,13 @@ A list of class \code{"IndepMatch"} with elements:
 }
 \description{
 Performs propensity score matching via \code{MatchIt}.
+}
+\details{
+\code{replace = TRUE} is not supported: matching with replacement produces no
+match-pair identifier from \code{MatchIt::match.data()}, which the paired
+downstream functions (balance tables, paired tests, and the conditional-logit
+matching estimator) all require. Pass \code{replace = FALSE} (the default), or use
+\code{find_matching_data_summary()} when replacement matching is needed.
 }
 \examples{
 data(example_cohort)
