@@ -16,7 +16,8 @@ find_matching_data_summary(data, exposure, covariates, caliper = 0.2, ...)
 \item{caliper}{Caliper width passed to \code{MatchIt::matchit()}. Default \code{0.20}.}
 
 \item{...}{Additional arguments passed to \code{MatchIt::matchit()}
-(e.g. \code{method}, \code{ratio}, \code{replace}).}
+(e.g. \code{method}, \code{ratio}, \code{replace}). \code{ratio > 1} (multiple control units
+per treated unit) is supported.}
 }
 \value{
 A list with:
@@ -24,7 +25,8 @@ A list with:
 \item{match_summ}{List with \code{all} and \code{matched} data frames from
 \code{summary(matchit(...), standardize = TRUE)}; covariate names are the
 row names and each table carries a \verb{Std. Mean Diff.} column.}
-\item{Data_all}{The input data frame unchanged.}
+\item{Data_all}{The input data frame with a \code{match_num} column added
+(all \code{NA} for units outside the matched sample).}
 \item{Data_matched}{The matched subset with a \code{match_num} column.}
 }
 }
@@ -33,6 +35,12 @@ Fits a propensity score model with \code{MatchIt::matchit()} and returns the
 standardized balance summary tables for the full (unmatched) and matched
 samples, mirroring the structure produced by the standalone PSM analysis
 scripts (\code{match_summ$all}, \code{match_summ$matched}).
+}
+\details{
+For \code{ratio > 1}, every treated/control pair from the match matrix is retained
+in \code{Data_matched}, with a unique \code{match_num} per pair. A known limitation
+applies when \code{replace = TRUE}: a control unit reused across multiple pairs
+can only carry a single \code{match_num}, and the last pair that matched it wins.
 }
 \examples{
 data(example_cohort)

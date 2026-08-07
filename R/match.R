@@ -83,14 +83,22 @@ match_cohort <- function(ps_model, method = "nearest", caliper = 0.2,
 #' @param covariates Character vector of covariate names.
 #' @param caliper Caliper width passed to `MatchIt::matchit()`. Default `0.20`.
 #' @param ... Additional arguments passed to `MatchIt::matchit()`
-#'   (e.g. `method`, `ratio`, `replace`).
+#'   (e.g. `method`, `ratio`, `replace`). `ratio > 1` (multiple control units
+#'   per treated unit) is supported.
+#'
+#' @details
+#' For `ratio > 1`, every treated/control pair from the match matrix is retained
+#' in `Data_matched`, with a unique `match_num` per pair. A known limitation
+#' applies when `replace = TRUE`: a control unit reused across multiple pairs
+#' can only carry a single `match_num`, and the last pair that matched it wins.
 #'
 #' @return A list with:
 #'   \describe{
 #'     \item{match_summ}{List with `all` and `matched` data frames from
 #'       `summary(matchit(...), standardize = TRUE)`; covariate names are the
 #'       row names and each table carries a `Std. Mean Diff.` column.}
-#'     \item{Data_all}{The input data frame unchanged.}
+#'     \item{Data_all}{The input data frame with a `match_num` column added
+#'       (all `NA` for units outside the matched sample).}
 #'     \item{Data_matched}{The matched subset with a `match_num` column.}
 #'   }
 #'
@@ -116,10 +124,18 @@ find_matching_data_summary <- function(data, exposure, covariates,
   match_summ_matched <- as.data.frame(s$sum.matched)
 
   b <- as.data.frame(m$match.matrix)
-  colnames(b) <- "matched_unit"
-  b$matched_unit <- as.character(b$matched_unit)
+  slot_cols <- names(b)
   b$treated_unit <- rownames(b)
-  c <- b[!is.na(b$matched_unit), ]
+  long <- stats::reshape(
+    b, direction = "long",
+    varying = slot_cols,
+    v.names = "matched_unit",
+    timevar = "slot",
+    idvar = "treated_unit"
+  )
+  long$matched_unit <- as.character(long$matched_unit)
+  long$treated_unit <- as.character(long$treated_unit)
+  c <- long[!is.na(long$matched_unit), ]
   c$match_num <- seq_len(nrow(c))
   data$match_num <- NA
   data[as.character(c$matched_unit), "match_num"] <- c$match_num
