@@ -1,5 +1,18 @@
 # IndepAssoc (development)
 
+* New `find_matching_data_summary()`: fits a propensity score model with
+  `MatchIt::matchit()` and returns the standardized balance summary tables
+  (`match_summ$all`/`match_summ$matched`, with a `Std. Mean Diff.` column)
+  plus the matched sample — the same structure produced by the standalone
+  PSM analysis scripts.
+* New `plot_asmd_balance()`: publication-ready grouped bar chart of the
+  absolute standardized mean difference (ASMD) for each covariate before and
+  after matching. Accepts output from `find_matching_data_summary()`,
+  `run_pipeline()`, or `check_balance()`. Colors are `#005A9C`
+  (Unadjusted) / `#E66101` (Matched) with a dashed balance-threshold line;
+  unrecognized inputs error with `Invalid matching result object provided.`,
+  and an all-filtered covariate set degrades to a warning plus an empty plot
+  shell.
 * `model_summ()` (used by `fit_outcome()` and `fit_all_models()`) now selects
   the treatment's coefficient rows by exact name match, or — for a factor
   exposure — by the factor levels recovered from the model frame
