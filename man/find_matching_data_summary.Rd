@@ -37,10 +37,13 @@ samples, mirroring the structure produced by the standalone PSM analysis
 scripts (\code{match_summ$all}, \code{match_summ$matched}).
 }
 \details{
-For \code{ratio > 1}, every treated/control pair from the match matrix is retained
-in \code{Data_matched}, with a unique \code{match_num} per pair. A known limitation
-applies when \code{replace = TRUE}: a control unit reused across multiple pairs
-can only carry a single \code{match_num}, and the last pair that matched it wins.
+For \code{ratio > 1}, \code{Data_matched} retains one row per treated/control pair:
+each treated unit appears once for every one of its matched controls, and
+every row carries the \code{match_num} of its pair. \code{Data_all} keeps one row per
+unit, so a treated unit matched to several controls carries the \code{match_num}
+of its first pair there. When \code{replace = TRUE}, a control unit reused across
+multiple pairs appears once per reuse in \code{Data_matched}, but can carry only
+a single \code{match_num} in \code{Data_all} (the first pair that matched it wins).
 }
 \examples{
 data(example_cohort)

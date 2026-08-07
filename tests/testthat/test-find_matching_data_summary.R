@@ -41,3 +41,16 @@ test_that("find_matching_data_summary supports ratio > 1", {
     d, "exposure", c("age", "diabetes", "hypertension"), ratio = 2))
   expect_true(nrow(res2$Data_matched) > nrow(res1$Data_matched))
 })
+
+test_that("find_matching_data_summary emits complete pairs for ratio > 1", {
+  d <- simulate_test_cohort()
+  set.seed(42)
+  res <- suppressWarnings(find_matching_data_summary(
+    d, "exposure", c("age", "diabetes", "hypertension"), ratio = 2))
+
+  pair_counts <- table(res$Data_matched$match_num)
+  expect_true(all(pair_counts == 2))
+  expect_equal(sum(pair_counts), nrow(res$Data_matched))
+  expect_equal(length(unique(res$Data_all$match_num[!is.na(res$Data_all$match_num)])),
+               length(unique(res$Data_matched$match_num)))
+})

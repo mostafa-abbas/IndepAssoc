@@ -87,10 +87,13 @@ match_cohort <- function(ps_model, method = "nearest", caliper = 0.2,
 #'   per treated unit) is supported.
 #'
 #' @details
-#' For `ratio > 1`, every treated/control pair from the match matrix is retained
-#' in `Data_matched`, with a unique `match_num` per pair. A known limitation
-#' applies when `replace = TRUE`: a control unit reused across multiple pairs
-#' can only carry a single `match_num`, and the last pair that matched it wins.
+#' For `ratio > 1`, `Data_matched` retains one row per treated/control pair:
+#' each treated unit appears once for every one of its matched controls, and
+#' every row carries the `match_num` of its pair. `Data_all` keeps one row per
+#' unit, so a treated unit matched to several controls carries the `match_num`
+#' of its first pair there. When `replace = TRUE`, a control unit reused across
+#' multiple pairs appears once per reuse in `Data_matched`, but can carry only
+#' a single `match_num` in `Data_all` (the first pair that matched it wins).
 #'
 #' @return A list with:
 #'   \describe{
@@ -135,12 +138,23 @@ find_matching_data_summary <- function(data, exposure, covariates,
   )
   long$matched_unit <- as.character(long$matched_unit)
   long$treated_unit <- as.character(long$treated_unit)
-  c <- long[!is.na(long$matched_unit), ]
-  c$match_num <- seq_len(nrow(c))
+  pairs <- long[!is.na(long$matched_unit),
+                c("treated_unit", "matched_unit"), drop = FALSE]
+  pairs$match_num <- seq_len(nrow(pairs))
+
+  treated_rows <- data[pairs$treated_unit, , drop = FALSE]
+  treated_rows$match_num <- pairs$match_num
+  control_rows <- data[pairs$matched_unit, , drop = FALSE]
+  control_rows$match_num <- pairs$match_num
+  m_data <- rbind(treated_rows, control_rows)
+  m_data <- m_data[order(m_data$match_num), ]
+  rownames(m_data) <- NULL
+
   data$match_num <- NA
-  data[as.character(c$matched_unit), "match_num"] <- c$match_num
-  data[as.character(c$treated_unit), "match_num"] <- c$match_num
-  m_data <- data[!is.na(data$match_num), ]
+  treated_first <- pairs[!duplicated(pairs$treated_unit), ]
+  control_first <- pairs[!duplicated(pairs$matched_unit), ]
+  data[treated_first$treated_unit, "match_num"] <- treated_first$match_num
+  data[control_first$matched_unit, "match_num"] <- control_first$match_num
 
   list(
     match_summ = list(all = match_summ_all, matched = match_summ_matched),
