@@ -80,7 +80,7 @@
 #' @export
 plot_asmd_balance <- function(matching_res,
                               threshold = 0.10,
-                              title = "Comparisons of the absolute standardized mean difference (ASMD) for all confounders in the unmatched and matched cohorts.") {
+                              title = "Absolute Standardized Mean Difference (ASMD) Before and After Matching") {
   tables <- .asmd_tables(matching_res)
 
   df_long <- rbind(
