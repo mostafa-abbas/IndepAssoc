@@ -1,5 +1,13 @@
 # IndepAssoc (development)
 
+* Documentation pass on the package `README.md`. Fixed a Markdown fence
+  mismatch that caused explanatory comment lines to render as a large heading
+  on GitHub; added a `Background` section citing the two published studies
+  whose analysis pipeline this package generalizes (Heliyon, 2025; *Journal of
+  Cardiothoracic Surgery*, 2024); and added a `Validation` section stating the
+  current unit-test count (399) and `R CMD check` status (0 errors, 0 notes).
+  No API or behavior changes; documentation only.
+
 * `plot_asmd_balance()` gains an opt-in `top_n` parameter (default `NULL`, so
   existing callers are unchanged). When `top_n` is set, the chart shows only the
   `top_n` covariates with the largest **unadjusted (pre-matching)** ASMD — still

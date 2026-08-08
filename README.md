@@ -11,6 +11,28 @@ estimates with minimal code.
 This package reports confounder-adjusted associations under the standard
 no-unmeasured-confounding assumption; it does not establish causal effects.
 
+## Background
+
+IndepAssoc is the packaged form of the analysis pipeline used in two published
+retrospective cohort studies from the same author group: *[Female sex is
+associated with short-term mortality in coronary artery bypass grafting
+patients: A propensity-matched analysis](https://doi.org/10.1016/j.heliyon.2025.e41723)*
+(Heliyon, 2025) and *[Atrial appendage closure is associated with increased risk
+for postoperative atrial fibrillation](https://doi.org/10.1186/s13019-024-03119-6)*
+(Journal of Cardiothoracic Surgery, 2024). Both studies used the same
+propensity-score workflow — a logistic propensity-score model, 1:1
+nearest-neighbor matching, ASMD balance checks, paired descriptive tests, and
+conditional outcome models — which this package generalizes into a reusable
+interface with five confounding-adjustment methods.
+
+## Validation
+
+The package has 399 passing unit tests and passes `R CMD check` with 0 errors
+and 0 notes. The methods are validated against the bundled `example_cohort`
+(a simulated cohort with a known treatment effect) and `rhc_sample`, the real
+Right Heart Catheterization cohort from the SUPPORT study (5,735 patients,
+50 confounders) used in the `rhc-validation` vignette.
+
 ## Installation
 
 Install from source in an R session with the package source checked out:
@@ -54,10 +76,12 @@ res <- run_pipeline(
 )
 res$comparison
 ```
-# The comparison table shows all five methods' estimates. Here `matching` is
-# propensity-score matching with conditional-logit/paired estimation (conditional
-# logistic regression stratified by matched pair for binary outcomes, a within-pair
-# fixed-effects linear model for continuous outcomes).
+
+The comparison table shows all five methods' estimates. Here `matching` is
+propensity-score matching with conditional-logit/paired estimation (conditional
+logistic regression stratified by matched pair for binary outcomes, a within-pair
+fixed-effects linear model for continuous outcomes).
+
 ```
           method              label       type estimate  conf_low conf_high
 1     regression outcome_continuous continuous 1.537680 0.5942670  2.481092
