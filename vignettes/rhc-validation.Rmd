@@ -227,6 +227,20 @@ than asserting which covariates end up on which side of that line, treat the
 chart above as the answer: it reflects this specific run, not a general
 claim.
 
+### Truncated view: the 25 most-imbalanced covariates
+
+The full chart above is dense by construction: the 50 covariates include
+several multi-level categorical variables (`cat1`, `cat2`, `ninsclas`,
+`income`, `race`), which expand to roughly 76 bars and leave the x-axis
+labels hard to read. `plot_asmd_balance()` offers an opt-in `top_n` argument
+that shows only the covariates with the largest unadjusted (pre-matching)
+ASMD — which is what the chart exists to communicate — and labels the chart
+with exactly how many of the total it is showing:
+
+```{r balance-plot-top-n}
+plot_asmd_balance(results_list$dth30, top_n = 25)
+```
+
 ## Results by outcome
 
 ```{r results-loop, results = "asis"}
