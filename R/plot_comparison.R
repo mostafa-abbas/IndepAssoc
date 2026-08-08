@@ -6,7 +6,9 @@
 #'   reference line at 1 (binary outcomes, estimates are ORs). `FALSE` plots
 #'   on the linear scale with a reference line at 0.
 #'
-#' @return A `ggplot` object (invisible).
+#' @return A `ggplot` object, returned visibly (it does not print itself).
+#'   Calling it bare at the console or in an R Markdown chunk renders the plot
+#'   once.
 #' @export
 #' @examples
 #' data(example_cohort)
@@ -41,6 +43,5 @@ plot_comparison <- function(comparison, log_scale = TRUE) {
     ggplot2::coord_flip() +
     ggplot2::labs(x = NULL, y = NULL, title = "Association Estimate by Method") +
     ggplot2::theme_minimal(base_size = 12)
-  print(p)
-  invisible(p)
+  p
 }

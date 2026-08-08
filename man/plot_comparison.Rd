@@ -15,7 +15,9 @@ reference line at 1 (binary outcomes, estimates are ORs). \code{FALSE} plots
 on the linear scale with a reference line at 0.}
 }
 \value{
-A \code{ggplot} object (invisible).
+A \code{ggplot} object, returned visibly (it does not print itself).
+Calling it bare at the console or in an R Markdown chunk renders the plot
+once.
 }
 \description{
 Forest Plot of Method Comparison Results

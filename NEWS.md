@@ -1,3 +1,15 @@
+# IndepAssoc (development)
+
+* `plot_comparison()` no longer prints the plot itself: the internal `print(p)`
+  side effect was removed and the `ggplot` is now returned visibly, so a bare
+  call in an R Markdown chunk (or at the console) renders exactly one plot
+  instead of two. Previously, the documented usage pattern — the caller wrapping
+  the call in an explicit `print()` — combined with the function's internal
+  `print(p)` to render two copies of every forest plot in the vignettes. **Not a
+  breaking change**: no capability was removed and the returned object is
+  unchanged; this is a bug fix that removes the duplicate render (and the
+  function no longer draws to the active graphics device as a side effect).
+
 # IndepAssoc 0.4.0 (2026-08-07)
 
 ## Breaking changes
