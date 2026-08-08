@@ -1,8 +1,8 @@
 ---
-title: "Validating the Methods on the RHC Benchmark Data"
+title: "Validating the Methods on the RHC Benchmark Cohort"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Validating the Methods on the RHC Benchmark Data}
+  %\VignetteIndexEntry{Validating the Methods on the RHC Benchmark Cohort}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -21,118 +21,307 @@ library(IndepAssoc)
 
 ## Introduction
 
-The simulated examples in the package vignette prove the pipeline runs; this
-vignette validates the five confounding-adjustment methods on a real,
-well-known observational dataset. The RHC (Right Heart Catheterization) study
-collected data on 5735 critically ill adults enrolled in the SUPPORT trial;
-Connors et al. (1996, *JAMA*) found that right heart catheterization was
-associated with increased mortality and increased use of resources.
+This vignette validates the package's five confounding-adjustment methods on a
+real, well-known observational dataset: the Right Heart Catheterization (RHC)
+cohort from the SUPPORT study. Connors et al. (1996, *JAMA*) enrolled 5,735
+critically ill adults across five U.S. teaching hospitals (1989-1994) and
+found that right heart catheterization — a diagnostic procedure, not a
+treatment in itself — was associated with *increased* mortality and *greater*
+resource use, contradicting the clinical assumption at the time that it was
+beneficial. Because the direction of that finding is well established and has
+been reproduced by dozens of independent reanalyses since, RHC is one of the
+standard benchmark datasets in the causal-inference literature, and it gives
+this package a real cohort to validate against, not just simulated data.
 
-Our comparison against that literature is strictly directional: RHC is
-associated with harm in the literature, and we check whether all five methods
-agree in direction. It is not an exact-value match to any published point
-estimate.
+We analyze three outcomes: 30-day mortality (`dth30`), longer-term mortality
+by 180 days (`death`), and hospital length of stay in days (`los`). We check
+whether all five adjustment methods — two that model the outcome directly
+(regression, matching) and three that model the propensity of receiving RHC
+(stratification, IPTW, AIPW) — agree on the *direction* of the association.
+Agreement across five methods that make different, largely independent
+assumptions is evidence the finding isn't an artifact of any single model's
+specification. It is not, by itself, proof of a causal effect — see the
+Caveat section at the end.
 
-The binary exposure is `swang1` (1 = RHC). We analyze two outcomes with the
-package's five methods — outcome regression, matching, stratification, IPTW,
-and AIPW: `dth30`, the true 30-day mortality (binary), and `los`, the length of
-stay in days (continuous).
+### The five methods
+
+- **Regression** — a single covariate-adjusted regression (logistic for
+  binary outcomes, linear for continuous) fit on the full, unmatched cohort.
+  Uses every patient, but its validity rests entirely on the outcome model
+  being correctly specified; no propensity score is involved.
+- **Matching** — 1:1 nearest-neighbor propensity-score matching (caliper 0.2
+  SD of logit-PS), followed by conditional logistic regression (binary
+  outcomes) or a pair-stratified linear model (continuous outcomes) on just
+  the matched subset.
+- **Stratification** — splits the cohort into propensity-score strata and
+  pools the within-stratum associations into one overall estimate. Keeps the
+  full sample and controls confounding by comparing only patients with
+  similar propensity scores.
+- **IPTW** — weights each patient by the inverse of their estimated
+  probability of receiving the exposure they actually received, then fits an
+  exposure-only weighted regression. As of `IndepAssoc` 0.4.0 this is a plain
+  marginal structural model — the weights alone carry the adjustment, there
+  is no additional covariate adjustment layered on top.
+- **AIPW** — combines a propensity-score model and an outcome regression
+  model via the augmented-IPW formula. It is "doubly robust": the estimate
+  stays consistent if *either* model is correctly specified, not necessarily
+  both, making it more resilient to model misspecification than regression
+  or IPTW used alone.
 
 ## Data preparation
 
-```{r preprocessing}
+```{r load-data}
 data(rhc_sample)
 rhc <- rhc_sample$data
 covariates <- rhc_sample$covariates
+exposure <- "swang1"
+
 nrow(rhc)
 length(covariates)
-table(rhc$swang1)
-sum(stats::complete.cases(rhc[, covariates]))
+table(RHC = rhc[[exposure]])
 ```
 
-The dataset ships with the package as `rhc_sample`, the cleaned cohort produced
-by `prepare_rhc_data()`: n = 5735 rows and a 50-column covariate vector. The
-exposure counts are 2184 RHC patients and 3551 controls, and complete-case
-analysis on the 50-covariate set retains the full 5735 rows: `adld3p` and
-`urin1` are excluded from the covariate set because their missingness would
-collapse the sample. The raw file stores the `cat2` category "None" as the
-literal text `"NA"`; the helper recodes that to `"None"` before converting the
-remaining literal `"NA"` strings to real missing values. The covariate vector
-includes the primary and secondary disease categories (`cat1`, `cat2`) and
-cancer status (`ca`) — standard confounders in the RHC literature — and
-excludes `surv2md1` (a SUPPORT-model survival probability derived from the
-other covariates, not a raw confounder).
+The cohort ships with the package as `rhc_sample`, already cleaned by
+`prepare_rhc_data()`: the exposure `swang1` is coded 0/1 (1 = received RHC
+within 24 hours of ICU admission), and the covariate vector holds 50 baseline
+characteristics — demographics, primary/secondary disease category,
+comorbidities, and physiologic measurements — chosen because they retain the
+full sample under complete-case analysis. (Two variables from the raw file,
+`adld3p` and `urin1`, are excluded: both are missing in more than half the
+cohort, and including either would collapse the usable sample from 5,735
+patients to a few hundred.)
 
-Note the distinction between the two binary outcomes in the raw data: `death`
-is a longer-term all-cause outcome, whereas `dth30` is the true 30-day
-mortality. This vignette reports `dth30`.
+### Outcomes
 
-## Binary outcome: 30-day mortality (dth30)
-
-```{r binary-pipeline}
-# We set a fixed random seed (1) before running the pipeline so the matching
-# step is reproducible; see `?run_pipeline`.
-set.seed(1)
-res30 <- run_pipeline(rhc, "swang1", covariates, "dth30",
-                      type = "binary")
-res30$comparison
+```{r outcomes-def}
+outcomes <- data.frame(
+  name  = c("dth30", "death", "los"),
+  label = c("30-day mortality", "180-day mortality",
+            "Hospital length of stay (days)"),
+  type  = c("binary", "binary", "continuous"),
+  stringsAsFactors = FALSE
+)
 ```
 
-Here `estimate` is the adjusted odds ratio for 30-day mortality associated with
-RHC. All five methods — outcome regression, matching, stratification, IPTW, and
-AIPW — find RHC associated with *increased* 30-day mortality, with odds ratios
-from about 1.3 to 1.5 and confidence intervals that exclude 1. The convergence
-across five functionally different adjustment strategies (those that model the
-outcome directly and those that model treatment assignment) is directionally
-consistent with Connors et al. (1996) and the later RHC reanalysis literature:
-the harm direction is reproduced by every method. The comparison table is the
-primary evidence for or against this independent association.
+`dth30` and `death` are not the same outcome, and the difference matters:
+`dth30` is mortality within a fixed 30-day window; `death` captures mortality
+over the study's longer, 180-day follow-up, so every patient with `dth30 = 1`
+also has `death = 1`, but not the reverse. Reporting both, rather than
+treating them as interchangeable, is deliberate — it lets us see whether an
+early-mortality signal persists over a longer horizon.
 
-This comparison is directional and qualitative — RHC is associated with harm —
-not an exact match to any specific published point estimate.
+A binary 0/1 outcome doesn't have a meaningful median or quartiles, so
+summarizing it with `summary()` (as you would for a continuous variable)
+produces numbers that are technically correct but not clinically
+interpretable — it reports what looks like a five-number summary of "0.35 of
+a death." The block below reports what actually matters for a binary
+outcome — the event count and proportion — and reserves `summary()` for the
+one genuinely continuous outcome, `los`. It also reports how much missing
+data each outcome has, since that determines each outcome's analytic sample
+size later in this vignette, rather than assuming it up front.
 
-```{r binary-forest}
-plot_comparison(res30$comparison, log_scale = TRUE)
+```{r outcome-summaries}
+for (i in seq_len(nrow(outcomes))) {
+  nm <- outcomes$name[i]
+  cat("\n", outcomes$label[i], " (`", nm, "`):\n", sep = "")
+
+  if (outcomes$type[i] == "binary") {
+    tab <- table(rhc[[nm]], useNA = "ifany")
+    print(tab)
+    cat("Event proportion:",
+        round(mean(rhc[[nm]] == 1, na.rm = TRUE), 3), "\n")
+  } else {
+    print(summary(rhc[[nm]]))
+  }
+
+  cat("Missing:", sum(is.na(rhc[[nm]])), "of", nrow(rhc), "\n")
+}
 ```
 
-## Continuous outcome: length of stay (los)
+## Running the pipeline
 
-```{r continuous-pipeline}
-# `los` (discharge date minus admission date) has one missing value; drop it
-# before running the pipeline so the complete-case sample is n = 5734.
-rhc_cc <- rhc[!is.na(rhc$los), ]
-nrow(rhc_cc)
+Each outcome is analyzed on its own complete-case sample — patients with
+non-missing values for the exposure, all 50 covariates, and that specific
+outcome. In practice `dth30` and `death` are fully observed on this cohort
+(confirmed by the "Missing: 0" lines above), so their complete-case samples
+are identical to the full 5,735-patient cohort; `los` has a small number of
+patients missing a discharge or admission date, so its analytic sample is
+marginally smaller. Filtering explicitly, rather than letting each internal
+model silently drop missing rows on its own, makes the exact analytic sample
+size for each outcome visible up front.
 
-# We set a fixed random seed (1) before running the pipeline so the matching
-# step is reproducible; see `?run_pipeline`.
-set.seed(1)
-reslos <- run_pipeline(rhc_cc, "swang1", covariates, "los",
-                       type = "continuous")
-reslos$comparison
+We pass `seed = 1` directly to `run_pipeline()` for every outcome, rather
+than calling `set.seed()` once before the loop. `run_pipeline()`'s `seed`
+argument resets the random state at the very start of each call, so — because
+matching depends only on the exposure and covariates, never on the outcome
+being analyzed — `dth30` and `death` end up drawing the *same* matched cohort
+(they share an identical complete-case sample), while `los`'s matched cohort
+can differ very slightly, since it starts from a marginally different set of
+patients.
+
+```{r run-pipeline}
+methods <- c("regression", "matching", "stratification", "iptw", "aipw")
+
+run_one_outcome <- function(name, type) {
+  analytic_sample <- rhc[stats::complete.cases(rhc[, c(exposure, covariates, name)]), ]
+  run_pipeline(
+    data       = analytic_sample,
+    exposure   = exposure,
+    covariates = covariates,
+    outcome    = name,
+    type       = type,
+    methods    = methods,
+    seed       = 1
+  )
+}
+
+results_list <- setNames(
+  lapply(seq_len(nrow(outcomes)),
+         function(i) run_one_outcome(outcomes$name[i], outcomes$type[i])),
+  outcomes$name
+)
 ```
 
-Here `estimate` is the adjusted mean difference in length of stay (days)
-associated with RHC. All five methods find RHC associated with a longer stay,
-roughly +2.5 to +3 days, with confidence intervals that exclude 0. The outcome
-`los` is derived as discharge date minus admission date and has a single
-missing value; dropping that row leaves the complete-case sample of n = 5734
-used here. As with the mortality analysis, this association is directional only
-— it is not an exact match to any published point estimate.
+### A note on the formatting helpers below
 
-```{r continuous-forest}
-plot_comparison(reslos$comparison, log_scale = FALSE)
+`format_comparison()` and `format_combined()` are not part of `IndepAssoc` —
+the package exposes the underlying data (`result$comparison`, a plain data
+frame) and leaves table formatting to the user. The two small helpers below
+are local to this vignette, not exported functions; they exist purely to
+render tidy tables and are intentionally kept simple.
+
+```{r format-helpers}
+format_comparison_table <- function(comparison, estimate_label) {
+  out <- data.frame(
+    Method   = tools::toTitleCase(comparison$method),
+    Estimate = round(comparison$estimate, 2),
+    `95% CI` = paste0(round(comparison$conf_low, 2), "\u2013",
+                       round(comparison$conf_high, 2)),
+    `p-value` = ifelse(comparison$p_value < 0.001, "<0.001",
+                        sprintf("%.3f", comparison$p_value)),
+    n = comparison$n,
+    check.names = FALSE
+  )
+  names(out)[names(out) == "Estimate"] <- estimate_label
+  out
+}
 ```
+
+## Balance check before and after matching
+
+Matching depends only on the exposure and the 50 covariates, so the same
+balance chart applies to every outcome that shares this cohort's exposure and
+covariate set; we show it once, from the `dth30` run.
+
+```{r balance-plot}
+results_list$dth30$balance_plot
+```
+
+The dashed line marks the 0.10 absolute-standardized-mean-difference (ASMD)
+threshold conventionally used to define adequate covariate balance. Most
+covariates in this cohort start well above that line before matching — the
+RHC literature has repeatedly documented substantial baseline imbalance
+between patients who did and didn't receive RHC — and matching should bring
+most, though not necessarily every, covariate under the threshold. Rather
+than asserting which covariates end up on which side of that line, treat the
+chart above as the answer: it reflects this specific run, not a general
+claim.
+
+## Results by outcome
+
+```{r results-loop, results = "asis"}
+for (i in seq_len(nrow(outcomes))) {
+  nm    <- outcomes$name[i]
+  type  <- outcomes$type[i]
+  label <- if (type == "binary") "OR" else "Mean Diff"
+
+  cat("\n\n###", outcomes$label[i], "\n\n")
+
+  print(knitr::kable(
+    format_comparison_table(results_list[[nm]]$comparison, label),
+    align = "lrrrr"
+  ))
+  cat("\n\n")
+
+  print(plot_comparison(results_list[[nm]]$comparison,
+                         log_scale = (type == "binary")))
+  cat("\n\n")
+}
+```
+
+`dth30` and `death` report an odds ratio; `los` reports a mean difference in
+days. `IndepAssoc`'s own validated testing of this exact cohort (the
+package's original single-outcome RHC analysis) found all five methods
+agreeing that RHC is associated with *increased* 30-day mortality — odds
+ratios roughly in the 1.3-1.5 range, confidence intervals excluding 1 — and
+with a *longer* hospital stay, roughly 2.5-3 additional days, confidence
+intervals excluding 0. The `dth30` and `los` tables above should reproduce
+that same pattern; if they don't, that's worth investigating rather than
+dismissing, since it would mean something about the analytic sample or
+package version differs from what was previously validated.
+
+For `death`, there is no prior validated result to compare against in this
+vignette — read the table above on its own terms. Given that every `dth30 =
+1` patient is also `death = 1`, a similar direction of association would not
+be surprising, but the 180-day window gives more time for events unrelated to
+the index RHC decision to occur, so the magnitude need not match the 30-day
+analysis exactly. The table is the answer; this paragraph is only a guide to
+reading it, not a substitute for it.
+
+## Combined comparison across outcomes
+
+```{r combined-table}
+combined_comparison <- do.call(rbind, lapply(seq_len(nrow(outcomes)), function(i) {
+  nm <- outcomes$name[i]
+  cbind(Outcome = outcomes$label[i],
+        format_comparison_table(results_list[[nm]]$comparison, "Estimate"))
+}))
+
+knitr::kable(combined_comparison, align = "llrrrr", row.names = FALSE)
+```
+
+The two binary outcomes report an odds ratio and the continuous outcome
+reports a mean difference in days — read the "Estimate" column together with
+the "Outcome" column, not as one directly comparable number across all
+fifteen rows.
+
+## A note on matching sample size
+
+The `matching` row's `n` in every table above is far smaller than the other
+four methods' — this is expected, not an error. Only 2,184 of the 5,735
+patients received RHC, so 1:1 matching can never retain more than roughly
+twice that many patients even under a perfect match rate; the other four
+methods use the full analytic sample because they either weight or model the
+outcome directly rather than discarding unmatched patients. A smaller,
+matching-based sample generally means wider confidence intervals for that row
+relative to the others — worth keeping in mind before treating any one row's
+significance (or lack of it) as more authoritative than another's.
+
+## Exporting results
+
+```{r export, eval = FALSE}
+for (i in seq_len(nrow(outcomes))) {
+  nm <- outcomes$name[i]
+  export_results(results_list[[nm]], output_dir = paste0("IndepAssoc_RHC_", nm))
+}
+write.csv(combined_comparison, "IndepAssoc_RHC_all_outcomes_comparison.csv",
+          row.names = FALSE)
+```
+
+(Not run automatically when this vignette builds, to avoid writing files
+outside the package's own directories during `R CMD check`.)
 
 ## Caveat
 
-This is a confounder-adjusted association under the standard
-no-unmeasured-confounding assumption, not a proven causal effect.
+This is a confounder-adjusted *association* under the standard
+no-unmeasured-confounding assumption — not a proven causal effect. Even five
+methods agreeing in direction cannot rule out an unmeasured confounder that
+happens to affect all five estimators the same way.
 
 ## References
 
-- Connors, A.F., Speroff, T., Dawson, N.V., et al. (1996). The Effectiveness of
-  Right Heart Catheterization in the Initial Care of Critically Ill Patients.
-  *JAMA*, 276(11), pp.889-897.
+- Connors, A.F., Speroff, T., Dawson, N.V., et al. (1996). The Effectiveness
+  of Right Heart Catheterization in the Initial Care of Critically Ill
+  Patients. *JAMA*, 276(11), 889-897.
 - The RHC data ship with the package as `rhc_sample`; they originate from the
-  `Hmisc` package's `rhc` dataset and are mirrored at
-  https://hbiostat.org/data/repo/rhc.csv.
+  SUPPORT study and are mirrored at https://hbiostat.org/data/repo/rhc.csv.
