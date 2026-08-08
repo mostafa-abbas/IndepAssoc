@@ -1,4 +1,54 @@
-# IndepAssoc (development)
+# IndepAssoc 0.4.0 (2026-08-07)
+
+## Breaking changes
+
+* Removed the exported `plot_love()`. The package now has a single ASMD
+  comparison chart: `plot_asmd_balance()`, which `run_pipeline()` also returns
+  as `result$balance_plot`. Callers of `plot_love()` should switch to
+  `plot_asmd_balance()` with a `run_pipeline()`, `find_matching_data_summary()`,
+  or `check_balance()` result.
+* `fit_outcome(..., method = "iptw")` is now a plain marginal structural model:
+  the outcome is regressed on the exposure only, weighted by the existing
+  stabilized inverse-probability weights. It no longer also adjusts for the full
+  covariate set on top of weighting (which duplicated `aipw`), so `iptw`
+  estimates change for all existing users.
+* `match_cohort(..., replace = TRUE)` now fails immediately at the call site
+  with a clear message instead of failing downstream with the confusing
+  `Matched data must contain 'match_num' or 'strata' column.` error. Use
+  `find_matching_data_summary()` when replacement matching is needed.
+
+## Bug fixes
+
+* `paired_wilcoxon_test()` and `mcnemar_test()` handle missing outcomes and
+  many:1 (`ratio > 1`) matching correctly. The paired Wilcoxon test no longer
+  crashes on `NA` outcomes and now averages the multiple controls within each
+  stratum so every matched row contributes; `mcnemar_test()` uses the
+  Cochran-Mantel-Haenszel test over per-stratum 2x2 tables (identical to
+  McNemar for 1:1 matching) instead of returning a silent `NA`. Previously extra
+  control rows were silently discarded and missing outcomes could be
+  misclassified.
+* `subgroup_analysis()` no longer returns silent all-`NA` results: the subgroup
+  variable (constant within each subgroup) is dropped from each subgroup's
+  covariate set, so every adjustment method fits real estimates.
+* `table_unmatched()`/`table_matched()` stop with `Covariates not found: <name>`
+  instead of silently dropping unknown covariate names via `intersect()`.
+* `model_summ()` selects the treatment's coefficient row by exact name match
+  (or factor-level pattern) instead of fragile substring matching that could
+  steal a prefix-colliding covariate's row.
+* Declared `utils` in `DESCRIPTION` Imports (hygiene fix; no behavior change).
+
+## New features
+
+* `run_pipeline()` now returns `result$balance_plot`: a publication-ready
+  grouped bar chart of absolute standardized mean differences (unadjusted vs.
+  matched) drawn at the `balance_threshold` used. The plot is returned, not
+  auto-rendered — print or save it yourself.
+* New `find_matching_data_summary()` (standalone PSM-style balance summary
+  tables plus the matched sample) and new `plot_asmd_balance()` (the chart
+  above, accepting output from `run_pipeline()`, `find_matching_data_summary()`,
+  or `check_balance()`).
+
+## Detailed changes
 
 * `run_pipeline()` now returns `result$balance_plot`: the grouped-bar ASMD chart
   (unadjusted vs. matched) produced by `plot_asmd_balance()` at the
