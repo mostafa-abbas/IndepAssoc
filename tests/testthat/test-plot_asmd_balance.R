@@ -178,3 +178,110 @@ test_that("plot_asmd_balance warns and returns an empty shell when no covariates
 test_that("plot_love is removed; plot_asmd_balance is the single ASMD plot function", {
   expect_false("plot_love" %in% getNamespaceExports("IndepAssoc"))
 })
+
+test_that("plot_asmd_balance top_n keeps the top_n covariates ranked by unadjusted ASMD", {
+  # unadjusted ranking selects var_a/var_b; matched ranking would select var_c/var_d,
+  # so this discriminates between ranking on the two columns
+  all_tab <- data.frame("Std. Mean Diff." = c(0.9, 0.8, 0.7, 0.1),
+                        row.names = c("var_a", "var_b", "var_c", "var_d"),
+                        check.names = FALSE)
+  matched_tab <- data.frame("Std. Mean Diff." = c(0.05, 0.05, 0.5, 0.4),
+                            row.names = c("var_a", "var_b", "var_c", "var_d"),
+                            check.names = FALSE)
+  res <- list(match_summ = list(all = all_tab, matched = matched_tab))
+
+  p <- plot_asmd_balance(res, top_n = 2)
+  expect_equal(levels(p$data$Variable), c("var_a", "var_b"))
+  expect_equal(nrow(p$data), 4)
+  expect_equal(sort(as.character(unique(p$data$Cohort))), c("Matched", "Unadjusted"))
+  expect_equal(p$labels$caption,
+               "Showing 2 of 4 covariates with the largest unadjusted ASMD")
+})
+
+test_that("plot_asmd_balance top_n ignores non-covariate rows when ranking", {
+  # distance has the largest unadjusted ASMD but must be excluded from the
+  # ranking and from the reported total
+  all_tab <- data.frame("Std. Mean Diff." = c(0.9, 0.8, 0.7, 0.1, 0.99),
+                        row.names = c("var_a", "var_b", "var_c", "var_d", "distance"),
+                        check.names = FALSE)
+  matched_tab <- data.frame("Std. Mean Diff." = c(0.05, 0.05, 0.5, 0.4, 0.1),
+                            row.names = c("var_a", "var_b", "var_c", "var_d", "distance"),
+                            check.names = FALSE)
+  res <- list(match_summ = list(all = all_tab, matched = matched_tab))
+
+  p <- plot_asmd_balance(res, top_n = 2)
+  expect_equal(levels(p$data$Variable), c("var_a", "var_b"))
+  expect_equal(p$labels$caption,
+               "Showing 2 of 4 covariates with the largest unadjusted ASMD")
+})
+
+test_that("plot_asmd_balance without top_n shows the full set and no caption", {
+  all_tab <- data.frame("Std. Mean Diff." = c(0.3, 0.1, 0.2),
+                        row.names = c("age", "bmi", "diabetes"),
+                        check.names = FALSE)
+  matched_tab <- data.frame("Std. Mean Diff." = c(0.02, 0.05, 0.01),
+                            row.names = c("age", "bmi", "diabetes"),
+                            check.names = FALSE)
+  res <- list(match_summ = list(all = all_tab, matched = matched_tab))
+
+  p <- plot_asmd_balance(res)
+  expect_equal(levels(p$data$Variable), c("age", "bmi", "diabetes"))
+  expect_equal(nrow(p$data), 6)
+  expect_null(p$labels$caption)
+})
+
+test_that("plot_asmd_balance top_n larger than the covariate count shows all and no caption", {
+  all_tab <- data.frame("Std. Mean Diff." = c(0.3, 0.1),
+                        row.names = c("age", "bmi"),
+                        check.names = FALSE)
+  matched_tab <- data.frame("Std. Mean Diff." = c(0.02, 0.05),
+                            row.names = c("age", "bmi"),
+                            check.names = FALSE)
+  res <- list(match_summ = list(all = all_tab, matched = matched_tab))
+
+  p <- plot_asmd_balance(res, top_n = 10)
+  expect_equal(levels(p$data$Variable), c("age", "bmi"))
+  expect_null(p$labels$caption)
+})
+
+test_that("plot_asmd_balance rejects invalid top_n", {
+  all_tab <- data.frame("Std. Mean Diff." = c(0.3, 0.1),
+                        row.names = c("age", "bmi"),
+                        check.names = FALSE)
+  matched_tab <- data.frame("Std. Mean Diff." = c(0.02, 0.05),
+                            row.names = c("age", "bmi"),
+                            check.names = FALSE)
+  res <- list(match_summ = list(all = all_tab, matched = matched_tab))
+
+  expect_error(plot_asmd_balance(res, top_n = 0), "top_n")
+  expect_error(plot_asmd_balance(res, top_n = -1), "top_n")
+  expect_error(plot_asmd_balance(res, top_n = NA), "top_n")
+})
+
+test_that("plot_asmd_balance top_n on the real RHC balance data keeps the top-25 by unadjusted ASMD", {
+  data(rhc_sample)
+  res <- suppressWarnings(suppressMessages(run_pipeline(
+    data = rhc_sample$data,
+    exposure = "swang1",
+    covariates = rhc_sample$covariates,
+    outcome = "dth30",
+    type = "binary",
+    methods = "regression",
+    seed = 42
+  )))
+
+  full <- plot_asmd_balance(res)
+  n_total <- length(levels(full$data$Variable))
+
+  p <- plot_asmd_balance(res, top_n = 25)
+  expect_equal(length(levels(p$data$Variable)), 25)
+  expect_match(
+    p$labels$caption,
+    sprintf("Showing 25 of %d covariates with the largest unadjusted ASMD", n_total)
+  )
+
+  unadj <- full$data[full$data$Cohort == "Unadjusted", c("Variable", "ASMD")]
+  unadj <- unadj[order(-unadj$ASMD), ]
+  expect_equal(sort(levels(p$data$Variable)),
+               sort(as.character(unadj$Variable[1:25])))
+})

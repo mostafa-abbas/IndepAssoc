@@ -7,7 +7,8 @@
 plot_asmd_balance(
   matching_res,
   threshold = 0.1,
-  title = "Absolute Standardized Mean Difference (ASMD) Before and After Matching"
+  title = "Absolute Standardized Mean Difference (ASMD) Before and After Matching",
+  top_n = NULL
 )
 }
 \arguments{
@@ -18,6 +19,13 @@ plot_asmd_balance(
 \item{threshold}{Numeric; balance threshold line (default \code{0.10}).}
 
 \item{title}{Character string for the plot title.}
+
+\item{top_n}{Integer; optional. When set, show only the \code{top_n} covariates
+(or levels of multi-level categorical covariates) with the largest
+unadjusted (pre-matching) ASMD, still showing both the unadjusted and
+matched bars for each. A caption stating how many of the total are shown
+is added. Default \code{NULL}: show every covariate — current behavior,
+unchanged.}
 }
 \value{
 A \code{ggplot} object.
@@ -34,5 +42,6 @@ res <- find_matching_data_summary(
   c("age", "diabetes", "hypertension", "bmi")
 )
 plot_asmd_balance(res)
+plot_asmd_balance(res, top_n = 10)
 
 }

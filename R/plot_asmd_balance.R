@@ -65,6 +65,12 @@
 #'   `IndepBalance` object from `check_balance()`.
 #' @param threshold Numeric; balance threshold line (default `0.10`).
 #' @param title Character string for the plot title.
+#' @param top_n Integer; optional. When set, show only the `top_n` covariates
+#'   (or levels of multi-level categorical covariates) with the largest
+#'   unadjusted (pre-matching) ASMD, still showing both the unadjusted and
+#'   matched bars for each. A caption stating how many of the total are shown
+#'   is added. Default `NULL`: show every covariate — current behavior,
+#'   unchanged.
 #'
 #' @return A `ggplot` object.
 #'
@@ -76,11 +82,20 @@
 #'   c("age", "diabetes", "hypertension", "bmi")
 #' )
 #' plot_asmd_balance(res)
+#' plot_asmd_balance(res, top_n = 10)
 #'
 #' @export
 plot_asmd_balance <- function(matching_res,
                               threshold = 0.10,
-                              title = "Absolute Standardized Mean Difference (ASMD) Before and After Matching") {
+                              title = "Absolute Standardized Mean Difference (ASMD) Before and After Matching",
+                              top_n = NULL) {
+  if (!is.null(top_n)) {
+    if (!is.numeric(top_n) || length(top_n) != 1 || is.na(top_n) || top_n < 1) {
+      stop("`top_n` must be NULL or a single positive number.")
+    }
+    top_n <- as.integer(top_n)
+  }
+
   tables <- .asmd_tables(matching_res)
 
   df_long <- rbind(
@@ -111,6 +126,26 @@ plot_asmd_balance <- function(matching_res,
   df_long$Variable <- factor(df_long$Variable, levels = var_order)
   df_long$Cohort <- factor(df_long$Cohort, levels = c("Unadjusted", "Matched"))
 
+  caption <- NULL
+  if (!is.null(top_n) && nrow(df_long) > 0 && top_n < length(var_order)) {
+    n_total <- length(var_order)
+    unadj_asmd <- stats::setNames(
+      df_long$ASMD[df_long$Cohort == "Unadjusted"],
+      df_long$Variable[df_long$Cohort == "Unadjusted"]
+    )
+    keep <- names(sort(unadj_asmd, decreasing = TRUE))[seq_len(top_n)]
+    df_long <- df_long[df_long$Variable %in% keep, , drop = FALSE]
+    df_long$Variable <- factor(df_long$Variable,
+                               levels = var_order[var_order %in% keep])
+    caption <- sprintf(
+      "Showing %d of %d covariates with the largest unadjusted ASMD",
+      top_n, n_total
+    )
+  }
+
+  labs_args <- list(x = NULL, y = "ASMD", title = title)
+  if (!is.null(caption)) labs_args$caption <- caption
+
   ggplot2::ggplot(df_long, ggplot2::aes(x = .data$Variable, y = .data$ASMD, fill = .data$Cohort)) +
     ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.8), width = 0.7) +
     ggplot2::geom_hline(yintercept = threshold, linetype = "dashed", color = "black", linewidth = 0.6) +
@@ -119,11 +154,7 @@ plot_asmd_balance <- function(matching_res,
       limits = c(0, max(df_long$ASMD, threshold + 0.10, na.rm = TRUE) * 1.05),
       expand = c(0, 0)
     ) +
-    ggplot2::labs(
-      x = NULL,
-      y = "ASMD",
-      title = title
-    ) +
+    do.call(ggplot2::labs, labs_args) +
     ggplot2::theme_classic(base_size = 11) +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1, color = "black"),

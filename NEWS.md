@@ -1,5 +1,17 @@
 # IndepAssoc (development)
 
+* `plot_asmd_balance()` gains an opt-in `top_n` parameter (default `NULL`, so
+  existing callers are unchanged). When `top_n` is set, the chart shows only the
+  `top_n` covariates with the largest **unadjusted (pre-matching)** ASMD — still
+  with both the unadjusted and matched bars side by side — and adds a caption
+  stating exactly how many of the total are shown, e.g. `"Showing 25 of 76
+  covariates with the largest unadjusted ASMD"` (computed from the actual
+  counts). This is a strictly additive, backward-compatible feature: without
+  `top_n` the output is byte-for-byte identical to before, and no capability was
+  removed. It targets cohorts with many multi-level categorical covariates
+  (e.g. the 76 levels of `rhc_sample`'s 50 covariates), where the full chart's
+  x-axis labels become illegible.
+
 * `plot_comparison()` no longer prints the plot itself: the internal `print(p)`
   side effect was removed and the `ggplot` is now returned visibly, so a bare
   call in an R Markdown chunk (or at the console) renders exactly one plot
