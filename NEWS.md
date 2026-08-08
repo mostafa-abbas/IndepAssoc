@@ -1,5 +1,18 @@
 # IndepAssoc (development)
 
+* New exported `format_comparison()` and `format_combined()`: display-layer
+  helpers that turn a raw `$comparison` data frame into a publication-ready
+  table. `format_comparison()` rounds `estimate`, `conf_low`, and `conf_high`
+  to `digits` (default 2), renders the CI as a single `"low\u2013high"` en-dash
+  string, formats `p_value` to `p_digits` decimals with values below the
+  threshold shown as `"<0.001"` (the threshold generalizes with `p_digits`),
+  labels the estimate column `OR` (binary) or `Mean Diff` (continuous) from the
+  `type` column, and capitalizes method names for display (`iptw` → `IPTW`,
+  `aipw` → `AIPW`). `format_combined()` handles a multi-outcome table with an
+  `Outcome` column, reusing `format_comparison()` internally. Both functions
+  format for display only: `export_results()`'s CSV output retains full numeric
+  precision and is unaffected by this phase, now guaranteed by a test.
+
 * Documentation pass on the package `README.md`. Fixed a Markdown fence
   mismatch that caused explanatory comment lines to render as a large heading
   on GitHub; added a `Background` section citing the two published studies
