@@ -70,7 +70,7 @@ result_death <- run_pipeline(
   type = "binary",
   methods = c("regression", "matching", "stratification", "iptw", "aipw")
 )
-result_death$comparison
+format_comparison(result_death$comparison)
 ```
 
 All five methods — outcome regression, matching, stratification, IPTW, and
@@ -107,7 +107,7 @@ result_wt <- run_pipeline(
   type = "continuous",
   methods = c("regression", "matching", "stratification", "iptw", "aipw")
 )
-result_wt$comparison
+format_comparison(result_wt$comparison)
 ```
 
 Here `estimate` is the adjusted mean weight change in kilograms associated with
@@ -160,7 +160,7 @@ result <- run_pipeline(
   type = "continuous",
   methods = c("matching", "iptw")
 )
-result$comparison
+format_comparison(result$comparison)
 ```
 
 Both estimates are the adjusted mean difference in 1978 earnings (dollars)

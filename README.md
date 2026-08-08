@@ -1,5 +1,7 @@
 # IndepAssoc
 
+[![R-CMD-check](https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml)
+
 Confounder-adjusted independent association testing via propensity-score methods.
 
 IndepAssoc generalizes a propensity-score-based analysis pipeline for retrospective
@@ -27,7 +29,7 @@ interface with five confounding-adjustment methods.
 
 ## Validation
 
-The package has 399 passing unit tests and passes `R CMD check` with 0 errors
+The package has 424 passing unit tests and passes `R CMD check` with 0 errors
 and 0 notes. The methods are validated against the bundled `example_cohort`
 (a simulated cohort with a known treatment effect) and `rhc_sample`, the real
 Right Heart Catheterization cohort from the SUPPORT study (5,735 patients,
@@ -74,27 +76,22 @@ res <- run_pipeline(
   type = "continuous",
   methods = c("regression", "matching", "stratification", "iptw", "aipw")
 )
-res$comparison
+format_comparison(res$comparison)
 ```
 
-The comparison table shows all five methods' estimates. Here `matching` is
-propensity-score matching with conditional-logit/paired estimation (conditional
-logistic regression stratified by matched pair for binary outcomes, a within-pair
-fixed-effects linear model for continuous outcomes).
+`format_comparison()` rounds the raw `$comparison` data frame into the
+publication-ready table below. Here `matching` is propensity-score matching
+with conditional-logit/paired estimation (conditional logistic regression
+stratified by matched pair for binary outcomes, a within-pair fixed-effects
+linear model for continuous outcomes).
 
 ```
-          method              label       type estimate  conf_low conf_high
-1     regression outcome_continuous continuous 1.537680 0.5942670  2.481092
-2       matching outcome_continuous continuous 2.146948 0.9511478  3.342748
-3 stratification outcome_continuous continuous 1.581406 0.4542341  2.708577
-4           iptw outcome_continuous continuous 1.483272 0.5107104  2.455833
-5           aipw outcome_continuous continuous 1.484582 0.5090073  2.460157
-       p_value   n
-1 0.0014506971 500
-2 0.0005131617 324
-3 0.0059631379 500
-4 0.0028681300 500
-5 0.0029297046 500
+          Method Mean Diff     95% CI p-value   n
+1     Regression      1.54  0.59–2.48   0.001 500
+2       Matching      2.15  0.95–3.34  <0.001 324
+3 Stratification      1.58  0.45–2.71   0.006 500
+4           IPTW      1.38 -0.05–2.81   0.059 500
+5           AIPW      1.48  0.51–2.46   0.003 500
 ```
 
 ## Reproducibility

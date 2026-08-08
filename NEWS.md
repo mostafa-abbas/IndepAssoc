@@ -1,5 +1,14 @@
 # IndepAssoc (development)
 
+* All three vignettes now format their comparison tables with the exported
+  `format_comparison()`/`format_combined()` functions instead of vignette-local
+  helpers (the duplicate helper in the `rhc-validation` vignette is deleted).
+  The combined multi-outcome table in `rhc-validation` is now built from the
+  raw, full-precision comparison data — `format_combined()` is used for display
+  only, and the exported CSV keeps full numeric precision. The README's worked
+  example now demonstrates `format_comparison()` and carries an R-CMD-check
+  status badge linking to the GitHub Actions workflow.
+
 * New exported `format_comparison()` and `format_combined()`: display-layer
   helpers that turn a raw `$comparison` data frame into a publication-ready
   table. `format_comparison()` rounds `estimate`, `conf_low`, and `conf_high`

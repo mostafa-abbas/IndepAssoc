@@ -194,7 +194,8 @@ matching with conditional-logit (binary) / within-pair (continuous) estimation),
 inverse-variance pooling for continuous), `iptw` (stabilized inverse-probability
 weights with robust `sandwich` (`vcovHC`) standard errors), and `aipw` (Bang & Robins
 augmented estimator). `run_pipeline(..., methods = ...)` runs them all and
-returns a single comparison table:
+returns a single comparison table; `format_comparison()` renders it as a
+publication-ready table:
 
 ```{r pipeline-comparison}
 result <- run_pipeline(
@@ -206,7 +207,7 @@ result <- run_pipeline(
   methods = c("regression", "matching", "stratification", "iptw", "aipw")
 )
 
-result$comparison
+format_comparison(result$comparison)
 ```
 
 All methods recover a positive association between treatment and the binary

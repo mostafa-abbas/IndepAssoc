@@ -182,31 +182,6 @@ results_list <- setNames(
 )
 ```
 
-### A note on the formatting helpers below
-
-`format_comparison()` and `format_combined()` are not part of `IndepAssoc` —
-the package exposes the underlying data (`result$comparison`, a plain data
-frame) and leaves table formatting to the user. The two small helpers below
-are local to this vignette, not exported functions; they exist purely to
-render tidy tables and are intentionally kept simple.
-
-```{r format-helpers}
-format_comparison_table <- function(comparison, estimate_label) {
-  out <- data.frame(
-    Method   = tools::toTitleCase(comparison$method),
-    Estimate = round(comparison$estimate, 2),
-    `95% CI` = paste0(round(comparison$conf_low, 2), "\u2013",
-                       round(comparison$conf_high, 2)),
-    `p-value` = ifelse(comparison$p_value < 0.001, "<0.001",
-                        sprintf("%.3f", comparison$p_value)),
-    n = comparison$n,
-    check.names = FALSE
-  )
-  names(out)[names(out) == "Estimate"] <- estimate_label
-  out
-}
-```
-
 ## Balance check before and after matching
 
 Matching depends only on the exposure and the 50 covariates, so the same
@@ -245,14 +220,13 @@ plot_asmd_balance(results_list$dth30, top_n = 25)
 
 ```{r results-loop, results = "asis"}
 for (i in seq_len(nrow(outcomes))) {
-  nm    <- outcomes$name[i]
-  type  <- outcomes$type[i]
-  label <- if (type == "binary") "OR" else "Mean Diff"
+  nm   <- outcomes$name[i]
+  type <- outcomes$type[i]
 
   cat("\n\n###", outcomes$label[i], "\n\n")
 
   print(knitr::kable(
-    format_comparison_table(results_list[[nm]]$comparison, label),
+    format_comparison(results_list[[nm]]$comparison),
     align = "lrrrr"
   ))
   cat("\n\n")
@@ -288,10 +262,11 @@ reading it, not a substitute for it.
 combined_comparison <- do.call(rbind, lapply(seq_len(nrow(outcomes)), function(i) {
   nm <- outcomes$name[i]
   cbind(Outcome = outcomes$label[i],
-        format_comparison_table(results_list[[nm]]$comparison, "Estimate"))
+        results_list[[nm]]$comparison)
 }))
 
-knitr::kable(combined_comparison, align = "llrrrr", row.names = FALSE)
+combined_formatted <- format_combined(combined_comparison)
+knitr::kable(combined_formatted, align = "llrrrr", row.names = FALSE)
 ```
 
 The two binary outcomes report an odds ratio and the continuous outcome
