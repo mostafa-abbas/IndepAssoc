@@ -38,9 +38,14 @@ Right Heart Catheterization cohort from the SUPPORT study (5,735 patients,
 
 ## Installation
 
-Install from source in an R session with the package source checked out:
-
+```r
+# install.packages("remotes")
+remotes::install_github("mostafa-abbas/IndepAssoc")
 ```
+
+Alternatively, install from source with the package source checked out:
+
+```r
 install.packages("devtools")
 devtools::install()
 ```
