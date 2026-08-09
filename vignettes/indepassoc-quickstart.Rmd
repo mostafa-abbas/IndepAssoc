@@ -273,7 +273,9 @@ trusting any single estimate.
 mcnemar_result <- mcnemar_test(matched$data, "outcome_binary", "exposure")
 mcnemar_result$p.value <- sprintf("%.3f", mcnemar_result$p.value)
 mcnemar_result$statistic <- round(mcnemar_result$statistic, 2)
+mcnemar_result$p <- sprintf("%.3f", mcnemar_result$p)
 mcnemar_result
+
 ```
 
 ### Paired Wilcoxon Test (Continuous)
