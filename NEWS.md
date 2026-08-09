@@ -1,5 +1,17 @@
 # IndepAssoc (development)
 
+* Final verification pass. The GitHub Actions R-CMD-check workflow now lives at
+  `.github/workflows/R-CMD-check.yaml` inside the package (it previously sat at
+  the repository root with a `working-directory: IndepAssoc` override), so it
+  will land at the repository root when the package is extracted into its own
+  standalone repo; the override is removed accordingly. `.github` is added to
+  `.Rbuildignore` so the hidden directory is kept in version control for CI but
+  excluded from the built package. The relocated workflow was verified against a
+  simulated standalone repo (package at repo root): `R CMD build` +
+  `R CMD check` clean with the workflow's `--no-manual`,
+  `--compact-vignettes=gs+qpdf` build arguments. Full suite green (424 tests)
+  and `R CMD check` clean (0 errors, 0 warnings, 0 notes).
+
 * All three vignettes now format their comparison tables with the exported
   `format_comparison()`/`format_combined()` functions instead of vignette-local
   helpers (the duplicate helper in the `rhc-validation` vignette is deleted).
