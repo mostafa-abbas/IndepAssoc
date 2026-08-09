@@ -189,7 +189,6 @@ no-unmeasured-confounding assumption, not a proven causal effect.
   American Statistical Association*, 94(448), pp.1053-1062.
 - Lalonde, R. (1986). Evaluating the Econometric Evaluations of Training
   Programs with Experimental Data. *American Economic Review*, 76(4), pp.604-620.
-- The NHEFS data are distributed with the `causaldata` package (R. B. Zubizarreta
-  et al.); see `citation("causaldata")`.
+- The NHEFS data are distributed with the `causaldata` package (Nick Huntington-Klein and Malcolm Barrett); see `citation("causaldata")`.
 - The `lalonde` data are distributed with the `MatchIt` package (Ho, Imai, King
   and Stuart); see `citation("MatchIt")`.

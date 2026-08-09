@@ -162,7 +162,10 @@ models_bin <- fit_all_models(
   type = "binary"
 )
 
-models_bin$summary_w
+models_bin_display <- models_bin$summary_w
+models_bin_display$p <- ifelse(models_bin_display$p < 0.001, "<0.001",
+                                sprintf("%.3f", models_bin_display$p))
+models_bin_display
 ```
 
 The three models are:
@@ -181,7 +184,10 @@ models_cont <- fit_all_models(
   type = "continuous"
 )
 
-models_cont$summary_w
+models_cont_display <- models_cont$summary_w
+models_cont_display$p <- ifelse(models_cont_display$p < 0.001, "<0.001",
+                                 sprintf("%.3f", models_cont_display$p))
+models_cont_display
 ```
 
 ### Compare All Confounding-Adjustment Methods
@@ -264,13 +270,18 @@ trusting any single estimate.
 ### McNemar Test (Binary)
 
 ```{r mcnemar}
-mcnemar_test(matched$data, "outcome_binary", "exposure")
+mcnemar_result <- mcnemar_test(matched$data, "outcome_binary", "exposure")
+mcnemar_result$p.value <- sprintf("%.3f", mcnemar_result$p.value)
+mcnemar_result$statistic <- round(mcnemar_result$statistic, 2)
+mcnemar_result
 ```
 
 ### Paired Wilcoxon Test (Continuous)
 
 ```{r wilcoxon}
-paired_wilcoxon_test(matched$data, "outcome_continuous", "exposure")
+wilcox_result <- paired_wilcoxon_test(matched$data, "outcome_continuous", "exposure")
+wilcox_result$p.value <- sprintf("%.3f", wilcox_result$p.value)
+wilcox_result
 ```
 
 ## Full Pipeline
