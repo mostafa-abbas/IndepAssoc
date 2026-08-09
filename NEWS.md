@@ -1,25 +1,19 @@
-# IndepAssoc (development)
+# IndepAssoc 0.5.0 (2026-08-08)
 
-* Final verification pass. The GitHub Actions R-CMD-check workflow now lives at
-  `.github/workflows/R-CMD-check.yaml` inside the package (it previously sat at
-  the repository root with a `working-directory: IndepAssoc` override), so it
-  will land at the repository root when the package is extracted into its own
-  standalone repo; the override is removed accordingly. `.github` is added to
-  `.Rbuildignore` so the hidden directory is kept in version control for CI but
-  excluded from the built package. The relocated workflow was verified against a
-  simulated standalone repo (package at repo root): `R CMD build` +
-  `R CMD check` clean with the workflow's `--no-manual`,
-  `--compact-vignettes=gs+qpdf` build arguments. Full suite green (424 tests)
-  and `R CMD check` clean (0 errors, 0 warnings, 0 notes).
+## Bug fixes
 
-* All three vignettes now format their comparison tables with the exported
-  `format_comparison()`/`format_combined()` functions instead of vignette-local
-  helpers (the duplicate helper in the `rhc-validation` vignette is deleted).
-  The combined multi-outcome table in `rhc-validation` is now built from the
-  raw, full-precision comparison data — `format_combined()` is used for display
-  only, and the exported CSV keeps full numeric precision. The README's worked
-  example now demonstrates `format_comparison()` and carries an R-CMD-check
-  status badge linking to the GitHub Actions workflow.
+* `plot_comparison()` no longer prints the plot itself: the internal `print(p)`
+  side effect was removed and the `ggplot` is now returned visibly, so a bare
+  call in an R Markdown chunk (or at the console) renders exactly one plot
+  instead of two. Previously, the documented usage pattern — the caller wrapping
+  the call in an explicit `print()` — combined with the function's internal
+  `print(p)` to render two copies of every forest plot in the vignettes. Not a
+  breaking change: no capability was removed and the returned object is
+  unchanged (Phase 11).
+* Fixed a Markdown fence mismatch in `README.md` that caused explanatory comment
+  lines to render as a large heading on GitHub (Phase 14).
+
+## New features
 
 * New exported `format_comparison()` and `format_combined()`: display-layer
   helpers that turn a raw `$comparison` data frame into a publication-ready
@@ -32,37 +26,37 @@
   `aipw` → `AIPW`). `format_combined()` handles a multi-outcome table with an
   `Outcome` column, reusing `format_comparison()` internally. Both functions
   format for display only: `export_results()`'s CSV output retains full numeric
-  precision and is unaffected by this phase, now guaranteed by a test.
-
-* Documentation pass on the package `README.md`. Fixed a Markdown fence
-  mismatch that caused explanatory comment lines to render as a large heading
-  on GitHub; added a `Background` section citing the two published studies
-  whose analysis pipeline this package generalizes (Heliyon, 2025; *Journal of
-  Cardiothoracic Surgery*, 2024); and added a `Validation` section stating the
-  current unit-test count (399) and `R CMD check` status (0 errors, 0 notes).
-  No API or behavior changes; documentation only.
-
+  precision, now guaranteed by a test (Phase 15).
 * `plot_asmd_balance()` gains an opt-in `top_n` parameter (default `NULL`, so
   existing callers are unchanged). When `top_n` is set, the chart shows only the
   `top_n` covariates with the largest **unadjusted (pre-matching)** ASMD — still
   with both the unadjusted and matched bars side by side — and adds a caption
   stating exactly how many of the total are shown, e.g. `"Showing 25 of 76
-  covariates with the largest unadjusted ASMD"` (computed from the actual
-  counts). This is a strictly additive, backward-compatible feature: without
-  `top_n` the output is byte-for-byte identical to before, and no capability was
-  removed. It targets cohorts with many multi-level categorical covariates
-  (e.g. the 76 levels of `rhc_sample`'s 50 covariates), where the full chart's
-  x-axis labels become illegible.
+  covariates with the largest unadjusted ASMD"`. Strictly additive and
+  backward-compatible: without `top_n` the output is byte-for-byte identical to
+  before. The `rhc-validation` vignette demonstrates `top_n = 25` on the RHC
+  cohort, where the full chart's x-axis labels (76 covariate levels) become
+  illegible (Phases 12-13).
 
-* `plot_comparison()` no longer prints the plot itself: the internal `print(p)`
-  side effect was removed and the `ggplot` is now returned visibly, so a bare
-  call in an R Markdown chunk (or at the console) renders exactly one plot
-  instead of two. Previously, the documented usage pattern — the caller wrapping
-  the call in an explicit `print()` — combined with the function's internal
-  `print(p)` to render two copies of every forest plot in the vignettes. **Not a
-  breaking change**: no capability was removed and the returned object is
-  unchanged; this is a bug fix that removes the duplicate render (and the
-  function no longer draws to the active graphics device as a side effect).
+## Documentation and CI
+
+* `README.md` gained a `Background` section citing the two published studies
+  whose analysis pipeline this package generalizes (Heliyon, 2025; *Journal of
+  Cardiothoracic Surgery*, 2024) and a `Validation` section stating the current
+  unit-test count (424) and `R CMD check` status (0 errors, 0 warnings, 0
+  notes). The worked example now demonstrates `format_comparison()` (Phase 14).
+* All three vignettes format their comparison tables with the exported
+  `format_comparison()`/`format_combined()` functions instead of vignette-local
+  helpers (the duplicate helper in the `rhc-validation` vignette is deleted).
+  The combined multi-outcome table in `rhc-validation` is built from the raw,
+  full-precision comparison data; the exported CSV keeps full numeric precision
+  (Phase 16).
+* Added a GitHub Actions R-CMD-check workflow (macOS, Windows, and Ubuntu at R
+  devel/release/oldrel-1) and an R-CMD-check status badge at the top of the
+  README. The workflow lives at `.github/workflows/R-CMD-check.yaml` inside the
+  package, so it lands at the repository root when the package is published
+  standalone; `.github` is excluded from the built package via `.Rbuildignore`
+  (Phases 16-17).
 
 # IndepAssoc 0.4.0 (2026-08-07)
 
