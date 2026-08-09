@@ -29,8 +29,9 @@ interface with five confounding-adjustment methods.
 
 ## Validation
 
-The package has 424 passing unit tests and passes `R CMD check` with 0 errors
-and 0 notes. The methods are validated against the bundled `example_cohort`
+The package has 424 passing unit tests and passes `R CMD check` cleanly
+(0 errors, 0 notes; one environmental warning — `qpdf` not installed on the
+test machine — unrelated to package code). The methods are validated against the bundled `example_cohort`
 (a simulated cohort with a known treatment effect) and `rhc_sample`, the real
 Right Heart Catheterization cohort from the SUPPORT study (5,735 patients,
 50 confounders) used in the `rhc-validation` vignette.
