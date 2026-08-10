@@ -438,9 +438,9 @@ print(pos_check)
 
 Two things stand out. First, the treated and control propensity-score
 distributions overlap broadly (roughly 0.019-0.985 treated vs
-0.003-0.955 control), so the cohort is not structurally non-positivious
-— a reader comparing only the two support ranges would conclude overlap
-is fine. Second,
+0.003-0.955 control), so the cohort does not have a structural
+positivity violation — a reader comparing only the two support ranges
+would conclude overlap is fine. Second,
 [`check_positivity()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.md)
 still flags 12 of 5,735 units outside the default \[0.01, 0.99\] support
 window, and the stabilized IPTW weights run from 0.39 to 20.2 — a
