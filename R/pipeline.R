@@ -7,7 +7,10 @@
 #' @param exposure Character string naming the binary exposure variable.
 #' @param covariates Character vector of covariate names.
 #' @param outcome Character string naming the outcome variable.
-#' @param type Outcome type: `"binary"` or `"continuous"`.
+#' @param type Outcome type: `"binary"` or `"continuous"`. When omitted it is
+#'   auto-detected from the outcome variable: a numeric or logical vector whose
+#'   values are all 0/1 is treated as `"binary"`, any other numeric vector as
+#'   `"continuous"`; factor/character outcomes keep the `"binary"` default.
 #' @param caliper Caliper for matching (default `0.2`).
 #' @param ratio Match ratio (default `1`).
 #' @param balance_threshold ASMD threshold (default `0.10`).
@@ -66,6 +69,10 @@ run_pipeline <- function(data, exposure, covariates, outcome,
                          methods = c("regression", "matching", "stratification", "iptw", "aipw"),
                          seed = NULL,
                          estimand = c("ATE", "ATT")) {
+  if (missing(type)) {
+    type <- detect_outcome_type(data[[outcome]])
+    if (is.null(type)) type <- "binary"
+  }
   type <- match.arg(type)
   estimand <- match.arg(estimand)
 

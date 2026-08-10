@@ -26,6 +26,24 @@ NULL
   stop("Matched data must contain 'match_num' or 'strata' column.")
 }
 
+#' Detect whether an outcome vector is binary (0/1 coded) or continuous.
+#'
+#' Numeric and logical vectors whose non-missing values are all 0/1 (or
+#' TRUE/FALSE) are classified as `"binary"`; any other numeric vector is
+#' classified as `"continuous"`. Non-numeric vectors (factor/character) cannot
+#' be auto-detected and return `NULL`, leaving the caller's existing default
+#' (`"binary"`) in force so historical behavior is preserved.
+#' @param y Outcome vector.
+#' @return `"binary"`, `"continuous"`, or `NULL`.
+#' @keywords internal
+#' @noRd
+detect_outcome_type <- function(y) {
+  if (!is.numeric(y) && !is.logical(y)) return(NULL)
+  vals <- unique(y[!is.na(y)])
+  if (length(vals) == 0) return(NULL)
+  if (all(vals %in% c(0, 1))) "binary" else "continuous"
+}
+
 #' Export pipeline results to CSV files
 #'
 #' Saves all pipeline outputs to CSV files in the specified directory.

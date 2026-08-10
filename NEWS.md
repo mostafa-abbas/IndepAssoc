@@ -1,3 +1,24 @@
+# IndepAssoc (unreleased)
+
+## Bug fixes
+
+A bugfix pass hardening the analysis pipeline for continuous outcomes and
+matched Table 1 generation.
+
+- `run_pipeline()` and `fit_all_models()` now auto-detect the outcome type
+  when `type` is omitted. A numeric or logical outcome whose values are all
+  0/1 is treated as `"binary"`; any other numeric outcome is treated as
+  `"continuous"`. Previously a continuous outcome such as `los` crashed with
+  `y values must be 0 <= y <= 1` because it defaulted to a binomial family.
+  An explicit `type` argument is still respected, and binary outcomes
+  (`dth30`, `death`) are unchanged.
+- `table_matched()` now pre-screens categorical covariates before running the
+  paired McNemar test, so a factor whose rare levels collapse to fewer than 2
+  observed levels in one exposure group after matching no longer makes
+  `gtsummary::add_p()` report an error. Such variables still appear in the
+  matched Table 1 (with counts) but are excluded from `add_p()` testing and
+  shown without a p-value instead of halting table generation.
+
 # IndepAssoc 0.6.0
 
 Adds explicit control over which causal estimand the propensity-score methods

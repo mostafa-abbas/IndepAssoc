@@ -128,6 +128,10 @@ model_summ <- function(model, treatment_feature, type = c("binary", "continuous"
 #'
 #' @export
 fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "continuous")) {
+  if (missing(type)) {
+    type <- detect_outcome_type(ps_model$data[[outcome]])
+    if (is.null(type)) type <- "binary"
+  }
   type <- match.arg(type)
   exposure <- ps_model$exposure
   full_data <- ps_model$data

@@ -41,3 +41,11 @@ test_that("covariate validation is consistent across pipeline entry points", {
   }, character(1))
   expect_true(all(grepl("Covariates not found: not_a_real_column", msgs, fixed = TRUE)))
 })
+
+test_that("table_matched pre-screens sparse factors that drop levels after matching", {
+  data(rhc_sample)
+  ps <- build_ps_model(rhc_sample$data, "swang1", rhc_sample$covariates)
+  m <- match_cohort(ps, seed = 1)
+  msgs <- testthat::capture_messages(table_matched(m, rhc_sample$covariates))
+  expect_false(any(grepl("errors were returned during", msgs, ignore.case = TRUE)))
+})
