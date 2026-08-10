@@ -24,6 +24,13 @@
 #'   fixed seed makes the whole run — including the step-2 matching and the
 #'   step-9 `"matching"` method — reproducible from a single value. Default
 #'   `NULL` (no seeding).
+#' @param estimand Causal estimand passed to `fit_outcome()`: `"ATE"` (default;
+#'   current behavior) or `"ATT"`. With `"ATT"`, `"iptw"` and `"aipw"` use
+#'   standardized mortality ratio (SMR) weights and `"stratification"` weights
+#'   each stratum's effect by the number of treated units, so the
+#'   propensity-score methods target the average treatment effect on the
+#'   treated (Austin 2011, doi:10.1080/00273171.2011.568786). `"matching"`
+#'   always targets the ATT by construction and ignores this argument.
 #'
 #' @details Whenever `"matching"` is among the requested `methods`, a fixed
 #'   `seed` is required for reproducible results. Pass the same `seed` value to
@@ -36,7 +43,9 @@
 #' @return A list of class `"IndepAssoc"` containing all pipeline results,
 #'   including `balance_plot` — the `ggplot` chart of absolute standardized mean
 #'   differences (ASMD) for unadjusted vs. matched cohorts, produced by
-#'   `plot_asmd_balance()` at the `balance_threshold` used.
+#'   `plot_asmd_balance()` at the `balance_threshold` used — and `positivity`,
+#'   the `IndepPositivity` object from `check_positivity()` (propensity-score
+#'   overlap and IPTW weight diagnostics for the requested `estimand`).
 #'
 #' @examples
 #' data(example_cohort)
@@ -55,13 +64,25 @@ run_pipeline <- function(data, exposure, covariates, outcome,
                          type = c("binary", "continuous"),
                          caliper = 0.2, ratio = 1, balance_threshold = 0.10,
                          methods = c("regression", "matching", "stratification", "iptw", "aipw"),
-                         seed = NULL) {
+                         seed = NULL,
+                         estimand = c("ATE", "ATT")) {
   type <- match.arg(type)
+  estimand <- match.arg(estimand)
 
   if (!is.null(seed)) set.seed(seed)
 
   message("Step 1/9: Building propensity score model...")
   ps <- build_ps_model(data, exposure, covariates)
+  positivity <- check_positivity(ps, estimand = estimand)
+  pg <- positivity$ps_by_group
+  message(sprintf(
+    "  Positivity: PS window [%.3f, %.3f]; control [%.3f, %.3f], treated [%.3f, %.3f]; %d outside window -> %s",
+    positivity$threshold[1], positivity$threshold[2],
+    pg$min[pg$group == 0], pg$max[pg$group == 0],
+    pg$min[pg$group == 1], pg$max[pg$group == 1],
+    positivity$ps_violations$n_total,
+    if (positivity$violation) "VIOLATED" else "OK"
+  ))
 
   message("Step 2/9: Matching cohorts...")
   matched <- match_cohort(ps, caliper = caliper, ratio = ratio)
@@ -96,7 +117,8 @@ run_pipeline <- function(data, exposure, covariates, outcome,
 
   message("Step 9/9: Running requested confounding-adjustment methods...")
   all_fits <- fit_outcome(data = data, exposure = exposure, covariates = covariates,
-                          outcome = outcome, type = type, method = methods)
+                          outcome = outcome, type = type, method = methods,
+                          estimand = estimand)
   if (length(methods) == 1) all_fits <- setNames(list(all_fits), methods)
   comparison <- do.call(rbind, lapply(names(all_fits), function(m) {
     r <- all_fits[[m]]
@@ -104,6 +126,14 @@ run_pipeline <- function(data, exposure, covariates, outcome,
                estimate = r$estimate, conf_low = r$conf_low, conf_high = r$conf_high,
                p_value = r$p_value, n = r$n, stringsAsFactors = FALSE)
   }))
+
+  if (any(c("iptw", "aipw") %in% methods)) {
+    w <- positivity$weights
+    message(sprintf(
+      "  IPTW weights (%s): min %.2f, median %.2f, max %.2f, max/min ratio %.1f",
+      w$estimand, w$min, w$median, w$max, w$max_min_ratio
+    ))
+  }
 
   message("Pipeline complete.")
 
@@ -121,7 +151,8 @@ run_pipeline <- function(data, exposure, covariates, outcome,
       models = all_models,
       comparison = comparison,
       stat_test = stat_test,
-      outcome_type = type
+      outcome_type = type,
+      positivity = positivity
     ),
     class = "IndepAssoc"
   )

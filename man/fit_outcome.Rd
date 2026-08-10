@@ -11,6 +11,8 @@ fit_outcome(
   outcome,
   type = c("binary", "continuous"),
   method = c("regression", "matching", "stratification", "iptw", "aipw"),
+  estimand = c("ATE", "ATT"),
+  trim = NULL,
   ...
 )
 }
@@ -30,6 +32,24 @@ fit_outcome(
 of results, one per method. \code{"matching"} is propensity-score matching
 with conditional-logit (binary) / within-pair (continuous) estimation.}
 
+\item{estimand}{Causal estimand: \code{"ATE"} (default) or \code{"ATT"}. With
+\code{"ATT"}, the propensity-score methods target the average treatment effect
+on the treated: \code{"iptw"} and \code{"aipw"} use standardized mortality ratio
+(SMR) weights, and \code{"stratification"} pools each stratum's within-stratum
+effect with weights proportional to the number of treated units in the
+stratum (Austin, 2011, doi:10.1080/00273171.2011.568786). \code{"matching"}
+targets the ATT by construction (1:1 matching without replacement) and
+ignores this argument — a silent no-op. \code{"regression"} reports a
+conditional effect and also ignores it.}
+
+\item{trim}{Optional length-1 or length-2 probability vector for weight
+trimming, applied to the IPTW and AIPW methods only. Weights are truncated
+at the specified percentiles of their distribution (Cole & Hernan 2008,
+doi:10.1093/aje/kwn085), so \code{trim = c(0.01, 0.99)} caps extreme weights
+that otherwise inflate variance. Default \code{NULL} (no trimming, current
+behavior preserved exactly). Ignored by \code{"regression"}, \code{"matching"}, and
+\code{"stratification"}.}
+
 \item{...}{Passed to the per-method estimators. \code{seed} is accepted by the
 matching method for reproducible matching.}
 }
@@ -47,12 +67,12 @@ model. \code{"matching"} is propensity-score matching with conditional-logit
 (binary) / within-pair (continuous) estimation. \code{"stratification"}
 stratifies on the propensity score. \code{"iptw"} is a marginal structural
 model: the outcome model regresses on the exposure only, weighted by
-stabilized inverse probability of treatment weights, with robust
-sandwich standard errors — confounding is controlled by the weights
-alone. \code{"aipw"} is a doubly-robust augmented estimator (Bang & Robins)
-that models both the outcome and the propensity score. For
-\code{method = "matching"}, binary outcomes must be coded as numeric 0/1
-(the conditional-logit estimator strata on the matched pair).
+stabilized inverse probability of treatment weights (or SMR weights when
+\code{estimand = "ATT"}), with robust sandwich standard errors — confounding
+is controlled by the weights alone. \code{"aipw"} is a doubly-robust augmented
+estimator (Bang & Robins) that models both the outcome and the propensity
+score. For \code{method = "matching"}, binary outcomes must be coded as numeric
+0/1 (the conditional-logit estimator strata on the matched pair).
 }
 \examples{
 data(example_cohort)
@@ -63,4 +83,16 @@ res <- fit_outcome(example_cohort, "exposure",
 res$regression$estimate
 res$iptw$estimate
 
+}
+\references{
+Austin PC. An introduction to propensity score methods for
+reducing the effects of confounding in observational studies.
+\emph{Multivariate Behavioral Research} 2011;46(3):399-424,
+doi:10.1080/00273171.2011.568786. Austin 2011 is the source for the IPTW
+SMR weights and the treated-count pooling used by \code{estimand = "ATT"}.
+Lunceford JK, Davidian M. Stratification and weighting via the propensity
+score in estimation of causal treatment effects. \emph{Statistics in Medicine}
+2004;23(19):2937-2960, doi:10.1002/sim.1903. Lunceford & Davidian (2004)
+is the source for the augmented influence-function ATE/ATT derivation used
+by AIPW.
 }

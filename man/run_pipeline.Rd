@@ -14,7 +14,8 @@ run_pipeline(
   ratio = 1,
   balance_threshold = 0.1,
   methods = c("regression", "matching", "stratification", "iptw", "aipw"),
-  seed = NULL
+  seed = NULL,
+  estimand = c("ATE", "ATT")
 )
 }
 \arguments{
@@ -48,12 +49,22 @@ augmented estimator.}
 fixed seed makes the whole run — including the step-2 matching and the
 step-9 \code{"matching"} method — reproducible from a single value. Default
 \code{NULL} (no seeding).}
+
+\item{estimand}{Causal estimand passed to \code{fit_outcome()}: \code{"ATE"} (default;
+current behavior) or \code{"ATT"}. With \code{"ATT"}, \code{"iptw"} and \code{"aipw"} use
+standardized mortality ratio (SMR) weights and \code{"stratification"} weights
+each stratum's effect by the number of treated units, so the
+propensity-score methods target the average treatment effect on the
+treated (Austin 2011, doi:10.1080/00273171.2011.568786). \code{"matching"}
+always targets the ATT by construction and ignores this argument.}
 }
 \value{
 A list of class \code{"IndepAssoc"} containing all pipeline results,
 including \code{balance_plot} — the \code{ggplot} chart of absolute standardized mean
 differences (ASMD) for unadjusted vs. matched cohorts, produced by
-\code{plot_asmd_balance()} at the \code{balance_threshold} used.
+\code{plot_asmd_balance()} at the \code{balance_threshold} used — and \code{positivity},
+the \code{IndepPositivity} object from \code{check_positivity()} (propensity-score
+overlap and IPTW weight diagnostics for the requested \code{estimand}).
 }
 \description{
 Orchestrates the full pipeline: PS model, matching, balance check,
