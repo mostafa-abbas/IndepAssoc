@@ -1,7 +1,7 @@
 Package: IndepAssoc
 Title: Confounder-Adjusted Independent Association Testing via Propensity Score
     Methods
-Version: 0.6.0
+Version: 0.6.1
 Authors@R: 
     person("Mostafa", "Hamza", role = c("aut", "cre"),
            email = "mostafa.mn.abbas@gmail.com")

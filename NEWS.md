@@ -1,4 +1,4 @@
-# IndepAssoc (unreleased)
+# IndepAssoc 0.6.1 (2026-08-10)
 
 ## Bug fixes
 
