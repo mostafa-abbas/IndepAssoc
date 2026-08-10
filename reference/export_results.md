@@ -42,34 +42,7 @@ res <- run_pipeline(
 #> a match.
 #> Step 3/9: Checking balance...
 #> Step 4/9: Generating unmatched descriptive table...
-#> The following errors were returned during `add_p()`:
-#> ✖ For variable `age` (`exposure`) and "estimate", "std.error", "parameter",
-#>   "statistic", "conf.low", "conf.high", and "p.value" statistics: The package
-#>   "broom" (>= 1.0.8) is required.
-#> ✖ For variable `bmi` (`exposure`) and "estimate", "std.error", "parameter",
-#>   "statistic", "conf.low", "conf.high", and "p.value" statistics: The package
-#>   "broom" (>= 1.0.8) is required.
-#> ✖ For variable `diabetes` (`exposure`) and "estimate", "std.error",
-#>   "parameter", "statistic", "conf.low", "conf.high", and "p.value" statistics:
-#>   The package "broom" (>= 1.0.8) is required.
-#> ✖ For variable `hypertension` (`exposure`) and "estimate", "std.error",
-#>   "parameter", "statistic", "conf.low", "conf.high", and "p.value" statistics:
-#>   The package "broom" (>= 1.0.8) is required.
 #> Step 5/9: Generating matched descriptive table...
-#> The following errors were returned during `add_p()`:
-#> ✖ For variable `diabetes` (`exposure`) and "estimate", "std.error",
-#>   "parameter", "statistic", "conf.low", "conf.high", and "p.value" statistics:
-#>   The package "broom" (>= 1.0.8) is required.
-#> ✖ For variable `hypertension` (`exposure`) and "estimate", "std.error",
-#>   "parameter", "statistic", "conf.low", "conf.high", and "p.value" statistics:
-#>   The package "broom" (>= 1.0.8) is required.
-#> The following errors were returned during `add_p()`:
-#> ✖ For variable `age` (`exposure`) and "estimate", "std.error", "parameter",
-#>   "statistic", "conf.low", "conf.high", and "p.value" statistics: The package
-#>   "broom" (>= 1.0.8) is required.
-#> ✖ For variable `bmi` (`exposure`) and "estimate", "std.error", "parameter",
-#>   "statistic", "conf.low", "conf.high", and "p.value" statistics: The package
-#>   "broom" (>= 1.0.8) is required.
 #> Step 6/9: Fitting all outcome models (3 types)...
 #> Step 7/9: Running paired statistical tests...
 #> Step 8/9: Generating balance table...
@@ -77,7 +50,7 @@ res <- run_pipeline(
 #> Pipeline complete.
 out_dir <- tempfile("indepassoc_export_")
 export_results(res, output_dir = out_dir)
-#> Results exported to: /tmp/RtmpylsNZm/indepassoc_export_1b533a657222
+#> Results exported to: /tmp/Rtmpq1bwXM/indepassoc_export_1a7a78fa8b91
 list.files(out_dir)
 #> [1] "balance_check_all.csv"         "balance_check_matched.csv"    
 #> [3] "binary_regression_summary.csv" "comparison.csv"               

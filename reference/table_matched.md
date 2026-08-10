@@ -34,20 +34,6 @@ matched <- match_cohort(ps)
 #> Warning: Fewer control units than treated units; not all treated units will get
 #> a match.
 table_matched(matched, c("age", "diabetes", "hypertension", "bmi"))
-#> The following errors were returned during `add_p()`:
-#> ✖ For variable `diabetes` (`exposure`) and "estimate", "std.error",
-#>   "parameter", "statistic", "conf.low", "conf.high", and "p.value" statistics:
-#>   The package "broom" (>= 1.0.8) is required.
-#> ✖ For variable `hypertension` (`exposure`) and "estimate", "std.error",
-#>   "parameter", "statistic", "conf.low", "conf.high", and "p.value" statistics:
-#>   The package "broom" (>= 1.0.8) is required.
-#> The following errors were returned during `add_p()`:
-#> ✖ For variable `age` (`exposure`) and "estimate", "std.error", "parameter",
-#>   "statistic", "conf.low", "conf.high", and "p.value" statistics: The package
-#>   "broom" (>= 1.0.8) is required.
-#> ✖ For variable `bmi` (`exposure`) and "estimate", "std.error", "parameter",
-#>   "statistic", "conf.low", "conf.high", and "p.value" statistics: The package
-#>   "broom" (>= 1.0.8) is required.
 
 
   
