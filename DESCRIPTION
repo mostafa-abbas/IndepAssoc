@@ -28,6 +28,7 @@ Imports:
     tidyselect,
     utils
 Suggests:
+    broom,
     causaldata,
     testthat (>= 3.0.0),
     knitr,
