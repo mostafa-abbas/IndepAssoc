@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,6 +51,8 @@
 <span>  <span class="va">outcome</span>,</span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"binary"</span>, <span class="st">"continuous"</span><span class="op">)</span>,</span>
 <span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"regression"</span>, <span class="st">"matching"</span>, <span class="st">"stratification"</span>, <span class="st">"iptw"</span>, <span class="st">"aipw"</span><span class="op">)</span>,</span>
+<span>  estimand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ATE"</span>, <span class="st">"ATT"</span><span class="op">)</span>,</span>
+<span>  trim <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -86,6 +88,28 @@ of results, one per method. <code>"matching"</code> is propensity-score matching
 with conditional-logit (binary) / within-pair (continuous) estimation.</p></dd>
 
 
+<dt id="arg-estimand">estimand<a class="anchor" aria-label="anchor" href="#arg-estimand"></a></dt>
+<dd><p>Causal estimand: <code>"ATE"</code> (default) or <code>"ATT"</code>. With
+<code>"ATT"</code>, the propensity-score methods target the average treatment effect
+on the treated: <code>"iptw"</code> and <code>"aipw"</code> use standardized mortality ratio
+(SMR) weights, and <code>"stratification"</code> pools each stratum's within-stratum
+effect with weights proportional to the number of treated units in the
+stratum (Austin, 2011, doi:10.1080/00273171.2011.568786). <code>"matching"</code>
+targets the ATT by construction (1:1 matching without replacement) and
+ignores this argument — a silent no-op. <code>"regression"</code> reports a
+conditional effect and also ignores it.</p></dd>
+
+
+<dt id="arg-trim">trim<a class="anchor" aria-label="anchor" href="#arg-trim"></a></dt>
+<dd><p>Optional length-1 or length-2 probability vector for weight
+trimming, applied to the IPTW and AIPW methods only. Weights are truncated
+at the specified percentiles of their distribution (Cole &amp; Hernan 2008,
+doi:10.1093/aje/kwn085), so <code>trim = c(0.01, 0.99)</code> caps extreme weights
+that otherwise inflate variance. Default <code>NULL</code> (no trimming, current
+behavior preserved exactly). Ignored by <code>"regression"</code>, <code>"matching"</code>, and
+<code>"stratification"</code>.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Passed to the per-method estimators. <code>seed</code> is accepted by the
 matching method for reproducible matching.</p></dd>
@@ -104,12 +128,25 @@ model. <code>"matching"</code> is propensity-score matching with conditional-log
 (binary) / within-pair (continuous) estimation. <code>"stratification"</code>
 stratifies on the propensity score. <code>"iptw"</code> is a marginal structural
 model: the outcome model regresses on the exposure only, weighted by
-stabilized inverse probability of treatment weights, with robust
-sandwich standard errors — confounding is controlled by the weights
-alone. <code>"aipw"</code> is a doubly-robust augmented estimator (Bang &amp; Robins)
-that models both the outcome and the propensity score. For
-<code>method = "matching"</code>, binary outcomes must be coded as numeric 0/1
-(the conditional-logit estimator strata on the matched pair).</p>
+stabilized inverse probability of treatment weights (or SMR weights when
+<code>estimand = "ATT"</code>), with robust sandwich standard errors — confounding
+is controlled by the weights alone. <code>"aipw"</code> is a doubly-robust augmented
+estimator (Bang &amp; Robins) that models both the outcome and the propensity
+score. For <code>method = "matching"</code>, binary outcomes must be coded as numeric
+0/1 (the conditional-logit estimator strata on the matched pair).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Austin PC. An introduction to propensity score methods for
+reducing the effects of confounding in observational studies.
+<em>Multivariate Behavioral Research</em> 2011;46(3):399-424,
+doi:10.1080/00273171.2011.568786. Austin 2011 is the source for the IPTW
+SMR weights and the treated-count pooling used by <code>estimand = "ATT"</code>.
+Lunceford JK, Davidian M. Stratification and weighting via the propensity
+score in estimation of causal treatment effects. <em>Statistics in Medicine</em>
+2004;23(19):2937-2960, doi:10.1002/sim.1903. Lunceford &amp; Davidian (2004)
+is the source for the augmented influence-function ATE/ATT derivation used
+by AIPW.</p>
     </div>
 
     <div class="section level2">

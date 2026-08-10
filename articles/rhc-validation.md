@@ -53,6 +53,33 @@ proof of a causal effect — see the Caveat section at the end.
   not necessarily both, making it more resilient to model
   misspecification than regression or IPTW used alone.
 
+### Estimand: what each method actually targets
+
+The five methods do not all estimate the same causal quantity. Matching
+targets the **average treatment effect on the treated (ATT)** — only
+treated patients that found a control match remain in the analysis, so
+the estimate describes the treated population by construction. IPTW and
+AIPW target the **average treatment effect (ATE)** over the full
+analytic sample: every patient contributes, reweighted (IPTW) or via
+augmented influence functions (AIPW), so the comparison mimics two
+exposure groups drawn from the full sample’s covariate distribution.
+Stratification pools stratum-specific effects across the full analytic
+sample — a common odds ratio via the Cochran-Mantel-Haenszel method for
+binary outcomes, an inverse-variance-weighted mean difference for
+continuous outcomes — a full-sample, stratum-pooled estimate rather than
+a strict marginal ATE. (With the new `estimand = "ATT"` option,
+stratification instead pools each stratum’s effect weighted by its
+number of treated units, and is then genuinely ATT-consistent.)
+Regression reports a **conditional** effect: the coefficient is adjusted
+for the listed covariates, and for binary outcomes the odds ratio is
+*non-collapsible* (a mathematical property, not a modeling choice), so
+it is not numerically equal to a marginal ATE even when the model is
+correct.
+
+So when the five rows below agree in direction and rough magnitude, that
+is real evidence of robustness — but they are five related quantities,
+not five independent measurements of a single parameter.
+
 ## Data preparation
 
 ``` r
@@ -315,6 +342,16 @@ worth investigating rather than dismissing, since it would mean
 something about the analytic sample or package version differs from what
 was previously validated.
 
+One caveat on `los` specifically: hospital length of stay is heavily
+right-skewed and bounded at zero (in the summary above, median 14 days,
+mean 21.5, maximum 342). The linear model reports a mean difference on
+the original day scale, which is a common simplification — including in
+the two source papers this package generalizes — but not the most
+distributionally appropriate choice for an outcome with this shape: a
+log-transform or a Gamma GLM would fit it better. Read the `los` mean
+difference as a convenient, interpretable summary, not as evidence that
+a day-scale linear model is the ideal specification.
+
 For `death`, there is no prior validated result to compare against in
 this vignette — read the table above on its own terms. Given that every
 `dth30 = 1` patient is also `death = 1`, a similar direction of
@@ -373,6 +410,168 @@ patients. A smaller, matching-based sample generally means wider
 confidence intervals for that row relative to the others — worth keeping
 in mind before treating any one row’s significance (or lack of it) as
 more authoritative than another’s.
+
+## Propensity-score overlap and weight diagnostics
+
+The balance chart above checks covariates, but the propensity-score
+methods rest on a second assumption: **positivity** — every patient must
+have a nonzero (and ideally non-extreme) chance of being in either
+group. Extreme propensity scores near 0 or 1, or the extreme
+inverse-probability weights they produce, can make IPTW/AIPW unstable
+even when covariate balance looks fine.
+[`check_positivity()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.md)
+inspects both, using the same propensity-score model the pipeline
+already built:
+
+``` r
+
+pos_check <- check_positivity(results_list$dth30$ps_model)
+print(pos_check)
+#> Propensity-score positivity check
+#> ================================
+#> Support window: 0.01 to 0.99 
+#>   exposure 0 (n=3551): PS [0.003, 0.955], median 0.236
+#>   exposure 1 (n=2184): PS [0.019, 0.985], median 0.555
+#> Positivity: VIOLATED (12 outside window)
+#> IPTW weights (ATE): min 0.39, median 0.78, max 20.18, max/min ratio 52.2
+```
+
+Two things stand out. First, the treated and control propensity-score
+distributions overlap broadly (roughly 0.019-0.985 treated vs
+0.003-0.955 control), so the cohort is not structurally non-positivious
+— a reader comparing only the two support ranges would conclude overlap
+is fine. Second,
+[`check_positivity()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.md)
+still flags 12 of 5,735 units outside the default \[0.01, 0.99\] support
+window, and the stabilized IPTW weights run from 0.39 to 20.2 — a
+52-fold max-to-min ratio. That is a mild warning, not a failure: 12
+extreme-tail patients out of 5,735 will not flip the analysis, but they
+are exactly the kind of extremity that can inflate IPTW/AIPW variance in
+a smaller sample — and the problem the `trim` argument exists for (see
+below). Every
+[`run_pipeline()`](https://mostafa-abbas.github.io/IndepAssoc/reference/run_pipeline.md)
+call now prints this same summary and returns it as `result$positivity`,
+so the check is visible by default rather than something to remember to
+run.
+
+## Sensitivity checks on `los`
+
+The main results report `los` as a day-scale mean difference from the
+full-sample analysis. Three specification choices deserve a closer look:
+which estimand the propensity-score methods target, how the estimate
+responds to weight trimming, and whether the outcome’s right-skew
+changes the conclusion under a log transform.
+
+### Estimand: ATE vs ATT
+
+``` r
+
+los_sample <- rhc[stats::complete.cases(rhc[, c(exposure, covariates, "los")]), ]
+
+los_reg <- fit_outcome(los_sample, exposure, covariates, "los",
+                       type = "continuous", method = "regression")
+los_ate <- fit_outcome(los_sample, exposure, covariates, "los",
+                       type = "continuous", method = c("iptw", "aipw"))
+los_att <- fit_outcome(los_sample, exposure, covariates, "los",
+                       type = "continuous", method = c("iptw", "aipw"),
+                       estimand = "ATT")
+
+row_from_fit <- function(outcome_lab, fit) {
+  data.frame(Outcome = outcome_lab, method = fit$method, type = fit$type,
+             estimate = fit$estimate, conf_low = fit$conf_low,
+             conf_high = fit$conf_high, p_value = fit$p_value, n = fit$n)
+}
+estimand_rows <- rbind(
+  row_from_fit("Regression", los_reg),
+  row_from_fit("ATE", los_ate$iptw), row_from_fit("ATE", los_ate$aipw),
+  row_from_fit("ATT", los_att$iptw), row_from_fit("ATT", los_att$aipw)
+)
+knitr::kable(format_combined(estimand_rows), align = "llrrrr")
+```
+
+| Outcome    | Method     | Estimate |     95% CI | p-value |    n |
+|:-----------|:-----------|---------:|-----------:|--------:|-----:|
+| Regression | Regression |     2.42 |  0.92–3.93 |   0.002 | 5734 |
+| ATE        | IPTW       |     2.88 |  1.12–4.65 |   0.001 | 5734 |
+| ATE        | AIPW       |     2.61 |  0.92–4.29 |   0.002 | 5734 |
+| ATT        | IPTW       |     1.76 | -0.58–4.10 |   0.141 | 5734 |
+| ATT        | AIPW       |     1.69 | -0.59–3.96 |   0.146 | 5734 |
+
+The `estimand` argument changes which population IPTW and AIPW target.
+Switching from the default ATE to ATT moves the `los` estimate from
+roughly 2.9 (IPTW) / 2.6 (AIPW) additional days to roughly 1.8 / 1.7
+days — the estimate for patients who received RHC rather than for the
+full analytic sample. Matching (the second row of the main table) is ATT
+by construction but reports roughly 3.1 days; that is not a
+contradiction. Matching analyzes only the treated patients who found a
+control match within the 0.2-SD caliper — a subset of the treated
+population — whereas the SMR weights retain every treated unit, and the
+two can differ under effect modification. All three rows target treated
+patients; exact agreement is not expected. The point is that the
+parameter behaves as designed: it shifts the propensity-score methods to
+a different, explicitly chosen population. Note that at this sample size
+the ATT estimates are also noisier — their confidence intervals cross
+zero — so the shift is informative about the estimand, not a
+statistically distinguishable difference between ATE and ATT.
+
+### Weight trimming
+
+``` r
+
+los_trim <- fit_outcome(los_sample, exposure, covariates, "los",
+                        type = "continuous", method = c("iptw", "aipw"),
+                        trim = c(0.01, 0.99))
+
+ci_str <- function(fit) {
+  sprintf("%.2f (%.2f-%.2f)", fit$estimate, fit$conf_low, fit$conf_high)
+}
+trim_rows <- data.frame(
+  Method        = c("IPTW", "AIPW"),
+  "No trimming" = c(ci_str(los_ate$iptw), ci_str(los_ate$aipw)),
+  "trim = c(0.01, 0.99)" = c(ci_str(los_trim$iptw), ci_str(los_trim$aipw)),
+  check.names = FALSE
+)
+knitr::kable(trim_rows)
+```
+
+| Method | No trimming      | trim = c(0.01, 0.99) |
+|:-------|:-----------------|:---------------------|
+| IPTW   | 2.88 (1.12-4.65) | 2.91 (1.22-4.60)     |
+| AIPW   | 2.61 (0.92-4.29) | 2.49 (0.94-4.05)     |
+
+Truncating the 1% most extreme weights on each side of the distribution
+barely moves the estimate (IPTW 2.88 to 2.91, AIPW 2.61 to 2.49 days)
+while modestly narrowing the confidence intervals. That is the expected
+behavior on this cohort: the positivity check above showed the weight
+extremity is real but mild, so trimming dampens variance without pulling
+the answer somewhere new. In a smaller or more imbalanced sample — where
+a handful of extreme weights can dominate — the same `trim` argument is
+the lever for assessing how much the headline estimate depends on those
+few units.
+
+### Log-transformed `los`
+
+``` r
+
+los_sample$log_los <- log(los_sample$los)
+los_log <- fit_outcome(los_sample, exposure, covariates, "log_los",
+                       type = "continuous", method = "regression")
+cat("Back-transformed effect of RHC on los:\n")
+#> Back-transformed effect of RHC on los:
+cat(sprintf("  exp(coef) = %.3f  (95%% CI %.3f-%.3f)\n",
+            exp(los_log$estimate), exp(los_log$conf_low), exp(los_log$conf_high)))
+#>   exp(coef) = 1.105  (95% CI 1.048-1.165)
+```
+
+This is the concrete version of Phase 18’s `los` caveat: fitting the
+same regression on the log-day scale back-transforms to a roughly 1.10
+multiplicative effect (95% CI comfortably above 1) — RHC is associated
+with roughly 5-17% longer stay — versus the roughly +2.4-day additive
+effect on the original scale. Same direction, same conclusion, and clear
+of the null, so the day-scale headline in the main table is not an
+artifact of the outcome’s right-skew. The log-scale ratio is a
+sensitivity check, not a replacement for the interpretable day-scale
+mean difference.
 
 ## Exporting results
 

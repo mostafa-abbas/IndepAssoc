@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -118,6 +118,7 @@
 3 Stratification      1.58  0.45–2.71   0.006 500
 4           IPTW      1.38 -0.05–2.81   0.059 500
 5           AIPW      1.48  0.51–2.46   0.003 500</code></pre>
+<p>The five methods do not all target the same estimand: <code>matching</code> targets the average treatment effect on the treated (ATT) by construction, <code>iptw</code> and <code>aipw</code> target the marginal ATE over the full analytic sample, <code>stratification</code> pools stratum-specific effects across the full sample, and <code>regression</code> reports a conditional (covariate-adjusted) effect — the binary-outcome odds ratio is non-collapsible, so it is not numerically equal to a marginal ATE. Agreement across the five is still meaningful robustness evidence, but they are related quantities, not five copies of one number.</p>
 </div>
 <div class="section level2">
 <h2 id="reproducibility">Reproducibility<a class="anchor" aria-label="anchor" href="#reproducibility"></a>

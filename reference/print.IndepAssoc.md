@@ -33,6 +33,7 @@ res <- run_pipeline(
   methods = "regression"
 )
 #> Step 1/9: Building propensity score model...
+#>   Positivity: PS window [0.010, 0.990]; control [0.366, 0.906], treated [0.364, 0.878]; 0 outside window -> OK
 #> Step 2/9: Matching cohorts...
 #> Warning: Fewer control units than treated units; not all treated units will get
 #> a match.

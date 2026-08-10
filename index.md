@@ -110,6 +110,16 @@ fixed-effects linear model for continuous outcomes).
     4           IPTW      1.38 -0.05–2.81   0.059 500
     5           AIPW      1.48  0.51–2.46   0.003 500
 
+The five methods do not all target the same estimand: `matching` targets
+the average treatment effect on the treated (ATT) by construction,
+`iptw` and `aipw` target the marginal ATE over the full analytic sample,
+`stratification` pools stratum-specific effects across the full sample,
+and `regression` reports a conditional (covariate-adjusted) effect — the
+binary-outcome odds ratio is non-collapsible, so it is not numerically
+equal to a marginal ATE. Agreement across the five is still meaningful
+robustness evidence, but they are related quantities, not five copies of
+one number.
+
 ## Reproducibility
 
 Matching-based results draw on the random number generator, so a fixed

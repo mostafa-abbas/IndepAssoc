@@ -62,6 +62,7 @@ res <- run_pipeline(
   methods = c("regression", "matching", "stratification", "iptw", "aipw")
 )
 #> Step 1/9: Building propensity score model...
+#>   Positivity: PS window [0.010, 0.990]; control [0.366, 0.906], treated [0.364, 0.878]; 0 outside window -> OK
 #> Step 2/9: Matching cohorts...
 #> Warning: Fewer control units than treated units; not all treated units will get
 #> a match.
@@ -101,6 +102,7 @@ res <- run_pipeline(
 #> Step 9/9: Running requested confounding-adjustment methods...
 #> Warning: Fewer control units than treated units; not all treated units will get
 #> a match.
+#>   IPTW weights (ATE): min 0.53, median 0.97, max 3.56, max/min ratio 6.8
 #> Pipeline complete.
 format_comparison(res$comparison)
 #>           Method   OR    95% CI p-value   n

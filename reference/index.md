@@ -6,6 +6,8 @@
   : Build Propensity Score Model
 - [`check_balance()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_balance.md)
   : Check Covariate Balance After Matching
+- [`check_positivity()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.md)
+  : Check Propensity-Score Positivity and IPTW Weight Diagnostics
 - [`example_cohort`](https://mostafa-abbas.github.io/IndepAssoc/reference/example_cohort.md)
   : Simulated Example Cohort
 - [`export_results()`](https://mostafa-abbas.github.io/IndepAssoc/reference/export_results.md)
@@ -34,6 +36,8 @@
   : Prepare the RHC dataset for analysis
 - [`print(`*`<IndepAssoc>`*`)`](https://mostafa-abbas.github.io/IndepAssoc/reference/print.IndepAssoc.md)
   : Print an IndepAssoc pipeline result
+- [`print(`*`<IndepPositivity>`*`)`](https://mostafa-abbas.github.io/IndepAssoc/reference/print.IndepPositivity.md)
+  : Print an IndepPositivity summary
 - [`rhc_sample`](https://mostafa-abbas.github.io/IndepAssoc/reference/rhc_sample.md)
   : Cleaned RHC Benchmark Cohort
 - [`run_pipeline()`](https://mostafa-abbas.github.io/IndepAssoc/reference/run_pipeline.md)

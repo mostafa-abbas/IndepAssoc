@@ -16,7 +16,8 @@ run_pipeline(
   ratio = 1,
   balance_threshold = 0.1,
   methods = c("regression", "matching", "stratification", "iptw", "aipw"),
-  seed = NULL
+  seed = NULL,
+  estimand = c("ATE", "ATT")
 )
 ```
 
@@ -74,13 +75,29 @@ run_pipeline(
   including the step-2 matching and the step-9 `"matching"` method —
   reproducible from a single value. Default `NULL` (no seeding).
 
+- estimand:
+
+  Causal estimand passed to
+  [`fit_outcome()`](https://mostafa-abbas.github.io/IndepAssoc/reference/fit_outcome.md):
+  `"ATE"` (default; current behavior) or `"ATT"`. With `"ATT"`, `"iptw"`
+  and `"aipw"` use standardized mortality ratio (SMR) weights and
+  `"stratification"` weights each stratum's effect by the number of
+  treated units, so the propensity-score methods target the average
+  treatment effect on the treated (Austin 2011,
+  doi:10.1080/00273171.2011.568786). `"matching"` always targets the ATT
+  by construction and ignores this argument.
+
 ## Value
 
 A list of class `"IndepAssoc"` containing all pipeline results,
 including `balance_plot` — the `ggplot` chart of absolute standardized
 mean differences (ASMD) for unadjusted vs. matched cohorts, produced by
 [`plot_asmd_balance()`](https://mostafa-abbas.github.io/IndepAssoc/reference/plot_asmd_balance.md)
-at the `balance_threshold` used.
+at the `balance_threshold` used — and `positivity`, the
+`IndepPositivity` object from
+[`check_positivity()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.md)
+(propensity-score overlap and IPTW weight diagnostics for the requested
+`estimand`).
 
 ## Details
 
@@ -106,6 +123,7 @@ res <- run_pipeline(
   methods = c("regression", "matching")
 )
 #> Step 1/9: Building propensity score model...
+#>   Positivity: PS window [0.010, 0.990]; control [0.366, 0.906], treated [0.364, 0.878]; 0 outside window -> OK
 #> Step 2/9: Matching cohorts...
 #> Warning: Fewer control units than treated units; not all treated units will get
 #> a match.

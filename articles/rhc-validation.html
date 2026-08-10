@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,6 +126,34 @@ robust”: the estimate stays consistent if <em>either</em> model is
 correctly specified, not necessarily both, making it more resilient to
 model misspecification than regression or IPTW used alone.</li>
 </ul>
+</div>
+<div class="section level3">
+<h3 id="estimand-what-each-method-actually-targets">Estimand: what each method actually targets<a class="anchor" aria-label="anchor" href="#estimand-what-each-method-actually-targets"></a>
+</h3>
+<p>The five methods do not all estimate the same causal quantity.
+Matching targets the <strong>average treatment effect on the treated
+(ATT)</strong> — only treated patients that found a control match remain
+in the analysis, so the estimate describes the treated population by
+construction. IPTW and AIPW target the <strong>average treatment effect
+(ATE)</strong> over the full analytic sample: every patient contributes,
+reweighted (IPTW) or via augmented influence functions (AIPW), so the
+comparison mimics two exposure groups drawn from the full sample’s
+covariate distribution. Stratification pools stratum-specific effects
+across the full analytic sample — a common odds ratio via the
+Cochran-Mantel-Haenszel method for binary outcomes, an
+inverse-variance-weighted mean difference for continuous outcomes — a
+full-sample, stratum-pooled estimate rather than a strict marginal ATE.
+(With the new <code>estimand = "ATT"</code> option, stratification
+instead pools each stratum’s effect weighted by its number of treated
+units, and is then genuinely ATT-consistent.) Regression reports a
+<strong>conditional</strong> effect: the coefficient is adjusted for the
+listed covariates, and for binary outcomes the odds ratio is
+<em>non-collapsible</em> (a mathematical property, not a modeling
+choice), so it is not numerically equal to a marginal ATE even when the
+model is correct.</p>
+<p>So when the five rows below agree in direction and rough magnitude,
+that is real evidence of robustness — but they are five related
+quantities, not five independent measurements of a single parameter.</p>
 </div>
 </div>
 <div class="section level2">
@@ -486,6 +514,16 @@ roughly 2.5-3 additional days, confidence intervals excluding 0. The
 that same pattern; if they don’t, that’s worth investigating rather than
 dismissing, since it would mean something about the analytic sample or
 package version differs from what was previously validated.</p>
+<p>One caveat on <code>los</code> specifically: hospital length of stay
+is heavily right-skewed and bounded at zero (in the summary above,
+median 14 days, mean 21.5, maximum 342). The linear model reports a mean
+difference on the original day scale, which is a common simplification —
+including in the two source papers this package generalizes — but not
+the most distributionally appropriate choice for an outcome with this
+shape: a log-transform or a Gamma GLM would fit it better. Read the
+<code>los</code> mean difference as a convenient, interpretable summary,
+not as evidence that a day-scale linear model is the ideal
+specification.</p>
 <p>For <code>death</code>, there is no prior validated result to compare
 against in this vignette — read the table above on its own terms. Given
 that every <code>dth30 = 1</code> patient is also
@@ -668,9 +706,218 @@ others — worth keeping in mind before treating any one row’s
 significance (or lack of it) as more authoritative than another’s.</p>
 </div>
 <div class="section level2">
+<h2 id="propensity-score-overlap-and-weight-diagnostics">Propensity-score overlap and weight diagnostics<a class="anchor" aria-label="anchor" href="#propensity-score-overlap-and-weight-diagnostics"></a>
+</h2>
+<p>The balance chart above checks covariates, but the propensity-score
+methods rest on a second assumption: <strong>positivity</strong> — every
+patient must have a nonzero (and ideally non-extreme) chance of being in
+either group. Extreme propensity scores near 0 or 1, or the extreme
+inverse-probability weights they produce, can make IPTW/AIPW unstable
+even when covariate balance looks fine. <code><a href="../reference/check_positivity.html">check_positivity()</a></code>
+inspects both, using the same propensity-score model the pipeline
+already built:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pos_check</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/check_positivity.html">check_positivity</a></span><span class="op">(</span><span class="va">results_list</span><span class="op">$</span><span class="va">dth30</span><span class="op">$</span><span class="va">ps_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">pos_check</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Propensity-score positivity check</span></span>
+<span><span class="co">#&gt; ================================</span></span>
+<span><span class="co">#&gt; Support window: 0.01 to 0.99 </span></span>
+<span><span class="co">#&gt;   exposure 0 (n=3551): PS [0.003, 0.955], median 0.236</span></span>
+<span><span class="co">#&gt;   exposure 1 (n=2184): PS [0.019, 0.985], median 0.555</span></span>
+<span><span class="co">#&gt; Positivity: VIOLATED (12 outside window)</span></span>
+<span><span class="co">#&gt; IPTW weights (ATE): min 0.39, median 0.78, max 20.18, max/min ratio 52.2</span></span></code></pre></div>
+<p>Two things stand out. First, the treated and control propensity-score
+distributions overlap broadly (roughly 0.019-0.985 treated vs
+0.003-0.955 control), so the cohort is not structurally non-positivious
+— a reader comparing only the two support ranges would conclude overlap
+is fine. Second, <code><a href="../reference/check_positivity.html">check_positivity()</a></code> still flags 12 of 5,735
+units outside the default [0.01, 0.99] support window, and the
+stabilized IPTW weights run from 0.39 to 20.2 — a 52-fold max-to-min
+ratio. That is a mild warning, not a failure: 12 extreme-tail patients
+out of 5,735 will not flip the analysis, but they are exactly the kind
+of extremity that can inflate IPTW/AIPW variance in a smaller sample —
+and the problem the <code>trim</code> argument exists for (see below).
+Every <code><a href="../reference/run_pipeline.html">run_pipeline()</a></code> call now prints this same summary and
+returns it as <code>result$positivity</code>, so the check is visible by
+default rather than something to remember to run.</p>
+</div>
+<div class="section level2">
+<h2 id="sensitivity-checks-on-los">Sensitivity checks on <code>los</code><a class="anchor" aria-label="anchor" href="#sensitivity-checks-on-los"></a>
+</h2>
+<p>The main results report <code>los</code> as a day-scale mean
+difference from the full-sample analysis. Three specification choices
+deserve a closer look: which estimand the propensity-score methods
+target, how the estimate responds to weight trimming, and whether the
+outcome’s right-skew changes the conclusion under a log transform.</p>
+<div class="section level3">
+<h3 id="estimand-ate-vs-att">Estimand: ATE vs ATT<a class="anchor" aria-label="anchor" href="#estimand-ate-vs-att"></a>
+</h3>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">los_sample</span> <span class="op">&lt;-</span> <span class="va">rhc</span><span class="op">[</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/complete.cases.html" class="external-link">complete.cases</a></span><span class="op">(</span><span class="va">rhc</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">exposure</span>, <span class="va">covariates</span>, <span class="st">"los"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="va">los_reg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_outcome.html">fit_outcome</a></span><span class="op">(</span><span class="va">los_sample</span>, <span class="va">exposure</span>, <span class="va">covariates</span>, <span class="st">"los"</span>,</span>
+<span>                       type <span class="op">=</span> <span class="st">"continuous"</span>, method <span class="op">=</span> <span class="st">"regression"</span><span class="op">)</span></span>
+<span><span class="va">los_ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_outcome.html">fit_outcome</a></span><span class="op">(</span><span class="va">los_sample</span>, <span class="va">exposure</span>, <span class="va">covariates</span>, <span class="st">"los"</span>,</span>
+<span>                       type <span class="op">=</span> <span class="st">"continuous"</span>, method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"iptw"</span>, <span class="st">"aipw"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">los_att</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_outcome.html">fit_outcome</a></span><span class="op">(</span><span class="va">los_sample</span>, <span class="va">exposure</span>, <span class="va">covariates</span>, <span class="st">"los"</span>,</span>
+<span>                       type <span class="op">=</span> <span class="st">"continuous"</span>, method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"iptw"</span>, <span class="st">"aipw"</span><span class="op">)</span>,</span>
+<span>                       estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">row_from_fit</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">outcome_lab</span>, <span class="va">fit</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Outcome <span class="op">=</span> <span class="va">outcome_lab</span>, method <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">method</span>, type <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">type</span>,</span>
+<span>             estimate <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">estimate</span>, conf_low <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">conf_low</span>,</span>
+<span>             conf_high <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">conf_high</span>, p_value <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">p_value</span>, n <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">estimand_rows</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  <span class="fu">row_from_fit</span><span class="op">(</span><span class="st">"Regression"</span>, <span class="va">los_reg</span><span class="op">)</span>,</span>
+<span>  <span class="fu">row_from_fit</span><span class="op">(</span><span class="st">"ATE"</span>, <span class="va">los_ate</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span>, <span class="fu">row_from_fit</span><span class="op">(</span><span class="st">"ATE"</span>, <span class="va">los_ate</span><span class="op">$</span><span class="va">aipw</span><span class="op">)</span>,</span>
+<span>  <span class="fu">row_from_fit</span><span class="op">(</span><span class="st">"ATT"</span>, <span class="va">los_att</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span>, <span class="fu">row_from_fit</span><span class="op">(</span><span class="st">"ATT"</span>, <span class="va">los_att</span><span class="op">$</span><span class="va">aipw</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="../reference/format_combined.html">format_combined</a></span><span class="op">(</span><span class="va">estimand_rows</span><span class="op">)</span>, align <span class="op">=</span> <span class="st">"llrrrr"</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="left">Outcome</th>
+<th align="left">Method</th>
+<th align="right">Estimate</th>
+<th align="right">95% CI</th>
+<th align="right">p-value</th>
+<th align="right">n</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Regression</td>
+<td align="left">Regression</td>
+<td align="right">2.42</td>
+<td align="right">0.92–3.93</td>
+<td align="right">0.002</td>
+<td align="right">5734</td>
+</tr>
+<tr class="even">
+<td align="left">ATE</td>
+<td align="left">IPTW</td>
+<td align="right">2.88</td>
+<td align="right">1.12–4.65</td>
+<td align="right">0.001</td>
+<td align="right">5734</td>
+</tr>
+<tr class="odd">
+<td align="left">ATE</td>
+<td align="left">AIPW</td>
+<td align="right">2.61</td>
+<td align="right">0.92–4.29</td>
+<td align="right">0.002</td>
+<td align="right">5734</td>
+</tr>
+<tr class="even">
+<td align="left">ATT</td>
+<td align="left">IPTW</td>
+<td align="right">1.76</td>
+<td align="right">-0.58–4.10</td>
+<td align="right">0.141</td>
+<td align="right">5734</td>
+</tr>
+<tr class="odd">
+<td align="left">ATT</td>
+<td align="left">AIPW</td>
+<td align="right">1.69</td>
+<td align="right">-0.59–3.96</td>
+<td align="right">0.146</td>
+<td align="right">5734</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>estimand</code> argument changes which population IPTW and
+AIPW target. Switching from the default ATE to ATT moves the
+<code>los</code> estimate from roughly 2.9 (IPTW) / 2.6 (AIPW)
+additional days to roughly 1.8 / 1.7 days — the estimate for patients
+who received RHC rather than for the full analytic sample. Matching (the
+second row of the main table) is ATT by construction but reports roughly
+3.1 days; that is not a contradiction. Matching analyzes only the
+treated patients who found a control match within the 0.2-SD caliper — a
+subset of the treated population — whereas the SMR weights retain every
+treated unit, and the two can differ under effect modification. All
+three rows target treated patients; exact agreement is not expected. The
+point is that the parameter behaves as designed: it shifts the
+propensity-score methods to a different, explicitly chosen population.
+Note that at this sample size the ATT estimates are also noisier — their
+confidence intervals cross zero — so the shift is informative about the
+estimand, not a statistically distinguishable difference between ATE and
+ATT.</p>
+</div>
+<div class="section level3">
+<h3 id="weight-trimming">Weight trimming<a class="anchor" aria-label="anchor" href="#weight-trimming"></a>
+</h3>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">los_trim</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_outcome.html">fit_outcome</a></span><span class="op">(</span><span class="va">los_sample</span>, <span class="va">exposure</span>, <span class="va">covariates</span>, <span class="st">"los"</span>,</span>
+<span>                        type <span class="op">=</span> <span class="st">"continuous"</span>, method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"iptw"</span>, <span class="st">"aipw"</span><span class="op">)</span>,</span>
+<span>                        trim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0.99</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ci_str</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.2f (%.2f-%.2f)"</span>, <span class="va">fit</span><span class="op">$</span><span class="va">estimate</span>, <span class="va">fit</span><span class="op">$</span><span class="va">conf_low</span>, <span class="va">fit</span><span class="op">$</span><span class="va">conf_high</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">trim_rows</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Method        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"IPTW"</span>, <span class="st">"AIPW"</span><span class="op">)</span>,</span>
+<span>  <span class="st">"No trimming"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">ci_str</span><span class="op">(</span><span class="va">los_ate</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span>, <span class="fu">ci_str</span><span class="op">(</span><span class="va">los_ate</span><span class="op">$</span><span class="va">aipw</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="st">"trim = c(0.01, 0.99)"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">ci_str</span><span class="op">(</span><span class="va">los_trim</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span>, <span class="fu">ci_str</span><span class="op">(</span><span class="va">los_trim</span><span class="op">$</span><span class="va">aipw</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  check.names <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">trim_rows</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="left">Method</th>
+<th align="left">No trimming</th>
+<th align="left">trim = c(0.01, 0.99)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">IPTW</td>
+<td align="left">2.88 (1.12-4.65)</td>
+<td align="left">2.91 (1.22-4.60)</td>
+</tr>
+<tr class="even">
+<td align="left">AIPW</td>
+<td align="left">2.61 (0.92-4.29)</td>
+<td align="left">2.49 (0.94-4.05)</td>
+</tr>
+</tbody>
+</table>
+<p>Truncating the 1% most extreme weights on each side of the
+distribution barely moves the estimate (IPTW 2.88 to 2.91, AIPW 2.61 to
+2.49 days) while modestly narrowing the confidence intervals. That is
+the expected behavior on this cohort: the positivity check above showed
+the weight extremity is real but mild, so trimming dampens variance
+without pulling the answer somewhere new. In a smaller or more
+imbalanced sample — where a handful of extreme weights can dominate —
+the same <code>trim</code> argument is the lever for assessing how much
+the headline estimate depends on those few units.</p>
+</div>
+<div class="section level3">
+<h3 id="log-transformed-los">Log-transformed <code>los</code><a class="anchor" aria-label="anchor" href="#log-transformed-los"></a>
+</h3>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">los_sample</span><span class="op">$</span><span class="va">log_los</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">los_sample</span><span class="op">$</span><span class="va">los</span><span class="op">)</span></span>
+<span><span class="va">los_log</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_outcome.html">fit_outcome</a></span><span class="op">(</span><span class="va">los_sample</span>, <span class="va">exposure</span>, <span class="va">covariates</span>, <span class="st">"log_los"</span>,</span>
+<span>                       type <span class="op">=</span> <span class="st">"continuous"</span>, method <span class="op">=</span> <span class="st">"regression"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Back-transformed effect of RHC on los:\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Back-transformed effect of RHC on los:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"  exp(coef) = %.3f  (95%% CI %.3f-%.3f)\n"</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">los_log</span><span class="op">$</span><span class="va">estimate</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">los_log</span><span class="op">$</span><span class="va">conf_low</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">los_log</span><span class="op">$</span><span class="va">conf_high</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   exp(coef) = 1.105  (95% CI 1.048-1.165)</span></span></code></pre></div>
+<p>This is the concrete version of Phase 18’s <code>los</code> caveat:
+fitting the same regression on the log-day scale back-transforms to a
+roughly 1.10 multiplicative effect (95% CI comfortably above 1) — RHC is
+associated with roughly 5-17% longer stay — versus the roughly +2.4-day
+additive effect on the original scale. Same direction, same conclusion,
+and clear of the null, so the day-scale headline in the main table is
+not an artifact of the outcome’s right-skew. The log-scale ratio is a
+sensitivity check, not a replacement for the interpretable day-scale
+mean difference.</p>
+</div>
+</div>
+<div class="section level2">
 <h2 id="exporting-results">Exporting results<a class="anchor" aria-label="anchor" href="#exporting-results"></a>
 </h2>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">outcomes</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">nm</span> <span class="op">&lt;-</span> <span class="va">outcomes</span><span class="op">$</span><span class="va">name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
 <span>  <span class="fu"><a href="../reference/export_results.html">export_results</a></span><span class="op">(</span><span class="va">results_list</span><span class="op">[[</span><span class="va">nm</span><span class="op">]</span><span class="op">]</span>, output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"IndepAssoc_RHC_"</span>, <span class="va">nm</span><span class="op">)</span><span class="op">)</span></span>

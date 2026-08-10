@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,11 +38,22 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.0" id="indepassoc-060">IndepAssoc 0.6.0<a class="anchor" aria-label="anchor" href="#indepassoc-060"></a></h2>
+<p>Adds explicit control over which causal estimand the propensity-score methods target, plus propensity-score and weight diagnostics.</p>
+<ul><li>
+<code><a href="../reference/fit_outcome.html">fit_outcome()</a></code> and <code><a href="../reference/run_pipeline.html">run_pipeline()</a></code> gain an <code>estimand = c("ATE", "ATT")</code> argument. With <code>"ATT"</code>, IPTW and AIPW use standardized mortality ratio (SMR) weighting and stratification pools by treated-unit count, so all four propensity-score-based methods can target the average treatment effect on the treated rather than the population average. Matching already targets the ATT by construction and ignores this argument. The default (<code>"ATE"</code>) is unchanged from prior behavior.</li>
+<li>New <code><a href="../reference/check_positivity.html">check_positivity()</a></code> reports propensity-score overlap between exposure groups, flags units outside a configurable support window (default <code>[0.01, 0.99]</code>), and summarizes the resulting IPTW weight distribution. <code><a href="../reference/run_pipeline.html">run_pipeline()</a></code> now prints this summary on every run and returns it as <code>result$positivity</code>.</li>
+<li>
+<code><a href="../reference/fit_outcome.html">fit_outcome()</a></code> gains a <code>trim</code> argument for the <code>"iptw"</code>/<code>"aipw"</code> methods, truncating extreme weights at specified percentiles. Default (<code>trim = NULL</code>) is unchanged from prior behavior.</li>
+<li>The RHC validation vignette now includes a worked positivity/weight diagnostic on the real cohort, a demonstration of the <code>estimand</code> and <code>trim</code> arguments, and a log-transformed sensitivity check for the right-skewed <code>los</code> outcome, alongside an expanded discussion of which estimand each of the five methods targets.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="indepassoc-050">IndepAssoc 0.5.0<a class="anchor" aria-label="anchor" href="#indepassoc-050"></a></h2>
 <p>Initial public release. Implements five confounding-adjustment methods (regression, matching, stratification, IPTW, AIPW) for testing whether an exposure is independently associated with an outcome after adjusting for measured confounders, generalizing the shared analysis pipeline from two peer-reviewed cardiac-surgery studies (see README).</p>
 <p>Validated against the RHC benchmark cohort (Connors et al. 1996) and NHEFS/lalonde (Hernán &amp; Robins; Dehejia &amp; Wahba). See vignettes for worked examples.</p>
 </div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

@@ -36,6 +36,7 @@ res <- run_pipeline(
   methods = "regression"
 )
 #> Step 1/9: Building propensity score model...
+#>   Positivity: PS window [0.010, 0.990]; control [0.366, 0.906], treated [0.364, 0.878]; 0 outside window -> OK
 #> Step 2/9: Matching cohorts...
 #> Warning: Fewer control units than treated units; not all treated units will get
 #> a match.
@@ -76,7 +77,7 @@ res <- run_pipeline(
 #> Pipeline complete.
 out_dir <- tempfile("indepassoc_export_")
 export_results(res, output_dir = out_dir)
-#> Results exported to: /tmp/Rtmp777aub/indepassoc_export_1a80201fd023
+#> Results exported to: /tmp/RtmpDv8Osu/indepassoc_export_1b2533411ecd
 list.files(out_dir)
 #> [1] "balance_check_all.csv"         "balance_check_matched.csv"    
 #> [3] "binary_regression_summary.csv" "comparison.csv"               

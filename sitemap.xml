@@ -10,6 +10,7 @@
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/news/index.html</loc></url>
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/build_ps_model.html</loc></url>
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/check_balance.html</loc></url>
+<url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.html</loc></url>
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/dot-wald_confint.html</loc></url>
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/example_cohort.html</loc></url>
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/export_results.html</loc></url>
@@ -28,6 +29,7 @@
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/plot_comparison.html</loc></url>
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/prepare_rhc_data.html</loc></url>
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/print.IndepAssoc.html</loc></url>
+<url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/print.IndepPositivity.html</loc></url>
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/rhc_sample.html</loc></url>
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/run_pipeline.html</loc></url>
 <url><loc>https://mostafa-abbas.github.io/IndepAssoc/reference/subgroup_analysis.html</loc></url>
