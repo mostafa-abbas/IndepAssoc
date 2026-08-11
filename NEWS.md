@@ -15,6 +15,12 @@ now fail fast with a clear, actionable error instead of silently succeeding.
   `threshold = c(0.99, 0.01)`); previously the inverted bounds silently
   mis-counted every unit as outside the support window. `threshold` must be
   ascending `(lower, upper)`.
+- `build_ps_model()` now fails fast on degenerate cohorts instead of silently
+  returning a meaningless model: it errors when the data has fewer than 2
+  rows, when either exposure arm is empty, or when either arm contains fewer
+  than 2 units. Previously `n = 1`, all-treated, and all-control data all
+  "converged" with degenerate propensity scores (all 1, all 0, or {0, 1})
+  that produced `NaN`/`Inf` weights downstream.
 
 # IndepAssoc 0.6.2 (2026-08-10)
 

@@ -19,3 +19,43 @@ test_that("build_ps_model errors on missing covariates", {
   d <- simulate_test_cohort()
   expect_error(build_ps_model(d, "exposure", c("age", "fake_var")), "not found")
 })
+
+test_that("build_ps_model errors when the data has fewer than 2 rows", {
+  expect_error(build_ps_model(data.frame(exposure = 1, x = 0.5), "exposure", "x"),
+               "`data` must contain at least 2 rows")
+  expect_error(build_ps_model(data.frame(exposure = 0, x = 0.5), "exposure", "x"),
+               "`data` must contain at least 2 rows")
+})
+
+test_that("build_ps_model errors when there are no control units", {
+  d <- data.frame(exposure = c(1, 1, 1, 1), x = c(0.2, 0.4, 0.6, 0.8))
+  expect_error(build_ps_model(d, "exposure", "x"),
+               "No control units found in the data")
+})
+
+test_that("build_ps_model errors when there are no treated units", {
+  d <- data.frame(exposure = c(0, 0, 0, 0), x = c(0.2, 0.4, 0.6, 0.8))
+  expect_error(build_ps_model(d, "exposure", "x"),
+               "No treated units found in the data")
+})
+
+test_that("build_ps_model errors when either exposure arm has fewer than 2 units", {
+  d1 <- data.frame(exposure = c(0, 1), x = c(0.3, 0.7))
+  expect_error(build_ps_model(d1, "exposure", "x"),
+               "Each exposure arm must contain at least 2 units")
+  d2 <- data.frame(exposure = c(rep(0, 9), 1), x = seq(0, 1, length.out = 10))
+  expect_error(build_ps_model(d2, "exposure", "x"),
+               "Each exposure arm must contain at least 2 units")
+})
+
+test_that("build_ps_model backward compatibility: a healthy cohort is unaffected", {
+  d <- simulate_test_cohort()
+  covs <- c("age", "diabetes", "hypertension")
+  ps <- build_ps_model(d, "exposure", covs)
+  expect_s3_class(ps, "IndepPSModel")
+
+  manual <- stats::glm(exposure ~ age + diabetes + hypertension, data = d,
+                       family = "binomial")
+  expect_equal(coef(ps$model), coef(manual))
+  expect_equal(ps$data$.ps, unname(stats::predict(manual, type = "response")))
+})

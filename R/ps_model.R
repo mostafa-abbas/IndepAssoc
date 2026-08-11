@@ -29,6 +29,21 @@ build_ps_model <- function(data, exposure, covariates, family = "binomial") {
   missing_covs <- setdiff(covariates, names(data))
   if (length(missing_covs) > 0) stop(paste("Covariates not found:", paste(missing_covs, collapse = ", ")))
 
+  if (nrow(data) < 2) {
+    stop("`data` must contain at least 2 rows to build a propensity score model.")
+  }
+  n_control <- sum(data[[exposure]] == 0, na.rm = TRUE)
+  n_treated <- sum(data[[exposure]] == 1, na.rm = TRUE)
+  if (n_control == 0) {
+    stop("No control units found in the data - cannot build a propensity score model.")
+  }
+  if (n_treated == 0) {
+    stop("No treated units found in the data - cannot build a propensity score model.")
+  }
+  if (n_treated < 2 || n_control < 2) {
+    stop("Each exposure arm must contain at least 2 units to build a propensity score model.")
+  }
+
   formula_str <- paste(exposure, "~", paste(covariates, collapse = " + "))
   formula <- as.formula(formula_str)
 
