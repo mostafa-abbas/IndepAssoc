@@ -34,8 +34,10 @@ build_ps_model <- function(data, exposure, covariates, family = "binomial") {
   if (nrow(data) < 4) {
     stop("`data` must contain at least 4 rows to build a propensity score model.")
   }
-  n_control <- sum(data[[exposure]] == 0, na.rm = TRUE)
-  n_treated <- sum(data[[exposure]] == 1, na.rm = TRUE)
+  exp <- data[[exposure]]
+  if (is.factor(exp)) exp <- exp != levels(exp)[1]
+  n_control <- sum(exp == 0, na.rm = TRUE)
+  n_treated <- sum(exp == 1, na.rm = TRUE)
   if (n_control == 0) {
     stop("No control units found in the data - cannot build a propensity score model.")
   }

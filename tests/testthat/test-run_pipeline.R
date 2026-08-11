@@ -59,3 +59,19 @@ test_that("run_pipeline matched Table 1 completes without gtsummary add_p errors
   )
   expect_false(any(grepl("errors were returned during", msgs, ignore.case = TRUE)))
 })
+
+test_that("run_pipeline completes end-to-end with a label-coded factor exposure", {
+  d <- simulate_test_cohort()
+  d$exposure <- factor(d$exposure, labels = c("control", "treated"))
+  res <- expect_no_error(suppressWarnings(suppressMessages(run_pipeline(
+    data = d,
+    exposure = "exposure",
+    covariates = c("age", "diabetes", "hypertension"),
+    outcome = "outcome",
+    methods = c("regression", "matching"),
+    seed = 1
+  ))))
+  expect_s3_class(res, "IndepAssoc")
+  expect_equal(res$outcome_type, "binary")
+  expect_true("OR" %in% names(res$models$summary_w))
+})

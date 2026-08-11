@@ -187,3 +187,27 @@ test_that("check_positivity backward compatibility: an ascending threshold is un
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
   expect_identical(check_positivity(ps, threshold = c(0.01, 0.99)), check_positivity(ps))
 })
+
+test_that("check_positivity handles a label-coded factor exposure", {
+  d <- simulate_test_cohort()
+  d$exposure <- factor(d$exposure, labels = c("control", "treated"))
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+
+  expect_no_warning(res <- check_positivity(ps))
+  g <- res$ps_by_group
+  expect_equal(g$n[g$group == 0], sum(d$exposure == "control"))
+  expect_equal(g$n[g$group == 1], sum(d$exposure == "treated"))
+  expect_true(all(is.finite(c(res$weights$min, res$weights$median, res$weights$max))))
+  expect_true(res$weights$max_min_ratio >= 1)
+})
+
+test_that("check_positivity factor exposure: group coding follows factor level order", {
+  d <- simulate_test_cohort()
+  d$exposure <- factor(d$exposure, labels = c("treated", "control"))
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+
+  res <- check_positivity(ps)
+  g <- res$ps_by_group
+  expect_equal(g$n[g$group == 0], sum(d$exposure == "treated"))
+  expect_equal(g$n[g$group == 1], sum(d$exposure == "control"))
+})

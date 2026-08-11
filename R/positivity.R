@@ -54,7 +54,9 @@ check_positivity <- function(ps, threshold = c(0.01, 0.99),
   }
   estimand <- match.arg(estimand)
 
-  a <- as.numeric(as.character(ps$data[[ps$exposure]]))
+  a <- ps$data[[ps$exposure]]
+  if (is.factor(a)) a <- a != levels(a)[1]
+  a <- as.numeric(a)
   p <- ps$data$.ps
 
   group_stats <- do.call(rbind, lapply(c(0, 1), function(g) {
