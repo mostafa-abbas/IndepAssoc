@@ -98,3 +98,23 @@ test_that("subgroup_analysis warns and returns an NA row when a subgroup fails t
   expect_true(any(is.na(out$estimate)))
   expect_identical(nrow(out), 2L)
 })
+
+test_that("subgroup_analysis auto-detects a continuous outcome when type is omitted", {
+  d <- simulate_test_cohort()
+  d$grp <- sample(c("A", "B"), nrow(d), replace = TRUE)
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- suppressWarnings(match_cohort(ps))
+  out <- suppressWarnings(subgroup_analysis(m, "outcome_continuous", "grp"))
+  expect_true(all(!is.na(out$estimate)))
+  expect_equal(nrow(out), length(unique(d$grp)))
+})
+
+test_that("subgroup_analysis still defaults to binary for a 0/1 outcome when type is omitted", {
+  d <- simulate_test_cohort()
+  d$grp <- sample(c("A", "B"), nrow(d), replace = TRUE)
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- suppressWarnings(match_cohort(ps))
+  out <- suppressWarnings(subgroup_analysis(m, "outcome", "grp"))
+  expect_true(all(!is.na(out$estimate)))
+  expect_equal(nrow(out), length(unique(d$grp)))
+})

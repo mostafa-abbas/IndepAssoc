@@ -71,6 +71,10 @@ fit_outcome <- function(data, exposure, covariates, outcome,
                         estimand = c("ATE", "ATT"),
                         trim = NULL,
                         ...) {
+  if (missing(type)) {
+    type <- detect_outcome_type(data[[outcome]])
+    if (is.null(type)) type <- "binary"
+  }
   type <- match.arg(type)
   estimand <- match.arg(estimand)
   allowed <- c("regression", "matching", "stratification", "iptw", "aipw")

@@ -31,6 +31,10 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
   data <- match_obj$data
   if (!subgroup_var %in% names(data)) stop(paste("Subgroup variable", subgroup_var, "not found."))
   if (!outcome %in% names(data)) stop(paste("Outcome", outcome, "not found."))
+  if (missing(type)) {
+    type <- detect_outcome_type(data[[outcome]])
+    if (is.null(type)) type <- "binary"
+  }
   type <- match.arg(type)
 
   covariates <- match_obj$ps_model$covariates

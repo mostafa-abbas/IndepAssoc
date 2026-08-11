@@ -241,3 +241,29 @@ test_that("fit_outcome matching with seed = NULL does not seed", {
   expect_identical(.Random.seed, pre)
   expect_equal(res$method, "matching")
 })
+
+test_that("fit_outcome auto-detects a continuous outcome when type is omitted", {
+  d <- simulate_test_cohort()
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"),
+                     "outcome_continuous", method = "regression")
+  expect_equal(res$type, "continuous")
+  expect_s3_class(res$model, "lm")
+})
+
+test_that("fit_outcome on rhc_sample continuous outcome completes without 'y values must be 0 <= y <= 1'", {
+  data(rhc_sample)
+  res <- expect_no_error(
+    fit_outcome(rhc_sample$data, "swang1", rhc_sample$covariates,
+                "los", method = "regression")
+  )
+  expect_equal(res$type, "continuous")
+  expect_s3_class(res$model, "lm")
+})
+
+test_that("fit_outcome still defaults to binary for a 0/1 outcome when type is omitted", {
+  d <- simulate_test_cohort()
+  res <- fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"),
+                     "outcome", method = "regression")
+  expect_equal(res$type, "binary")
+  expect_s3_class(res$model, "glm")
+})
