@@ -53,18 +53,20 @@ test_that("run_pipeline prints sequentially numbered step messages in execution 
   expect_identical(steps, paste0("Step ", 1:9, "/9"))
 })
 
-test_that("run_pipeline completes on a constant binary response", {
+test_that("run_pipeline errors on a constant binary response", {
   d <- simulate_test_cohort()
   d$outcome <- 0L
-  res <- suppressWarnings(run_pipeline(
-    data = d,
-    exposure = "exposure",
-    covariates = c("age", "diabetes", "hypertension"),
-    outcome = "outcome",
-    type = "binary",
-    methods = "regression"
-  ))
-  expect_s3_class(res, "IndepAssoc")
+  expect_error(
+    suppressWarnings(suppressMessages(run_pipeline(
+      data = d,
+      exposure = "exposure",
+      covariates = c("age", "diabetes", "hypertension"),
+      outcome = "outcome",
+      type = "binary",
+      methods = "regression"
+    ))),
+    "zero variance"
+  )
 })
 
 test_that("run_pipeline with a fixed seed is reproducible", {

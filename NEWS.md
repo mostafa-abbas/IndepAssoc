@@ -21,6 +21,15 @@ now fail fast with a clear, actionable error instead of silently succeeding.
   than 2 units. Previously `n = 1`, all-treated, and all-control data all
   "converged" with degenerate propensity scores (all 1, all 0, or {0, 1})
   that produced `NaN`/`Inf` weights downstream.
+- `fit_outcome()` now errors on a zero-variance binary outcome for every
+  method (regression, matching, stratification, iptw, aipw). Previously an
+  all-0 or all-1 outcome silently returned a meaningless OR of 1 (with a
+  `0-Inf` confidence interval), an `NA`, or even an impossible negative OR,
+  after only a generic `glm.fit: algorithm did not converge` warning. The
+  error is raised once at the `fit_outcome()` entry point, so `run_pipeline()`
+  and `subgroup_analysis()` inherit it. A related test asserting that
+  `run_pipeline()` *completes* on a constant binary response was repurposed
+  to assert the new error instead.
 
 # IndepAssoc 0.6.2 (2026-08-10)
 

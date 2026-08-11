@@ -14,7 +14,7 @@ test_that("subgroup_analysis does not warn when subgroup_var was a matching cova
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
   m <- suppressWarnings(match_cohort(ps))
   expect_warning(
-    subgroup_analysis(m, "outcome", "age"),
+    subgroup_analysis(m, "outcome", "diabetes"),
     NA
   )
 })

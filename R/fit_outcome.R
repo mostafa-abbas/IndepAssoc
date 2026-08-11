@@ -89,6 +89,17 @@ fit_outcome <- function(data, exposure, covariates, outcome,
   if (length(missing_covs) > 0) stop(paste("Covariates not found:", paste(missing_covs, collapse = ", ")))
   if (!outcome %in% names(data)) stop(paste("Outcome", outcome, "not found."))
 
+  if (type == "binary") {
+    y <- data[[outcome]]
+    y <- y[!is.na(y)]
+    if (length(y) > 0 && length(unique(y)) < 2) {
+      stop(sprintf(
+        "Binary outcome `%s` has zero variance (all %d values are %s) - cannot estimate a treatment effect.",
+        outcome, length(y), y[1]
+      ))
+    }
+  }
+
   funs <- c(
     regression     = ".fit_regression",
     matching       = ".fit_matching",

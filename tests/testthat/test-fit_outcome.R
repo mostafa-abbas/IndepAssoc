@@ -267,3 +267,50 @@ test_that("fit_outcome still defaults to binary for a 0/1 outcome when type is o
   expect_equal(res$type, "binary")
   expect_s3_class(res$model, "glm")
 })
+
+test_that("fit_outcome rejects a zero-variance binary outcome for every method", {
+  d <- simulate_test_cohort()
+  covs <- c("age", "diabetes", "hypertension")
+  for (val in c(0, 1)) {
+    d$y <- rep(val, nrow(d))
+    for (meth in c("regression", "matching", "stratification", "iptw", "aipw")) {
+      expect_error(
+        fit_outcome(d, "exposure", covs, "y", type = "binary", method = meth),
+        "zero variance",
+        info = paste("value =", val, "method =", meth)
+      )
+    }
+  }
+})
+
+test_that("fit_outcome zero-variance error names the outcome, count, and value", {
+  d <- simulate_test_cohort()
+  d$y <- rep(0, nrow(d))
+  err <- tryCatch(
+    fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"), "y",
+                type = "binary", method = "regression"),
+    error = function(e) e
+  )
+  expect_s3_class(err, "simpleError")
+  expect_match(conditionMessage(err), "Binary outcome `y` has zero variance")
+  expect_match(conditionMessage(err), "all 200 values are 0")
+  expect_match(conditionMessage(err), "cannot estimate a treatment effect")
+})
+
+test_that("fit_outcome backward compatibility: a normal-variance binary outcome is unaffected", {
+  d <- simulate_test_cohort()
+  covs <- c("age", "diabetes", "hypertension")
+  for (meth in c("regression", "matching", "stratification", "iptw", "aipw")) {
+    f <- suppressWarnings(suppressMessages(fit_outcome(
+      d, "exposure", covs, "outcome", type = "binary", method = meth
+    )))
+    expect_true(is.finite(f$estimate), info = meth)
+    expect_true(all(is.finite(c(f$conf_low, f$conf_high, f$p_value))), info = meth)
+  }
+
+  manual <- stats::glm(outcome ~ exposure + age + diabetes + hypertension,
+                       data = d, family = stats::binomial)
+  f_reg <- suppressWarnings(fit_outcome(d, "exposure", covs, "outcome",
+                                        type = "binary", method = "regression"))
+  expect_equal(f_reg$estimate, exp(unname(stats::coef(manual)["exposure"])))
+})
