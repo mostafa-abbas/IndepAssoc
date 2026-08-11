@@ -139,6 +139,18 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
   pred_features <- c(exposure, all_covs)
 
   if (!outcome %in% names(full_data)) stop(paste("Outcome", outcome, "not found."))
+
+  if (type == "binary") {
+    y <- full_data[[outcome]]
+    y <- y[!is.na(y)]
+    if (length(y) > 0 && length(unique(y)) < 2) {
+      stop(sprintf(
+        "Binary outcome `%s` has zero variance (all %d values are %s) - cannot estimate a treatment effect.",
+        outcome, length(y), y[1]
+      ))
+    }
+  }
+
   matched_data <- .ensure_match_num(matched_data)
 
   if (type == "binary") {
@@ -156,11 +168,11 @@ fit_all_models <- function(ps_model, matched_data, outcome, type = c("binary", "
     conditional <- .fit_conditional_logit(matched_data, exposure, "label")
 
     mixed_form <- as.formula(paste("label ~", exposure, "+ (1 | match_num)"))
-    # lme4::checkResponse() throws "Response is constant" when the matched
-    # cohort's binary outcome has fewer than 2 unique values (a degenerate
-    # matched cohort whose outcome is all 0, all 1, or empty). glm() and
-    # clogit() tolerate this, so only the mixed-effects model can fail; it is
-    # deliberately skipped (NA row) rather than halting the whole pipeline.
+    # Constant binary outcomes are rejected at the entry of fit_all_models(),
+    # so the mixed-effects model cannot fail with lme4's "Response is
+    # constant". This tryCatch remains as a safety net for other glmer fitting
+    # failures (e.g. singular fits on sparse strata); those degrade to an NA
+    # row with a warning rather than halting the whole pipeline.
     mixed_effect <- tryCatch(
       lme4::glmer(mixed_form, family = stats::binomial, data = matched_data),
       error = function(e) {

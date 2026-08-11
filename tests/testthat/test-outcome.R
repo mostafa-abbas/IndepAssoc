@@ -139,30 +139,46 @@ test_that("fit_all_models conditional logit is built by the shared helper", {
   expect_equal(cond$loglik, expected$loglik)
 })
 
-test_that("fit_all_models degrades gracefully when the mixed-effect response is constant", {
+test_that("fit_all_models rejects a zero-variance binary outcome", {
+  covs <- c("age", "diabetes", "hypertension")
+  for (val in c(0, 1)) {
+    d <- simulate_test_cohort()
+    d$y <- rep(val, nrow(d))
+    ps <- build_ps_model(d, "exposure", covs)
+    m <- suppressWarnings(match_cohort(ps))
+    expect_error(
+      fit_all_models(ps, m$data, "y", type = "binary"),
+      "zero variance",
+      info = paste("value =", val)
+    )
+  }
+})
+
+test_that("fit_all_models zero-variance error names the outcome, count, and value", {
   d <- simulate_test_cohort()
-  d$outcome <- 0L
+  d$y <- rep(1, nrow(d))
   ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
   m <- suppressWarnings(match_cohort(ps))
-  expect_warning(
-    withCallingHandlers(
-      fam <- fit_all_models(ps, m$data, "outcome", type = "binary"),
-      warning = function(w) {
-        if (!grepl("failed to fit", conditionMessage(w), fixed = TRUE)) {
-          invokeRestart("muffleWarning")
-        }
-      }
-    ),
-    "failed to fit"
+  err <- tryCatch(
+    fit_all_models(ps, m$data, "y", type = "binary"),
+    error = function(e) e
   )
-  expect_null(fam$models[["Mixed effect logistic"]])
-  expect_false(is.null(fam$models[["Fully adjusted logistic"]]))
-  expect_false(is.null(fam$models[["Conditional logit"]]))
-  me_row <- fam$summary_w[fam$summary_w$Model == "Mixed effect logistic", ]
-  expect_true(is.na(me_row$OR))
-  expect_true(is.na(me_row$p))
+  expect_s3_class(err, "simpleError")
+  expect_match(conditionMessage(err), "Binary outcome `y` has zero variance")
+  expect_match(conditionMessage(err), sprintf("all %d values are 1", nrow(d)))
+  expect_match(conditionMessage(err), "cannot estimate a treatment effect")
+})
+
+test_that("fit_all_models backward compatibility: a normal-variance binary outcome is unaffected", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- suppressWarnings(match_cohort(ps))
+  fam <- fit_all_models(ps, m$data, "outcome", type = "binary")
+  expect_s3_class(fam, "IndepOutcomeModels")
   expect_equal(nrow(fam$summary_w), 3)
-  expect_false(any(is.na(fam$summary_w[fam$summary_w$Model == "Fully adjusted logistic", "OR"])))
+  expect_true(all(is.finite(fam$summary_w$OR)))
+  expect_equal(fam$summary_w$Model,
+               c("Fully adjusted logistic", "Conditional logit", "Mixed effect logistic"))
 })
 
 test_that("fit_all_models degrades gracefully when the continuous response is constant", {

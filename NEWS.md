@@ -30,6 +30,24 @@ now fail fast with a clear, actionable error instead of silently succeeding.
   and `subgroup_analysis()` inherit it. A related test asserting that
   `run_pipeline()` *completes* on a constant binary response was repurposed
   to assert the new error instead.
+- `fit_all_models()` now errors on a zero-variance binary outcome instead of
+  returning a warning plus meaningless estimates. Previously an all-0 or
+  all-1 outcome was only detected by `lme4` for the mixed-effect model (which
+  was skipped with a warning and an `NA` row), while the fully adjusted
+  logistic and conditional logit models silently returned a meaningless OR
+  of 1 (with a `0-Inf` confidence interval) or `NA`. The error is raised once
+  at the `fit_all_models()` entry point with the same message as
+  `fit_outcome()`, so the two entry points behave identically. A related test
+  asserting that `fit_all_models()` *degrades gracefully* on a constant
+  response was repurposed to assert the new error instead.
+
+**Behavior change for `run_pipeline()`:** a constant binary outcome now halts
+the pipeline at Step 6 (`fit_all_models()`) with the clear "zero variance"
+error, before any results object is returned. A call that previously completed
+and returned a results object with garbage rows (OR = 1, `0-Inf` CI, `NA`)
+for every binary model now stops with an error. This was already the
+`fit_outcome()` behavior at Step 9 since the previous release; the halting
+point is now earlier and `fit_all_models()` standalone is consistent.
 
 # IndepAssoc 0.6.2 (2026-08-10)
 
