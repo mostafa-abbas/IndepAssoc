@@ -17,11 +17,16 @@ silently succeeding.
   mis-counted every unit as outside the support window. `threshold` must be
   ascending `(lower, upper)`.
 - `build_ps_model()` now fails fast on degenerate cohorts instead of silently
-  returning a meaningless model: it errors when the data has fewer than 2
+  returning a meaningless model: it errors when the data has fewer than 4
   rows, when either exposure arm is empty, or when either arm contains fewer
   than 2 units. Previously `n = 1`, all-treated, and all-control data all
   "converged" with degenerate propensity scores (all 1, all 0, or {0, 1})
   that produced `NaN`/`Inf` weights downstream.
+- `build_ps_model()` now emits a non-fatal warning when either exposure arm
+  has fewer than 10 units, since propensity-score estimation at that sample
+  size is unreliable. The warning names the affected arm(s); the model is
+  still built. The floor for a build to proceed at all is 4 rows total with
+  at least 2 units per arm (see above).
 - `fit_outcome()` now errors on a zero-variance binary outcome for every
   method (regression, matching, stratification, iptw, aipw). Previously an
   all-0 or all-1 outcome silently returned a meaningless OR of 1 (with a
@@ -40,7 +45,12 @@ silently succeeding.
   at the `fit_all_models()` entry point with the same message as
   `fit_outcome()`, so the two entry points behave identically. A related test
   asserting that `fit_all_models()` *degrades gracefully* on a constant
-  response was repurposed to assert the new error instead.
+  response was repurposed to assert the new error instead. Note the check
+  validates only the top-level outcome vector at entry: when the *full*
+  cohort's outcome has real variance but the matched subset fit by the
+  mixed-effect model is constant (the original Phase 2 RHC failure mode),
+  the mixed model still degrades gracefully to an `NA` row with a warning
+  while the other models are unaffected. A regression test covers this case.
 
 **Behavior change for `run_pipeline()`:** a constant binary outcome now halts
 the pipeline at Step 6 (`fit_all_models()`) with the clear "zero variance"

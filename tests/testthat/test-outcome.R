@@ -154,6 +154,50 @@ test_that("fit_all_models rejects a zero-variance binary outcome", {
   }
 })
 
+test_that("fit_all_models degrades gracefully on a constant-response subset, not hard-errors (Phase 2 RHC scenario)", {
+  # Original Phase 2 failure mode (see IndepAssoc_rhc_fixes_plan.md): the full
+  # cohort's outcome has real variance, but the matched subset fit by the
+  # mixed-effects model is constant, so lme4::glmer() throws "Response is
+  # constant". The entry-level zero-variance check must NOT fire here (it only
+  # validates the top-level outcome vector); the mixed model must degrade to an
+  # NA row with a warning while the rest of the call continues.
+  d <- simulate_test_cohort(seed = 42)
+  covs <- c("age", "diabetes", "hypertension")
+  ps <- build_ps_model(d, "exposure", covs)
+  expect_gt(length(unique(d$outcome)), 1) # precondition: full outcome varies
+
+  set.seed(1)
+  matched_const <- data.frame(
+    exposure = rep(c(1, 0), 10),
+    age = rnorm(20), diabetes = rbinom(20, 1, 0.3),
+    hypertension = rbinom(20, 1, 0.5),
+    outcome = 0L,
+    match_num = rep(1:10, each = 2)
+  )
+  expect_equal(length(unique(matched_const$outcome)), 1) # precondition: subset constant
+
+  fam <- NULL
+  expect_warning(
+    withCallingHandlers(
+      fam <- fit_all_models(ps, matched_const, "outcome", type = "binary"),
+      warning = function(w) {
+        if (!grepl("failed to fit", conditionMessage(w), fixed = TRUE)) {
+          invokeRestart("muffleWarning")
+        }
+      }
+    ),
+    "failed to fit"
+  )
+  expect_s3_class(fam, "IndepOutcomeModels")
+  expect_equal(nrow(fam$summary_w), 3)
+  expect_null(fam$models[["Mixed effect logistic"]])
+  expect_true(is.na(fam$summary_w$OR[3]))
+  expect_true(is.na(fam$summary_w$p[3]))
+  expect_false(is.null(fam$models[["Fully adjusted logistic"]]))
+  expect_false(is.null(fam$models[["Conditional logit"]]))
+  expect_true(is.finite(fam$summary_w$OR[1]))
+})
+
 test_that("fit_all_models zero-variance error names the outcome, count, and value", {
   d <- simulate_test_cohort()
   d$y <- rep(1, nrow(d))

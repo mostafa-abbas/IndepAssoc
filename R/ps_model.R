@@ -3,7 +3,9 @@
 #' Fits a logistic regression model predicting exposure from covariates,
 #' then appends predicted propensity scores to the data.
 #'
-#' @param data Data frame containing the cohort.
+#' @param data Data frame containing the cohort. Must have at least 4 rows and
+#'   at least 2 units in each exposure arm; a non-fatal warning is emitted when
+#'   either arm has fewer than 10 units.
 #' @param exposure Character string naming the binary exposure variable.
 #' @param covariates Character vector of covariate names to adjust for.
 #' @param family GLM family; default `"binomial"` for logistic regression.
@@ -29,8 +31,8 @@ build_ps_model <- function(data, exposure, covariates, family = "binomial") {
   missing_covs <- setdiff(covariates, names(data))
   if (length(missing_covs) > 0) stop(paste("Covariates not found:", paste(missing_covs, collapse = ", ")))
 
-  if (nrow(data) < 2) {
-    stop("`data` must contain at least 2 rows to build a propensity score model.")
+  if (nrow(data) < 4) {
+    stop("`data` must contain at least 4 rows to build a propensity score model.")
   }
   n_control <- sum(data[[exposure]] == 0, na.rm = TRUE)
   n_treated <- sum(data[[exposure]] == 1, na.rm = TRUE)
@@ -42,6 +44,19 @@ build_ps_model <- function(data, exposure, covariates, family = "binomial") {
   }
   if (n_treated < 2 || n_control < 2) {
     stop("Each exposure arm must contain at least 2 units to build a propensity score model.")
+  }
+  if (n_control < 10 || n_treated < 10) {
+    small_arms <- c()
+    if (n_control < 10) {
+      small_arms <- c(small_arms, sprintf("control arm has %d observations", n_control))
+    }
+    if (n_treated < 10) {
+      small_arms <- c(small_arms, sprintf("treated arm has %d observations", n_treated))
+    }
+    warning(paste0("Propensity score model may be unreliable at this sample size: ",
+                   paste(small_arms, collapse = " and "),
+                   " (minimum recommended: 10 per arm)."),
+            call. = FALSE)
   }
 
   formula_str <- paste(exposure, "~", paste(covariates, collapse = " + "))
