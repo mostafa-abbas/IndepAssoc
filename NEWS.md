@@ -2,8 +2,9 @@
 
 ## Input validation hardening
 
-First pass of the 0.6.3 hardening series (issue #1): malformed range arguments
-now fail fast with a clear, actionable error instead of silently succeeding.
+First pass of the 0.6.3 hardening series (issue #1): malformed argument values
+and degenerate data now fail fast with a clear, actionable error instead of
+silently succeeding.
 
 - `match_cohort()` now errors when `caliper` is negative. A negative caliper
   such as `caliper = -0.2` previously ran MatchIt with an invalid caliper and
