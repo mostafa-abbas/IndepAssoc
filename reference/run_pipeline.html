@@ -9,7 +9,7 @@ descriptive tables, outcome models (3 types), and statistical tests."></head><bo
 
     <a class="navbar-brand me-2" href="../index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,7 +83,10 @@ descriptive tables, outcome models (3 types), and statistical tests.</p>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
-<dd><p>Outcome type: <code>"binary"</code> or <code>"continuous"</code>.</p></dd>
+<dd><p>Outcome type: <code>"binary"</code> or <code>"continuous"</code>. When omitted it is
+auto-detected from the outcome variable: a numeric or logical vector whose
+values are all 0/1 is treated as <code>"binary"</code>, any other numeric vector as
+<code>"continuous"</code>; factor/character outcomes keep the <code>"binary"</code> default.</p></dd>
 
 
 <dt id="arg-caliper">caliper<a class="anchor" aria-label="anchor" href="#arg-caliper"></a></dt>

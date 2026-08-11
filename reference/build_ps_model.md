@@ -13,7 +13,9 @@ build_ps_model(data, exposure, covariates, family = "binomial")
 
 - data:
 
-  Data frame containing the cohort.
+  Data frame containing the cohort. Must have at least 4 rows and at
+  least 2 units in each exposure arm; a non-fatal warning is emitted
+  when either arm has fewer than 10 units.
 
 - exposure:
 

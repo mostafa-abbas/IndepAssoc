@@ -9,7 +9,7 @@ then appends predicted propensity scores to the data."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +55,9 @@ then appends predicted propensity scores to the data.</p>
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>Data frame containing the cohort.</p></dd>
+<dd><p>Data frame containing the cohort. Must have at least 4 rows and
+at least 2 units in each exposure arm; a non-fatal warning is emitted when
+either arm has fewer than 10 units.</p></dd>
 
 
 <dt id="arg-exposure">exposure<a class="anchor" aria-label="anchor" href="#arg-exposure"></a></dt>

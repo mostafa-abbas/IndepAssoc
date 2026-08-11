@@ -41,7 +41,11 @@ run_pipeline(
 
 - type:
 
-  Outcome type: `"binary"` or `"continuous"`.
+  Outcome type: `"binary"` or `"continuous"`. When omitted it is
+  auto-detected from the outcome variable: a numeric or logical vector
+  whose values are all 0/1 is treated as `"binary"`, any other numeric
+  vector as `"continuous"`; factor/character outcomes keep the
+  `"binary"` default.
 
 - caliper:
 

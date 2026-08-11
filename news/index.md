@@ -1,5 +1,59 @@
 # Changelog
 
+## IndepAssoc 0.6.3 (2026-08-11)
+
+### Input validation hardening
+
+Malformed argument values and degenerate input now fail fast with a
+clear, actionable error instead of silently succeeding or surfacing only
+a generic downstream warning.
+
+- [`match_cohort()`](https://mostafa-abbas.github.io/IndepAssoc/reference/match_cohort.md)
+  errors when `caliper` is negative. A negative caliper such as
+  `caliper = -0.2` previously ran MatchIt with an invalid caliper and
+  silently returned a matched cohort.
+- [`fit_outcome()`](https://mostafa-abbas.github.io/IndepAssoc/reference/fit_outcome.md)
+  with `method = "iptw"` or `method = "aipw"` errors when `trim` bounds
+  are inverted (e.g. `trim = c(0.9, 0.1)`); previously the range was
+  silently sorted. `trim` must be ascending `(lower, upper)`.
+- [`check_positivity()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.md)
+  errors when `threshold` bounds are inverted (e.g.
+  `threshold = c(0.99, 0.01)`); previously the inverted bounds silently
+  mis-counted every unit as outside the support window. `threshold` must
+  be ascending `(lower, upper)`.
+- [`build_ps_model()`](https://mostafa-abbas.github.io/IndepAssoc/reference/build_ps_model.md)
+  errors when the data has fewer than 4 rows, when either exposure arm
+  is empty, or when either arm contains fewer than 2 units, and warns
+  when either arm has fewer than 10 units. Previously `n = 1`,
+  all-treated, and all-control data all “converged” with degenerate
+  propensity scores (all 1, all 0, or {0, 1}) that produced `NaN`/`Inf`
+  weights downstream, with no indication that the sample was too small.
+- [`fit_outcome()`](https://mostafa-abbas.github.io/IndepAssoc/reference/fit_outcome.md)
+  and
+  [`fit_all_models()`](https://mostafa-abbas.github.io/IndepAssoc/reference/fit_all_models.md)
+  error on a zero-variance binary outcome. Previously an all-0 or all-1
+  outcome silently returned a meaningless OR of 1 (with a `0-Inf`
+  confidence interval), an `NA`, or even an impossible negative OR,
+  after only a generic `glm.fit: algorithm did not converge` warning —
+  or, for the mixed-effect model, a skipped fit with a warning. The
+  error is raised once at each entry point (on the top-level outcome
+  vector) with the same message, so
+  [`run_pipeline()`](https://mostafa-abbas.github.io/IndepAssoc/reference/run_pipeline.md)
+  and
+  [`subgroup_analysis()`](https://mostafa-abbas.github.io/IndepAssoc/reference/subgroup_analysis.md)
+  inherit it and the two entry points behave identically. A constant
+  outcome within a matched subset or subgroup, where the full cohort’s
+  outcome varies, still degrades gracefully: the affected model returns
+  an `NA` with a warning and the others are unaffected.
+
+**Behavior change for
+[`run_pipeline()`](https://mostafa-abbas.github.io/IndepAssoc/reference/run_pipeline.md):**
+a constant binary outcome now halts the pipeline at Step 6
+([`fit_all_models()`](https://mostafa-abbas.github.io/IndepAssoc/reference/fit_all_models.md))
+with the clear “zero variance” error instead of returning a results
+object with garbage rows (OR = 1, `0-Inf` CI, `NA`) for every binary
+model.
+
 ## IndepAssoc 0.6.2 (2026-08-10)
 
 ### Bug fixes
