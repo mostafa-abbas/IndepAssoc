@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.2" id="indepassoc-062-2026-08-10">IndepAssoc 0.6.2 (2026-08-10)<a class="anchor" aria-label="anchor" href="#indepassoc-062-2026-08-10"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-6-2">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-6-2"></a></h3>
+<p>Completes the 0.6.1 auto-detection fix for the package’s remaining public entry points.</p>
+<ul><li>
+<code><a href="../reference/fit_outcome.html">fit_outcome()</a></code> and <code><a href="../reference/subgroup_analysis.html">subgroup_analysis()</a></code> now auto-detect the outcome type when <code>type</code> is omitted, matching the behavior <code><a href="../reference/run_pipeline.html">run_pipeline()</a></code> and <code><a href="../reference/fit_all_models.html">fit_all_models()</a></code> gained in 0.6.1. A numeric or logical outcome whose values are all 0/1 is treated as <code>"binary"</code>; any other numeric outcome is treated as <code>"continuous"</code>. Previously a direct <code><a href="../reference/fit_outcome.html">fit_outcome()</a></code> call on a continuous outcome such as <code>los</code> with <code>type</code> omitted still crashed with <code>y values must be 0 &lt;= y &lt;= 1</code> because it defaulted to a binomial family through <code><a href="https://rdrr.io/r/base/match.arg.html" class="external-link">match.arg()</a></code>. An explicit <code>type</code> argument is still respected, and binary outcomes are unchanged.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.1" id="indepassoc-061-2026-08-10">IndepAssoc 0.6.1 (2026-08-10)<a class="anchor" aria-label="anchor" href="#indepassoc-061-2026-08-10"></a></h2>
 <div class="section level3">

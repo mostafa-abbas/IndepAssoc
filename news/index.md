@@ -1,5 +1,30 @@
 # Changelog
 
+## IndepAssoc 0.6.2 (2026-08-10)
+
+### Bug fixes
+
+Completes the 0.6.1 auto-detection fix for the package’s remaining
+public entry points.
+
+- [`fit_outcome()`](https://mostafa-abbas.github.io/IndepAssoc/reference/fit_outcome.md)
+  and
+  [`subgroup_analysis()`](https://mostafa-abbas.github.io/IndepAssoc/reference/subgroup_analysis.md)
+  now auto-detect the outcome type when `type` is omitted, matching the
+  behavior
+  [`run_pipeline()`](https://mostafa-abbas.github.io/IndepAssoc/reference/run_pipeline.md)
+  and
+  [`fit_all_models()`](https://mostafa-abbas.github.io/IndepAssoc/reference/fit_all_models.md)
+  gained in 0.6.1. A numeric or logical outcome whose values are all 0/1
+  is treated as `"binary"`; any other numeric outcome is treated as
+  `"continuous"`. Previously a direct
+  [`fit_outcome()`](https://mostafa-abbas.github.io/IndepAssoc/reference/fit_outcome.md)
+  call on a continuous outcome such as `los` with `type` omitted still
+  crashed with `y values must be 0 <= y <= 1` because it defaulted to a
+  binomial family through
+  [`match.arg()`](https://rdrr.io/r/base/match.arg.html). An explicit
+  `type` argument is still respected, and binary outcomes are unchanged.
+
 ## IndepAssoc 0.6.1 (2026-08-10)
 
 ### Bug fixes
