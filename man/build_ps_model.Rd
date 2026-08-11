@@ -7,7 +7,9 @@
 build_ps_model(data, exposure, covariates, family = "binomial")
 }
 \arguments{
-\item{data}{Data frame containing the cohort.}
+\item{data}{Data frame containing the cohort. Must have at least 4 rows and
+at least 2 units in each exposure arm; a non-fatal warning is emitted when
+either arm has fewer than 10 units.}
 
 \item{exposure}{Character string naming the binary exposure variable.}
 

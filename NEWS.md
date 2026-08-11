@@ -1,64 +1,43 @@
-# IndepAssoc 0.6.3 (unreleased)
+# IndepAssoc 0.6.3 (2026-08-11)
 
 ## Input validation hardening
 
-First pass of the 0.6.3 hardening series (issue #1): malformed argument values
-and degenerate data now fail fast with a clear, actionable error instead of
-silently succeeding.
+Malformed argument values and degenerate input now fail fast with a clear,
+actionable error instead of silently succeeding or surfacing only a generic
+downstream warning.
 
-- `match_cohort()` now errors when `caliper` is negative. A negative caliper
-  such as `caliper = -0.2` previously ran MatchIt with an invalid caliper and
+- `match_cohort()` errors when `caliper` is negative. A negative caliper such
+  as `caliper = -0.2` previously ran MatchIt with an invalid caliper and
   silently returned a matched cohort.
-- `fit_outcome()` with `method = "iptw"` or `method = "aipw"` now errors when
-  `trim` bounds are inverted (e.g. `trim = c(0.9, 0.1)`); previously the range
-  was silently sorted. `trim` must be ascending `(lower, upper)`.
-- `check_positivity()` now errors when `threshold` bounds are inverted (e.g.
+- `fit_outcome()` with `method = "iptw"` or `method = "aipw"` errors when
+  `trim` bounds are inverted (e.g. `trim = c(0.9, 0.1)`); previously the
+  range was silently sorted. `trim` must be ascending `(lower, upper)`.
+- `check_positivity()` errors when `threshold` bounds are inverted (e.g.
   `threshold = c(0.99, 0.01)`); previously the inverted bounds silently
   mis-counted every unit as outside the support window. `threshold` must be
   ascending `(lower, upper)`.
-- `build_ps_model()` now fails fast on degenerate cohorts instead of silently
-  returning a meaningless model: it errors when the data has fewer than 4
-  rows, when either exposure arm is empty, or when either arm contains fewer
-  than 2 units. Previously `n = 1`, all-treated, and all-control data all
-  "converged" with degenerate propensity scores (all 1, all 0, or {0, 1})
-  that produced `NaN`/`Inf` weights downstream.
-- `build_ps_model()` now emits a non-fatal warning when either exposure arm
-  has fewer than 10 units, since propensity-score estimation at that sample
-  size is unreliable. The warning names the affected arm(s); the model is
-  still built. The floor for a build to proceed at all is 4 rows total with
-  at least 2 units per arm (see above).
-- `fit_outcome()` now errors on a zero-variance binary outcome for every
-  method (regression, matching, stratification, iptw, aipw). Previously an
-  all-0 or all-1 outcome silently returned a meaningless OR of 1 (with a
-  `0-Inf` confidence interval), an `NA`, or even an impossible negative OR,
-  after only a generic `glm.fit: algorithm did not converge` warning. The
-  error is raised once at the `fit_outcome()` entry point, so `run_pipeline()`
-  and `subgroup_analysis()` inherit it. A related test asserting that
-  `run_pipeline()` *completes* on a constant binary response was repurposed
-  to assert the new error instead.
-- `fit_all_models()` now errors on a zero-variance binary outcome instead of
-  returning a warning plus meaningless estimates. Previously an all-0 or
-  all-1 outcome was only detected by `lme4` for the mixed-effect model (which
-  was skipped with a warning and an `NA` row), while the fully adjusted
-  logistic and conditional logit models silently returned a meaningless OR
-  of 1 (with a `0-Inf` confidence interval) or `NA`. The error is raised once
-  at the `fit_all_models()` entry point with the same message as
-  `fit_outcome()`, so the two entry points behave identically. A related test
-  asserting that `fit_all_models()` *degrades gracefully* on a constant
-  response was repurposed to assert the new error instead. Note the check
-  validates only the top-level outcome vector at entry: when the *full*
-  cohort's outcome has real variance but the matched subset fit by the
-  mixed-effect model is constant (the original Phase 2 RHC failure mode),
-  the mixed model still degrades gracefully to an `NA` row with a warning
-  while the other models are unaffected. A regression test covers this case.
+- `build_ps_model()` errors when the data has fewer than 4 rows, when either
+  exposure arm is empty, or when either arm contains fewer than 2 units, and
+  warns when either arm has fewer than 10 units. Previously `n = 1`,
+  all-treated, and all-control data all "converged" with degenerate
+  propensity scores (all 1, all 0, or {0, 1}) that produced `NaN`/`Inf`
+  weights downstream, with no indication that the sample was too small.
+- `fit_outcome()` and `fit_all_models()` error on a zero-variance binary
+  outcome. Previously an all-0 or all-1 outcome silently returned a
+  meaningless OR of 1 (with a `0-Inf` confidence interval), an `NA`, or even
+  an impossible negative OR, after only a generic `glm.fit: algorithm did
+  not converge` warning — or, for the mixed-effect model, a skipped fit with
+  a warning. The error is raised once at each entry point (on the top-level
+  outcome vector) with the same message, so `run_pipeline()` and
+  `subgroup_analysis()` inherit it and the two entry points behave
+  identically. A constant outcome within a matched subset or subgroup, where
+  the full cohort's outcome varies, still degrades gracefully: the affected
+  model returns an `NA` with a warning and the others are unaffected.
 
 **Behavior change for `run_pipeline()`:** a constant binary outcome now halts
 the pipeline at Step 6 (`fit_all_models()`) with the clear "zero variance"
-error, before any results object is returned. A call that previously completed
-and returned a results object with garbage rows (OR = 1, `0-Inf` CI, `NA`)
-for every binary model now stops with an error. This was already the
-`fit_outcome()` behavior at Step 9 since the previous release; the halting
-point is now earlier and `fit_all_models()` standalone is consistent.
+error instead of returning a results object with garbage rows (OR = 1,
+`0-Inf` CI, `NA`) for every binary model.
 
 # IndepAssoc 0.6.2 (2026-08-10)
 

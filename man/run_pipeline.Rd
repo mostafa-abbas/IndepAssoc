@@ -27,7 +27,10 @@ run_pipeline(
 
 \item{outcome}{Character string naming the outcome variable.}
 
-\item{type}{Outcome type: \code{"binary"} or \code{"continuous"}.}
+\item{type}{Outcome type: \code{"binary"} or \code{"continuous"}. When omitted it is
+auto-detected from the outcome variable: a numeric or logical vector whose
+values are all 0/1 is treated as \code{"binary"}, any other numeric vector as
+\code{"continuous"}; factor/character outcomes keep the \code{"binary"} default.}
 
 \item{caliper}{Caliper for matching (default \code{0.2}).}
 
