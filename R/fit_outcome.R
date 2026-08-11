@@ -245,7 +245,11 @@ fit_outcome <- function(data, exposure, covariates, outcome,
   if (any(trim < 0) || any(trim > 1)) {
     stop("`trim` values must lie in [0, 1].")
   }
-  sort(trim)
+  if (trim[1] > trim[2]) {
+    stop(sprintf("`trim` bounds must be ascending (lower, upper), got %g, %g.",
+                 trim[1], trim[2]))
+  }
+  trim
 }
 
 #' Truncate positive weights at percentile quantiles (Cole & Hernan 2008).

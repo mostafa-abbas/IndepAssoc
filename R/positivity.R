@@ -48,6 +48,10 @@ check_positivity <- function(ps, threshold = c(0.01, 0.99),
   if (length(threshold) != 2) {
     stop("`threshold` must be a length-2 numeric vector.")
   }
+  if (threshold[1] > threshold[2]) {
+    stop(sprintf("`threshold` bounds must be ascending (lower, upper), got %g, %g.",
+                 threshold[1], threshold[2]))
+  }
   estimand <- match.arg(estimand)
 
   a <- as.numeric(as.character(ps$data[[ps$exposure]]))

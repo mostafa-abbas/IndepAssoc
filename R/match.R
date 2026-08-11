@@ -46,6 +46,10 @@ match_cohort <- function(ps_model, method = "nearest", caliper = 0.2,
                          seed = NULL) {
   if (!inherits(ps_model, "IndepPSModel")) stop("`ps_model` must be an IndepPSModel object.")
 
+  if (isTRUE(any(caliper < 0))) {
+    stop(sprintf("`caliper` must be non-negative, not %g.", min(caliper, na.rm = TRUE)))
+  }
+
   if (isTRUE(replace)) {
     stop(
       "match_cohort() does not support replace = TRUE: ",

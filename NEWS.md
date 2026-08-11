@@ -1,3 +1,21 @@
+# IndepAssoc 0.6.3 (unreleased)
+
+## Input validation hardening
+
+First pass of the 0.6.3 hardening series (issue #1): malformed range arguments
+now fail fast with a clear, actionable error instead of silently succeeding.
+
+- `match_cohort()` now errors when `caliper` is negative. A negative caliper
+  such as `caliper = -0.2` previously ran MatchIt with an invalid caliper and
+  silently returned a matched cohort.
+- `fit_outcome()` with `method = "iptw"` or `method = "aipw"` now errors when
+  `trim` bounds are inverted (e.g. `trim = c(0.9, 0.1)`); previously the range
+  was silently sorted. `trim` must be ascending `(lower, upper)`.
+- `check_positivity()` now errors when `threshold` bounds are inverted (e.g.
+  `threshold = c(0.99, 0.01)`); previously the inverted bounds silently
+  mis-counted every unit as outside the support window. `threshold` must be
+  ascending `(lower, upper)`.
+
 # IndepAssoc 0.6.2 (2026-08-10)
 
 ## Bug fixes

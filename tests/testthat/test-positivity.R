@@ -140,3 +140,50 @@ test_that("run_pipeline emits the positivity/weight summary and returns it", {
   expect_s3_class(res$positivity, "IndepPositivity")
   expect_type(res$positivity$violation, "logical")
 })
+
+test_that("iptw and aipw reject an inverted trim range", {
+  d <- simulate_test_cohort()
+  expect_error(
+    fit_outcome(d, "exposure", "age", "outcome_continuous", type = "continuous",
+                method = "iptw", trim = c(0.9, 0.1)),
+    "`trim` bounds must be ascending"
+  )
+  expect_error(
+    fit_outcome(d, "exposure", "age", "outcome_continuous", type = "continuous",
+                method = "aipw", trim = c(0.9, 0.1)),
+    "`trim` bounds must be ascending"
+  )
+})
+
+test_that("trim backward compatibility: an ascending trim range is unaffected", {
+  d <- simulate_test_cohort()
+  covs <- c("age", "diabetes", "hypertension")
+  for (method in c("iptw", "aipw")) {
+    default <- fit_outcome(d, "exposure", covs, "outcome_continuous",
+                           type = "continuous", method = method)
+    wide <- fit_outcome(d, "exposure", covs, "outcome_continuous",
+                        type = "continuous", method = method, trim = c(0, 1))
+    expect_equal(wide$estimate, default$estimate, tolerance = 1e-12)
+    expect_equal(wide$conf_low, default$conf_low, tolerance = 1e-12)
+    expect_equal(wide$conf_high, default$conf_high, tolerance = 1e-12)
+    expect_equal(wide$p_value, default$p_value, tolerance = 1e-12)
+  }
+  tight <- fit_outcome(d, "exposure", covs, "outcome_continuous", type = "continuous",
+                       method = "iptw", trim = c(0.05, 0.95))
+  expect_true(is.finite(tight$estimate))
+})
+
+test_that("check_positivity rejects an inverted threshold range", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+
+  err <- tryCatch(check_positivity(ps, threshold = c(0.99, 0.01)), error = function(e) e)
+  expect_s3_class(err, "simpleError")
+  expect_match(conditionMessage(err), "`threshold` bounds must be ascending")
+})
+
+test_that("check_positivity backward compatibility: an ascending threshold is unaffected", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  expect_identical(check_positivity(ps, threshold = c(0.01, 0.99)), check_positivity(ps))
+})

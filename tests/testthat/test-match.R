@@ -68,3 +68,21 @@ test_that("match_cohort(replace = FALSE) still matches exactly as before", {
   expect_s3_class(m, "IndepMatch")
   expect_true(nrow(m$data) > 0)
 })
+
+test_that("match_cohort rejects a negative caliper", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+
+  err <- tryCatch(match_cohort(ps, caliper = -0.2), error = function(e) e)
+  expect_s3_class(err, "simpleError")
+  expect_match(conditionMessage(err), "`caliper` must be non-negative")
+})
+
+test_that("match_cohort backward compatibility: a non-negative caliper is unaffected", {
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  default <- suppressWarnings(match_cohort(ps, seed = 42))
+  valid <- suppressWarnings(match_cohort(ps, caliper = 0.2, seed = 42))
+  expect_s3_class(valid, "IndepMatch")
+  expect_identical(valid$data, default$data)
+})
