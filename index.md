@@ -34,7 +34,7 @@ into a reusable interface with five confounding-adjustment methods.
 
 ## Validation
 
-The package has 515 passing unit tests and passes `R CMD check` cleanly
+The package has 526 passing unit tests and passes `R CMD check` cleanly
 (0 errors, 0 notes; one environmental warning — `qpdf` not installed on
 the test machine — unrelated to package code). The methods are validated
 against the bundled `example_cohort` (a simulated cohort with a known
