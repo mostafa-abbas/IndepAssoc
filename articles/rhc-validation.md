@@ -22,9 +22,9 @@ mortality by 180 days (`death`), and hospital length of stay in days
 the outcome directly (regression, matching) and three that model the
 propensity of receiving RHC (stratification, IPTW, AIPW) — agree on the
 *direction* of the association. Agreement across five methods that make
-different, largely independent assumptions is evidence the finding isn’t
-an artifact of any single model’s specification. It is not, by itself,
-proof of a causal effect — see the Caveat section at the end.
+different modeling assumptions is evidence the finding isn’t an artifact
+of any single model’s specification. It is not, by itself, proof of a
+causal effect — see the Caveat section at the end.
 
 ### The five methods
 

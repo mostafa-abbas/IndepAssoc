@@ -57,10 +57,10 @@
 <div class="page-header"><h1 id="indepassoc">IndepAssoc<a class="anchor" aria-label="anchor" href="#indepassoc"></a>
 </h1></div>
 <p><a href="https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></p>
-<p><strong>Does an exposure–outcome association survive being tested five independent ways?</strong></p>
-<p>IndepAssoc answers one question: is a risk factor (an exposure) genuinely associated with an outcome after other relevant factors are accounted for — or is the apparent link a statistical artifact? Instead of trusting a single statistical method, the package tests the same association through five independent methods and shows whether they agree. When they agree, the finding is robust; when they do not, the signal needs a closer look.</p>
+<p><strong>Does an exposure–outcome association survive being tested through five distinct methods?</strong></p>
+<p>IndepAssoc answers one question: is a risk factor (an exposure) genuinely associated with an outcome after other relevant factors are accounted for — or is the apparent link a statistical artifact? Instead of trusting a single statistical method, the package tests the same association through five methods that each rely on different modeling assumptions, and shows whether they agree. When they agree, the finding is robust; when they do not, the signal needs a closer look.</p>
 <div class="float">
-<img src="reference/figures/indepassoc-overview.png" alt="Conceptual overview: one association in the data, tested five independent ways (regression, matching, stratification, IPTW, AIPW), then a check of whether the methods agree"><div class="figcaption">Conceptual overview: one association in the data, tested five independent ways (regression, matching, stratification, IPTW, AIPW), then a check of whether the methods agree</div>
+<img src="reference/figures/indepassoc-overview.png" alt="Conceptual overview: one association in the data, tested through five distinct methods (regression, matching, stratification, IPTW, AIPW), then a check of whether the methods agree"><div class="figcaption">Conceptual overview: one association in the data, tested through five distinct methods (regression, matching, stratification, IPTW, AIPW), then a check of whether the methods agree</div>
 </div>
 <div class="section level2">
 <h2 id="new-to-these-methods">New to these methods?<a class="anchor" aria-label="anchor" href="#new-to-these-methods"></a>
@@ -76,13 +76,13 @@
 <li>
 <strong>IPTW (inverse probability of treatment weighting)</strong> — gives each person a weight so the exposed and unexposed groups look alike on the other factors, then compares the weighted groups.</li>
 <li>
-<strong>AIPW (augmented IPTW)</strong> — combines the IPTW reweighting with a regression model; a hybrid that is often more stable than either approach alone.</li>
+<strong>AIPW (augmented IPTW)</strong> — combines the IPTW reweighting with an outcome regression; it is doubly robust, so the estimate stays reliable if either the propensity model or the outcome model is correctly specified, not necessarily both.</li>
 </ul>
 </div>
 <div class="section level2">
 <h2 id="what-it-is--and-what-it-is-not">What it is — and what it is not<a class="anchor" aria-label="anchor" href="#what-it-is--and-what-it-is-not"></a>
 </h2>
-<p><strong>What it is:</strong> a pipeline that tests whether an exposure is independently associated with an outcome — adjusting for confounding factors via matching, weighting, stratification, or regression — and produces publication-ready tables and effect estimates with minimal code.</p>
+<p><strong>What it is:</strong> a pipeline that tests whether an exposure is independently associated with an outcome — adjusting for confounding factors via five distinct methods — regression, matching, stratification, and two propensity-score weighting approaches — and produces publication-ready tables and effect estimates with minimal code.</p>
 <p><strong>What it is not:</strong> proof of causation. The package reports confounder-adjusted associations under the standard no-unmeasured-confounding assumption; it does not establish causal effects. An association — however robust — is not a causal effect.</p>
 </div>
 <div class="section level2">

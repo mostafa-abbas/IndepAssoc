@@ -2,24 +2,24 @@
 
 [![R-CMD-check](https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml)
 
-**Does an exposure–outcome association survive being tested five
-independent ways?**
+**Does an exposure–outcome association survive being tested through five
+distinct methods?**
 
 IndepAssoc answers one question: is a risk factor (an exposure)
 genuinely associated with an outcome after other relevant factors are
 accounted for — or is the apparent link a statistical artifact? Instead
 of trusting a single statistical method, the package tests the same
-association through five independent methods and shows whether they
-agree. When they agree, the finding is robust; when they do not, the
-signal needs a closer look.
+association through five methods that each rely on different modeling
+assumptions, and shows whether they agree. When they agree, the finding
+is robust; when they do not, the signal needs a closer look.
 
-![Conceptual overview: one association in the data, tested five
-independent ways (regression, matching, stratification, IPTW, AIPW),
+![Conceptual overview: one association in the data, tested through five
+distinct methods (regression, matching, stratification, IPTW, AIPW),
 then a check of whether the methods
 agree](reference/figures/indepassoc-overview.png)
 
-Conceptual overview: one association in the data, tested five
-independent ways (regression, matching, stratification, IPTW, AIPW),
+Conceptual overview: one association in the data, tested through five
+distinct methods (regression, matching, stratification, IPTW, AIPW),
 then a check of whether the methods agree
 
 ## New to these methods?
@@ -37,15 +37,17 @@ sentence:
 - **IPTW (inverse probability of treatment weighting)** — gives each
   person a weight so the exposed and unexposed groups look alike on the
   other factors, then compares the weighted groups.
-- **AIPW (augmented IPTW)** — combines the IPTW reweighting with a
-  regression model; a hybrid that is often more stable than either
-  approach alone.
+- **AIPW (augmented IPTW)** — combines the IPTW reweighting with an
+  outcome regression; it is doubly robust, so the estimate stays
+  reliable if either the propensity model or the outcome model is
+  correctly specified, not necessarily both.
 
 ## What it is — and what it is not
 
 **What it is:** a pipeline that tests whether an exposure is
 independently associated with an outcome — adjusting for confounding
-factors via matching, weighting, stratification, or regression — and
+factors via five distinct methods — regression, matching,
+stratification, and two propensity-score weighting approaches — and
 produces publication-ready tables and effect estimates with minimal
 code.
 
