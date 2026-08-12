@@ -84,6 +84,23 @@ ratio is non-collapsible, so it is not numerically equal to a marginal ATE.
 Agreement across the five is still meaningful robustness evidence, but they are
 related quantities, not five copies of one number.
 
+## A real-world validation
+
+The same pipeline holds up on a real clinical question. The bundled `rhc_sample`
+cohort — 5,735 intensive-care patients from the SUPPORT study — was analyzed
+for the association between right heart catheterization (RHC) and 30-day
+mortality, adjusting for 50 confounders with all five methods. Each method
+independently found that RHC was associated with increased 30-day mortality,
+with odds ratios in the 1.3–1.5 range and confidence intervals excluding no
+effect:
+
+![Forest plot of 30-day mortality odds ratios by method: regression (OR 1.49), matching (OR 1.39), stratification (OR 1.39), IPTW (OR 1.32), and AIPW (OR 1.33); all confidence intervals exclude 1, so all five methods agree that right heart catheterization is associated with increased 30-day mortality](man/figures/rhc-forest-dth30.png)
+
+That all five methods point the same way on a confounder-adjusted benchmark
+shows the pipeline works on real data, not only on simulated cohorts. The full
+analysis — balance checks, matching diagnostics, and sensitivity checks — is in
+the [rhc-validation vignette](https://mostafa-abbas.github.io/IndepAssoc/articles/rhc-validation.html).
+
 ## Background
 
 IndepAssoc is the packaged form of the analysis pipeline used in two published
