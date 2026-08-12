@@ -1,5 +1,33 @@
 # Changelog
 
+## IndepAssoc 0.6.4 (2026-08-11)
+
+### Bug fixes
+
+Restores support for two-level factor exposures (e.g.
+`factor(exposure, labels = c("control", "treated"))`), which 0.6.3’s
+arm-count validation had broken.
+
+- [`build_ps_model()`](https://mostafa-abbas.github.io/IndepAssoc/reference/build_ps_model.md)
+  and
+  [`check_positivity()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.md)
+  now normalize a factor exposure the same way the model fitting already
+  does: the first factor level is the reference (control) arm and the
+  second is the treated arm. Previously the arm-count check compared the
+  raw column to `0`/`1`, so a factor whose levels were not literally
+  `"0"`/`"1"` — a completely ordinary way to code a binary exposure in R
+  — reported `No control units found in the data` even when both arms
+  were present, and
+  [`check_positivity()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.md)
+  returned `NA` weights. (#4)
+- Arm coding now follows factor level order explicitly and is covered by
+  tests: level 1 is always control and level 2 is always treated,
+  regardless of the labels. This pins down the semantics that previously
+  relied on the user coding the control arm first and silently flipped
+  treated/control when they did not. (#5)
+- 0.6.3’s degenerate-data validation is unchanged: an exposure with a
+  genuinely empty or single-unit arm still errors.
+
 ## IndepAssoc 0.6.3 (2026-08-11)
 
 ### Input validation hardening

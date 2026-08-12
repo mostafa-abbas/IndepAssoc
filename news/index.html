@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,17 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.4" id="indepassoc-064-2026-08-11">IndepAssoc 0.6.4 (2026-08-11)<a class="anchor" aria-label="anchor" href="#indepassoc-064-2026-08-11"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-6-4">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-6-4"></a></h3>
+<p>Restores support for two-level factor exposures (e.g. <code>factor(exposure, labels = c("control", "treated"))</code>), which 0.6.3’s arm-count validation had broken.</p>
+<ul><li>
+<code><a href="../reference/build_ps_model.html">build_ps_model()</a></code> and <code><a href="../reference/check_positivity.html">check_positivity()</a></code> now normalize a factor exposure the same way the model fitting already does: the first factor level is the reference (control) arm and the second is the treated arm. Previously the arm-count check compared the raw column to <code>0</code>/<code>1</code>, so a factor whose levels were not literally <code>"0"</code>/<code>"1"</code> — a completely ordinary way to code a binary exposure in R — reported <code>No control units found in the data</code> even when both arms were present, and <code><a href="../reference/check_positivity.html">check_positivity()</a></code> returned <code>NA</code> weights. (#4)</li>
+<li>Arm coding now follows factor level order explicitly and is covered by tests: level 1 is always control and level 2 is always treated, regardless of the labels. This pins down the semantics that previously relied on the user coding the control arm first and silently flipped treated/control when they did not. (#5)</li>
+<li>0.6.3’s degenerate-data validation is unchanged: an exposure with a genuinely empty or single-unit arm still errors.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.3" id="indepassoc-063-2026-08-11">IndepAssoc 0.6.3 (2026-08-11)<a class="anchor" aria-label="anchor" href="#indepassoc-063-2026-08-11"></a></h2>
 <div class="section level3">
