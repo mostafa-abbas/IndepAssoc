@@ -9,6 +9,12 @@ question:
 > Is a risk factor or exposure independently associated with an outcome,
 > after adjusting for confounders?
 
+Put simply: treated and untreated patients differ in many ways besides
+the treatment itself, so a naive comparison of their outcomes can be
+misleading. A confounder-adjusted analysis holds those other differences
+fixed so that any observed difference in outcome reflects the treatment
+— not who happened to receive it.
+
 Matching is used in the context of estimating the effect of a binary
 treatment or exposure on an outcome while controlling for measured
 pre-treatment variables. The goal of matching is to produce *covariate
@@ -53,6 +59,12 @@ The first step is to estimate a propensity score for each unit — the
 predicted probability of receiving treatment given the covariates. This
 is done via logistic regression.
 
+Think of the propensity score as a single number summarizing how similar
+a patient is to the treated group based on their characteristics. Two
+patients with the same score are comparable on the measured covariates,
+even when their raw characteristics differ — which is what makes the
+score useful for matching.
+
 ``` r
 
 ps <- build_ps_model(
@@ -81,7 +93,11 @@ summary(ps$data$.ps)
 
 ## Step 2: Check Initial Imbalance
 
-Before matching, we can examine the initial imbalance using
+If the treated and untreated groups differ in their covariates, any
+difference in their outcomes could be caused by those covariates rather
+than by the treatment. Imbalance is exactly that difference, and
+matching works by removing it. Before matching, we can examine the
+initial imbalance using
 [`cobalt::bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html)
 via
 [`check_balance()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_balance.md):
@@ -135,6 +151,14 @@ check_balance(m0, threshold = 0.10, plot = FALSE)
 We perform 1:1 nearest-neighbor matching on the propensity score without
 replacement, with a caliper of 0.2 standard deviations of the logit(PS):
 
+1:1 nearest-neighbor matching pairs each treated patient with the
+untreated patient whose propensity score is closest. “Without
+replacement” means each patient is used at most once, and the *caliper*
+is a tolerance window: a pair is kept only if the two scores are close
+enough — here, within 0.2 standard deviations, on the logit scale (a
+standard transformation of probabilities). A treated patient with no
+untreated counterpart that close is left unmatched.
+
 ``` r
 
 matched <- match_cohort(ps, caliper = 0.2)
@@ -164,6 +188,11 @@ returns the ASMD chart as part of its result. The `balance_plot` element
 visualizes absolute standardized mean differences (ASMD) for each
 covariate before and after matching:
 
+ASMD measures how far apart the two groups are on a covariate in
+standard-deviation units. Because it is scale-free, covariates measured
+on different scales (age in years, BMI, a disease indicator) can be
+compared on a single axis.
+
 ``` r
 
 result <- run_pipeline(
@@ -189,7 +218,9 @@ matched cohort. All covariates should fall below the dashed line (ASMD
 ### Unmatched Data
 
 For the unmatched data, we use chi-square tests (categorical) and
-Wilcoxon rank-sum tests (continuous):
+Wilcoxon rank-sum tests (continuous). The chi-square test compares
+proportions between the two groups; the Wilcoxon rank-sum test compares
+two continuous distributions without assuming they are normally shaped:
 
 ``` r
 
@@ -201,7 +232,10 @@ table_unmatched(data, "exposure", c("age", "diabetes", "hypertension", "bmi"))
 ### Matched Data
 
 For the matched data, we use paired tests — McNemar (categorical) and
-Wilcoxon signed-rank (continuous):
+Wilcoxon signed-rank (continuous). Because each pair holds one treated
+and one untreated patient, these tests compare outcomes within pairs;
+McNemar is the categorical counterpart, and the signed-rank test is the
+paired version of the rank-sum test:
 
 ``` r
 
@@ -336,10 +370,13 @@ the right choice depends on the data and the question:
   included. Efficient and familiar, but the estimate depends on the
   outcome-model functional form, and it extrapolates where propensity
   scores have poor overlap.
-- **Matching** discards poorly overlaid units, so inference stays close
-  to the data; it answers the treatment-on-the-treated question and is
-  the estimator used in the source cardiac-surgery papers. Cost: fewer
-  units and no benefit from observations that do not overlap.
+- **Matching** discards poorly overlaid units — patients whose
+  propensity score has no counterpart in the other group — so inference
+  stays close to the data; it answers the treatment-on-the-treated
+  question (the effect among the patients who actually received the
+  treatment) and is the estimator used in the source cardiac-surgery
+  papers. Cost: fewer units and no benefit from observations that do not
+  overlap.
 - **Stratification** groups patients into propensity-score strata
   (quintiles) and pools within-stratum contrasts. Simple and
   transparent, but residual confounding within strata is a real risk

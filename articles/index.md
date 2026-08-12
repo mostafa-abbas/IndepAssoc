@@ -2,9 +2,9 @@
 
 ### All vignettes
 
-- [Benchmarking the Methods on Real
-  Data](https://mostafa-abbas.github.io/IndepAssoc/articles/causal-benchmarks.md):
+- [Does It Get the Right Answer? Validating IndepAssoc Against Known
+  Results](https://mostafa-abbas.github.io/IndepAssoc/articles/causal-benchmarks.md):
 - [IndepAssoc: A Quick-Start
   Guide](https://mostafa-abbas.github.io/IndepAssoc/articles/indepassoc-quickstart.md):
-- [Validating the Methods on the RHC Benchmark
-  Cohort](https://mostafa-abbas.github.io/IndepAssoc/articles/rhc-validation.md):
+- [Case study: right heart catheterization and ICU
+  mortality](https://mostafa-abbas.github.io/IndepAssoc/articles/rhc-validation.md):

@@ -1,4 +1,4 @@
-# Validating the Methods on the RHC Benchmark Cohort
+# Case study: right heart catheterization and ICU mortality
 
 ## Introduction
 
@@ -28,53 +28,75 @@ proof of a causal effect — see the Caveat section at the end.
 
 ### The five methods
 
-- **Regression** — a single covariate-adjusted regression (logistic for
-  binary outcomes, linear for continuous) fit on the full, unmatched
-  cohort. Uses every patient, but its validity rests entirely on the
-  outcome model being correctly specified; no propensity score is
+Each method adjusts for the same 50 confounders but in a different way,
+and several lean on the *propensity score* — a single number per patient
+summarizing how likely they were to receive RHC given their baseline
+characteristics. In plain terms:
+
+- **Regression** — “fit a multivariable model that includes the exposure
+  and all the confounders at once, and read off the exposure’s
+  association.” More precisely: a single covariate-adjusted regression
+  (logistic for binary outcomes, linear for continuous) fit on the full,
+  unmatched cohort. Uses every patient, but its validity rests entirely
+  on the outcome model being correctly specified; no propensity score is
   involved.
-- **Matching** — 1:1 nearest-neighbor propensity-score matching (caliper
-  0.2 SD of logit-PS), followed by conditional logistic regression
-  (binary outcomes) or a pair-stratified linear model (continuous
-  outcomes) on just the matched subset.
-- **Stratification** — splits the cohort into propensity-score strata
-  and pools the within-stratum associations into one overall estimate.
-  Keeps the full sample and controls confounding by comparing only
-  patients with similar propensity scores.
-- **IPTW** — weights each patient by the inverse of their estimated
-  probability of receiving the exposure they actually received, then
-  fits an exposure-only weighted regression. As of `IndepAssoc` 0.4.0
-  this is a plain marginal structural model — the weights alone carry
-  the adjustment, there is no additional covariate adjustment layered on
-  top.
-- **AIPW** — combines a propensity-score model and an outcome regression
-  model via the augmented-IPW formula. It is “doubly robust”: the
-  estimate stays consistent if *either* model is correctly specified,
-  not necessarily both, making it more resilient to model
-  misspecification than regression or IPTW used alone.
+- **Matching** — “pair each RHC patient with a non-RHC patient who looks
+  similar on the confounders, then compare outcomes within the pairs.”
+  More precisely: 1:1 nearest-neighbor propensity-score matching
+  (caliper 0.2 SD of logit-PS), followed by conditional logistic
+  regression (binary outcomes) or a pair-stratified linear model
+  (continuous outcomes) on just the matched subset.
+- **Stratification** — “sort patients into a few similar-risk groups,
+  compare RHC vs non-RHC within each group, and pool those comparisons.”
+  More precisely: splits the cohort into propensity-score strata and
+  pools the within-stratum associations into one overall estimate. Keeps
+  the full sample and controls confounding by comparing only patients
+  with similar propensity scores.
+- **IPTW** — “reweight the sample so the RHC and non-RHC groups look
+  alike on the confounders, then compare the reweighted groups as if
+  they were two randomized arms.” More precisely: weights each patient
+  by the inverse of their estimated probability of receiving the
+  exposure they actually received, then fits an exposure-only weighted
+  regression. As of `IndepAssoc` 0.4.0 this is a plain marginal
+  structural model — the weights alone carry the adjustment, there is no
+  additional covariate adjustment layered on top.
+- **AIPW** — “run the reweighting and an outcome regression together, so
+  a mistake in one model can be rescued by the other.” More precisely:
+  combines a propensity-score model and an outcome regression model via
+  the augmented-IPW formula. It is “doubly robust”: the estimate stays
+  consistent if *either* model is correctly specified, not necessarily
+  both, making it more resilient to model misspecification than
+  regression or IPTW used alone.
 
 ### Estimand: what each method actually targets
 
-The five methods do not all estimate the same causal quantity. Matching
-targets the **average treatment effect on the treated (ATT)** — only
-treated patients that found a control match remain in the analysis, so
-the estimate describes the treated population by construction. IPTW and
-AIPW target the **average treatment effect (ATE)** over the full
-analytic sample: every patient contributes, reweighted (IPTW) or via
-augmented influence functions (AIPW), so the comparison mimics two
-exposure groups drawn from the full sample’s covariate distribution.
-Stratification pools stratum-specific effects across the full analytic
-sample — a common odds ratio via the Cochran-Mantel-Haenszel method for
-binary outcomes, an inverse-variance-weighted mean difference for
-continuous outcomes — a full-sample, stratum-pooled estimate rather than
-a strict marginal ATE. (With the new `estimand = "ATT"` option,
-stratification instead pools each stratum’s effect weighted by its
-number of treated units, and is then genuinely ATT-consistent.)
-Regression reports a **conditional** effect: the coefficient is adjusted
-for the listed covariates, and for binary outcomes the odds ratio is
-*non-collapsible* (a mathematical property, not a modeling choice), so
-it is not numerically equal to a marginal ATE even when the model is
-correct.
+The five methods do not all estimate the same causal quantity — put
+simply, they answer for different populations. The ones to keep
+straight:
+
+- **ATT — the effect on those who got RHC.** Matching targets the
+  **average treatment effect on the treated (ATT)**: only treated
+  patients that found a control match remain in the analysis, so the
+  estimate describes the treated population by construction.
+- **ATE — the effect over the whole cohort.** IPTW and AIPW target the
+  **average treatment effect (ATE)** over the full analytic sample:
+  every patient contributes, reweighted (IPTW) or via augmented
+  influence functions (AIPW), so the comparison mimics two exposure
+  groups drawn from the full sample’s covariate distribution.
+- **Stratification** pools stratum-specific effects across the full
+  analytic sample — a common odds ratio via the Cochran-Mantel-Haenszel
+  method for binary outcomes, an inverse-variance-weighted mean
+  difference for continuous outcomes — a full-sample, stratum-pooled
+  estimate rather than a strict marginal ATE. (With the new
+  `estimand = "ATT"` option, stratification instead pools each stratum’s
+  effect weighted by its number of treated units, and is then genuinely
+  ATT-consistent.)
+- **Regression** reports a **conditional** effect: the coefficient is
+  adjusted for the listed covariates. For binary outcomes the odds ratio
+  is *non-collapsible* (a mathematical property, not a modeling choice —
+  the odds ratio does not average across subgroups to equal a marginal
+  effect, even with a perfectly specified model), so it is not
+  numerically equal to a marginal ATE even when the model is correct.
 
 So when the five rows below agree in direction and rough magnitude, that
 is real evidence of robustness — but they are five related quantities,
@@ -245,13 +267,15 @@ results_list$dth30$balance_plot
 
 The dashed line marks the 0.10 absolute-standardized-mean-difference
 (ASMD) threshold conventionally used to define adequate covariate
-balance. Most covariates in this cohort start well above that line
-before matching — the RHC literature has repeatedly documented
-substantial baseline imbalance between patients who did and didn’t
-receive RHC — and matching should bring most, though not necessarily
-every, covariate under the threshold. Rather than asserting which
-covariates end up on which side of that line, treat the chart above as
-the answer: it reflects this specific run, not a general claim.
+balance — ASMD is a scale-free measure of how far apart the RHC and
+non-RHC groups are on a covariate, in standard-deviation units. Most
+covariates in this cohort start well above that line before matching —
+the RHC literature has repeatedly documented substantial baseline
+imbalance between patients who did and didn’t receive RHC — and matching
+should bring most, though not necessarily every, covariate under the
+threshold. Rather than asserting which covariates end up on which side
+of that line, treat the chart above as the answer: it reflects this
+specific run, not a general claim.
 
 ### Truncated view: the 25 most-imbalanced covariates
 
@@ -273,6 +297,11 @@ plot_asmd_balance(results_list$dth30, top_n = 25)
 ![](rhc-validation_files/figure-html/balance-plot-top-n-1.png)
 
 ## Results by outcome
+
+Each table below is the vignette’s core result: whether five methods
+that work differently agree on the direction and size of RHC’s
+association with that outcome. The forest plot beside each table draws
+the same numbers, with the confidence intervals made visible.
 
 ``` r
 

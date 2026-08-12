@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Benchmarking the Methods on Real Data • IndepAssoc</title>
+<title>Does It Get the Right Answer? Validating IndepAssoc Against Known Results • IndepAssoc</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Benchmarking the Methods on Real Data">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Does It Get the Right Answer? Validating IndepAssoc Against Known Results">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,9 +33,9 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/causal-benchmarks.html">Benchmarking the Methods on Real Data</a></li>
+<li><a class="dropdown-item" href="../articles/causal-benchmarks.html">Does It Get the Right Answer? Validating IndepAssoc Against Known Results</a></li>
     <li><a class="dropdown-item" href="../articles/indepassoc-quickstart.html">IndepAssoc: A Quick-Start Guide</a></li>
-    <li><a class="dropdown-item" href="../articles/rhc-validation.html">Validating the Methods on the RHC Benchmark Cohort</a></li>
+    <li><a class="dropdown-item" href="../articles/rhc-validation.html">Case study: right heart catheterization and ICU mortality</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -57,7 +57,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Benchmarking the Methods on Real Data</h1>
+      <h1>Does It Get the Right Answer? Validating IndepAssoc Against Known Results</h1>
             
       
 
@@ -70,19 +70,26 @@
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
 <p>The simulated examples in the quick-start vignette prove the pipeline
-runs; this vignette exercises the adjustment methods on real, messy
-observational data with two well-known datasets. The NHEFS (NHANES
-Epidemiologic Follow-up Study) data from the <code>causaldata</code>
-package is the canonical textbook dataset for regression, matching,
-stratification, IPTW, and AIPW (Hernán &amp; Robins, <em>Causal
-Inference: What If</em>): the scientific question is whether quitting
+runs; this one checks whether it gets the <em>right</em> answer. The
+logic is that of an answer key: use datasets whose correct result is
+already known, run the package’s methods on them, and compare what comes
+out with what should be true.</p>
+<p>The first dataset is NHEFS (NHANES Epidemiologic Follow-up Study),
+from the <code>causaldata</code> package — the canonical textbook
+example for regression, matching, stratification, IPTW, and AIPW (Hernán
+&amp; Robins, <em>Causal Inference: What If</em>). Its findings are well
+established, so agreement between the package’s results and the textbook
+answers is meaningful: the scientific question is whether quitting
 smoking is independently associated with an outcome after adjusting for
-measured confounders. The NSW demonstration was a randomized
-job-training program whose effect on 1978 earnings is known — the
-Dehejia &amp; Wahba (1999) experimental benchmark estimate of
-<strong>$1,794</strong> — and <code><a href="https://kosukeimai.github.io/MatchIt/reference/lalonde.html" class="external-link">MatchIt::lalonde</a></code> combines its
-treated units with a nonexperimental comparison group, letting us check
-the propensity score methods against a known experimental answer.</p>
+measured confounders.</p>
+<p>The second is the NSW demonstration, a randomized job-training
+program whose effect on 1978 earnings was measured directly in the
+experiment — the Dehejia &amp; Wahba (1999) benchmark estimate of
+<strong>$1,794</strong>. <code><a href="https://kosukeimai.github.io/MatchIt/reference/lalonde.html" class="external-link">MatchIt::lalonde</a></code> combines the
+program’s treated units with a nonexperimental comparison group, so we
+can run the package’s observational methods on that combined data and
+check whether they recover the answer the experiment already gave
+us.</p>
 </div>
 <div class="section level2">
 <h2 id="the-five-methods-on-nhefs">The five methods on NHEFS<a class="anchor" aria-label="anchor" href="#the-five-methods-on-nhefs"></a>
@@ -128,10 +135,11 @@ activity, and baseline weight.</p>
 <span><span class="co">#&gt; 4           IPTW 1.07 0.80–1.42   0.668 1629</span></span>
 <span><span class="co">#&gt; 5           AIPW 1.00 0.78–1.29   0.969 1629</span></span></code></pre></div>
 <p>All five methods — outcome regression, matching, stratification,
-IPTW, and AIPW — return odds ratios close to 1, with confidence
-intervals that straddle 1 and p-values well above 0.05. The agreement
-across five functionally different adjustment strategies (those that
-model the outcome directly and those that model treatment assignment) is
+IPTW, and AIPW — return odds ratios close to 1 (the value that means no
+association), with confidence intervals that straddle 1 (they include
+that no-effect value) and p-values well above 0.05. The agreement across
+five functionally different adjustment strategies (those that model the
+outcome directly and those that model treatment assignment) is
 reassuring: the null finding is not an artifact of any single estimator.
 Had the estimates diverged sharply — say, matching far from regression —
 that would flag outcome-model misspecification or poor propensity-score
@@ -171,9 +179,9 @@ is stated here for transparency).</p>
 <p>Here <code>estimate</code> is the adjusted mean weight change in
 kilograms associated with quitting smoking. All five methods agree on a
 gain of roughly 3 to 3.5 kg, with narrow confidence intervals that
-exclude 0. The convergence across methods is consistent with the
-well-documented finding from this dataset that quitting smoking is
-associated with weight gain.</p>
+exclude 0 (so the gain is not plausibly zero). The convergence across
+methods is consistent with the well-documented finding from this dataset
+that quitting smoking is associated with weight gain.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_comparison.html">plot_comparison</a></span><span class="op">(</span><span class="va">result_wt</span><span class="op">$</span><span class="va">comparison</span>, log_scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="causal-benchmarks_files/figure-html/continuous-forest-1.png" class="r-plt" alt="" width="768"></p>
@@ -232,10 +240,12 @@ $1,794.</p>
 <p>The propensity-score matching estimate lands close to the
 experimental benchmark of $1,794, while the IPTW estimate deviates
 further — a pattern that mirrors the original Dehejia &amp; Wahba
-finding that PSM recovers the experimental ATT much better than naive or
-heavily weighted estimators on this dataset. Divergence from the
-benchmark is itself informative, signaling sensitivity to the weighting
-specification or limited covariate overlap.</p>
+finding that PSM recovers the experimental ATT (the average treatment
+effect among the treated — the program’s effect on the people who
+actually took part) much better than naive or heavily weighted
+estimators on this dataset. Divergence from the benchmark is itself
+informative, signaling sensitivity to the weighting specification or
+limited covariate overlap.</p>
 <p>This is a confounder-adjusted association under the standard
 no-unmeasured-confounding assumption, not a proven causal effect.</p>
 </div>

@@ -1,22 +1,30 @@
-# Benchmarking the Methods on Real Data
+# Does It Get the Right Answer? Validating IndepAssoc Against Known Results
 
 ## Introduction
 
 The simulated examples in the quick-start vignette prove the pipeline
-runs; this vignette exercises the adjustment methods on real, messy
-observational data with two well-known datasets. The NHEFS (NHANES
-Epidemiologic Follow-up Study) data from the `causaldata` package is the
-canonical textbook dataset for regression, matching, stratification,
-IPTW, and AIPW (Hernán & Robins, *Causal Inference: What If*): the
-scientific question is whether quitting smoking is independently
-associated with an outcome after adjusting for measured confounders. The
-NSW demonstration was a randomized job-training program whose effect on
-1978 earnings is known — the Dehejia & Wahba (1999) experimental
-benchmark estimate of **\$1,794** — and
+runs; this one checks whether it gets the *right* answer. The logic is
+that of an answer key: use datasets whose correct result is already
+known, run the package’s methods on them, and compare what comes out
+with what should be true.
+
+The first dataset is NHEFS (NHANES Epidemiologic Follow-up Study), from
+the `causaldata` package — the canonical textbook example for
+regression, matching, stratification, IPTW, and AIPW (Hernán & Robins,
+*Causal Inference: What If*). Its findings are well established, so
+agreement between the package’s results and the textbook answers is
+meaningful: the scientific question is whether quitting smoking is
+independently associated with an outcome after adjusting for measured
+confounders.
+
+The second is the NSW demonstration, a randomized job-training program
+whose effect on 1978 earnings was measured directly in the experiment —
+the Dehejia & Wahba (1999) benchmark estimate of **\$1,794**.
 [`MatchIt::lalonde`](https://kosukeimai.github.io/MatchIt/reference/lalonde.html)
-combines its treated units with a nonexperimental comparison group,
-letting us check the propensity score methods against a known
-experimental answer.
+combines the program’s treated units with a nonexperimental comparison
+group, so we can run the package’s observational methods on that
+combined data and check whether they recover the answer the experiment
+already gave us.
 
 ## The five methods on NHEFS
 
@@ -67,9 +75,10 @@ format_comparison(result_death$comparison)
 ```
 
 All five methods — outcome regression, matching, stratification, IPTW,
-and AIPW — return odds ratios close to 1, with confidence intervals that
-straddle 1 and p-values well above 0.05. The agreement across five
-functionally different adjustment strategies (those that model the
+and AIPW — return odds ratios close to 1 (the value that means no
+association), with confidence intervals that straddle 1 (they include
+that no-effect value) and p-values well above 0.05. The agreement across
+five functionally different adjustment strategies (those that model the
 outcome directly and those that model treatment assignment) is
 reassuring: the null finding is not an artifact of any single estimator.
 Had the estimates diverged sharply — say, matching far from regression —
@@ -117,10 +126,10 @@ format_comparison(result_wt$comparison)
 
 Here `estimate` is the adjusted mean weight change in kilograms
 associated with quitting smoking. All five methods agree on a gain of
-roughly 3 to 3.5 kg, with narrow confidence intervals that exclude 0.
-The convergence across methods is consistent with the well-documented
-finding from this dataset that quitting smoking is associated with
-weight gain.
+roughly 3 to 3.5 kg, with narrow confidence intervals that exclude 0 (so
+the gain is not plausibly zero). The convergence across methods is
+consistent with the well-documented finding from this dataset that
+quitting smoking is associated with weight gain.
 
 ``` r
 
@@ -194,10 +203,11 @@ plot_comparison(result$comparison, log_scale = FALSE)
 The propensity-score matching estimate lands close to the experimental
 benchmark of \$1,794, while the IPTW estimate deviates further — a
 pattern that mirrors the original Dehejia & Wahba finding that PSM
-recovers the experimental ATT much better than naive or heavily weighted
-estimators on this dataset. Divergence from the benchmark is itself
-informative, signaling sensitivity to the weighting specification or
-limited covariate overlap.
+recovers the experimental ATT (the average treatment effect among the
+treated — the program’s effect on the people who actually took part)
+much better than naive or heavily weighted estimators on this dataset.
+Divergence from the benchmark is itself informative, signaling
+sensitivity to the weighting specification or limited covariate overlap.
 
 This is a confounder-adjusted association under the standard
 no-unmeasured-confounding assumption, not a proven causal effect.

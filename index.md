@@ -2,82 +2,59 @@
 
 [![R-CMD-check](https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml)
 
-Confounder-adjusted independent association testing via propensity-score
-methods.
+**Does an exposure–outcome association survive being tested five
+independent ways?**
 
-IndepAssoc generalizes a propensity-score-based analysis pipeline for
-retrospective cohort studies. It answers whether a risk factor or
-exposure is independently associated with an outcome after adjusting for
-confounders via matching, weighting, stratification, or regression, and
+IndepAssoc answers one question: is a risk factor (an exposure)
+genuinely associated with an outcome after other relevant factors are
+accounted for — or is the apparent link a statistical artifact? Instead
+of trusting a single statistical method, the package tests the same
+association through five independent methods and shows whether they
+agree. When they agree, the finding is robust; when they do not, the
+signal needs a closer look.
+
+![Conceptual overview: one association in the data, tested five
+independent ways (regression, matching, stratification, IPTW, AIPW),
+then a check of whether the methods
+agree](reference/figures/indepassoc-overview.png)
+
+Conceptual overview: one association in the data, tested five
+independent ways (regression, matching, stratification, IPTW, AIPW),
+then a check of whether the methods agree
+
+## New to these methods?
+
+If you are not a statistician, here is what each method does in one
+sentence:
+
+- **Regression** — builds a model of the outcome that includes the
+  exposure and the other factors at once, then reports the exposure’s
+  association with the outcome after holding the other factors fixed.
+- **Matching** — pairs each exposed person with an otherwise similar
+  unexposed person and compares outcomes within the pairs.
+- **Stratification** — groups people with similar backgrounds, compares
+  exposed and unexposed within each group, then pools the comparisons.
+- **IPTW (inverse probability of treatment weighting)** — gives each
+  person a weight so the exposed and unexposed groups look alike on the
+  other factors, then compares the weighted groups.
+- **AIPW (augmented IPTW)** — combines the IPTW reweighting with a
+  regression model; a hybrid that is often more stable than either
+  approach alone.
+
+## What it is — and what it is not
+
+**What it is:** a pipeline that tests whether an exposure is
+independently associated with an outcome — adjusting for confounding
+factors via matching, weighting, stratification, or regression — and
 produces publication-ready tables and effect estimates with minimal
 code.
 
-This package reports confounder-adjusted associations under the standard
+**What it is not:** proof of causation. The package reports
+confounder-adjusted associations under the standard
 no-unmeasured-confounding assumption; it does not establish causal
-effects.
+effects. An association — however robust — is not a causal effect.
 
-## Background
-
-IndepAssoc is the packaged form of the analysis pipeline used in two
-published retrospective cohort studies from the same author group:
-*[Female sex is associated with short-term mortality in coronary artery
-bypass grafting patients: A propensity-matched
-analysis](https://doi.org/10.1016/j.heliyon.2025.e41723)* (Heliyon,
-2025) and *[Atrial appendage closure is associated with increased risk
-for postoperative atrial
-fibrillation](https://doi.org/10.1186/s13019-024-03119-6)* (Journal of
-Cardiothoracic Surgery, 2024). Both studies used the same
-propensity-score workflow — a logistic propensity-score model, 1:1
-nearest-neighbor matching, ASMD balance checks, paired descriptive
-tests, and conditional outcome models — which this package generalizes
-into a reusable interface with five confounding-adjustment methods.
-
-## Validation
-
-The package has 631 passing unit tests and passes `R CMD check` cleanly
-(0 errors, 0 notes; one environmental warning — `qpdf` not installed on
-the test machine — unrelated to package code). The methods are validated
-against the bundled `example_cohort` (a simulated cohort with a known
-treatment effect) and `rhc_sample`, the real Right Heart Catheterization
-cohort from the SUPPORT study (5,735 patients, 50 confounders) used in
-the `rhc-validation` vignette.
-
-## Installation
-
-``` r
-
-# install.packages("remotes")
-remotes::install_github("mostafa-abbas/IndepAssoc")
-```
-
-Alternatively, install from source with the package source checked out:
-
-``` r
-
-install.packages("devtools")
-devtools::install()
-```
-
-`causaldata` and `MatchIt` are needed for the vignettes.
-
-## Datasets
-
-Two datasets ship with the package:
-
-- `example_cohort` — a simulated 500-row cohort with a known treatment
-  effect, for quick runs of the full pipeline.
-- `rhc_sample` — the cleaned Right Heart Catheterization (RHC) cohort
-  from the SUPPORT study (5735 rows, 50 confounders), the basis of the
-  `rhc-validation` vignette. It is a confounder-adjusted association
-  benchmark, not a proof of causality (see
-  [`?rhc_sample`](https://mostafa-abbas.github.io/IndepAssoc/reference/rhc_sample.md)).
-
-Both are lazy-loaded via [`data()`](https://rdrr.io/r/utils/data.html);
-the raw-generation scripts live in `data-raw/`
-(`simulate_example_cohort.R`, `prepare_rhc.R`) and are excluded from the
-installed package.
-
-## Example
+## How it works
 
 ``` r
 
@@ -119,6 +96,95 @@ binary-outcome odds ratio is non-collapsible, so it is not numerically
 equal to a marginal ATE. Agreement across the five is still meaningful
 robustness evidence, but they are related quantities, not five copies of
 one number.
+
+## A real-world validation
+
+The same pipeline holds up on a real clinical question. The bundled
+`rhc_sample` cohort — 5,735 intensive-care patients from the SUPPORT
+study — was analyzed for the association between right heart
+catheterization (RHC) and 30-day mortality, adjusting for 50 confounders
+with all five methods. Each method independently found that RHC was
+associated with increased 30-day mortality, with odds ratios in the
+1.3–1.5 range and confidence intervals excluding no effect:
+
+![Forest plot of 30-day mortality odds ratios by method: regression (OR
+1.49), matching (OR 1.39), stratification (OR 1.39), IPTW (OR 1.32), and
+AIPW (OR 1.33); all confidence intervals exclude 1, so all five methods
+agree that right heart catheterization is associated with increased
+30-day mortality](reference/figures/rhc-forest-dth30.png)
+
+Forest plot of 30-day mortality odds ratios by method: regression (OR
+1.49), matching (OR 1.39), stratification (OR 1.39), IPTW (OR 1.32), and
+AIPW (OR 1.33); all confidence intervals exclude 1, so all five methods
+agree that right heart catheterization is associated with increased
+30-day mortality
+
+That all five methods point the same way on a confounder-adjusted
+benchmark shows the pipeline works on real data, not only on simulated
+cohorts. The full analysis — balance checks, matching diagnostics, and
+sensitivity checks — is in the [rhc-validation
+vignette](https://mostafa-abbas.github.io/IndepAssoc/articles/rhc-validation.html).
+
+## Background
+
+IndepAssoc is the packaged form of the analysis pipeline used in two
+published retrospective cohort studies from the same author group:
+*[Female sex is associated with short-term mortality in coronary artery
+bypass grafting patients: A propensity-matched
+analysis](https://doi.org/10.1016/j.heliyon.2025.e41723)* (Heliyon,
+2025) and *[Atrial appendage closure is associated with increased risk
+for postoperative atrial
+fibrillation](https://doi.org/10.1186/s13019-024-03119-6)* (Journal of
+Cardiothoracic Surgery, 2024). Both studies used the same
+propensity-score workflow — a logistic propensity-score model, 1:1
+nearest-neighbor matching, ASMD balance checks, paired descriptive
+tests, and conditional outcome models — which this package generalizes
+into a reusable interface with five confounding-adjustment methods.
+
+## Datasets
+
+Two datasets ship with the package:
+
+- `example_cohort` — a simulated 500-row cohort with a known treatment
+  effect, for quick runs of the full pipeline.
+- `rhc_sample` — the cleaned Right Heart Catheterization (RHC) cohort
+  from the SUPPORT study (5735 rows, 50 confounders), the basis of the
+  `rhc-validation` vignette. It is a confounder-adjusted association
+  benchmark, not a proof of causality (see
+  [`?rhc_sample`](https://mostafa-abbas.github.io/IndepAssoc/reference/rhc_sample.md)).
+
+Both are lazy-loaded via [`data()`](https://rdrr.io/r/utils/data.html);
+the raw-generation scripts live in `data-raw/`
+(`simulate_example_cohort.R`, `prepare_rhc.R`) and are excluded from the
+installed package.
+
+## Installation
+
+``` r
+
+# install.packages("remotes")
+remotes::install_github("mostafa-abbas/IndepAssoc")
+```
+
+Alternatively, install from source with the package source checked out:
+
+``` r
+
+install.packages("devtools")
+devtools::install()
+```
+
+`causaldata` and `MatchIt` are needed for the vignettes.
+
+## Validation
+
+The package has 631 passing unit tests and passes `R CMD check` cleanly
+(0 errors, 0 notes; one environmental warning — `qpdf` not installed on
+the test machine — unrelated to package code). The methods are validated
+against the bundled `example_cohort` (a simulated cohort with a known
+treatment effect) and `rhc_sample`, the real Right Heart Catheterization
+cohort from the SUPPORT study (5,735 patients, 50 confounders) used in
+the `rhc-validation` vignette.
 
 ## Reproducibility
 

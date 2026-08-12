@@ -33,9 +33,9 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/causal-benchmarks.html">Benchmarking the Methods on Real Data</a></li>
+<li><a class="dropdown-item" href="../articles/causal-benchmarks.html">Does It Get the Right Answer? Validating IndepAssoc Against Known Results</a></li>
     <li><a class="dropdown-item" href="../articles/indepassoc-quickstart.html">IndepAssoc: A Quick-Start Guide</a></li>
-    <li><a class="dropdown-item" href="../articles/rhc-validation.html">Validating the Methods on the RHC Benchmark Cohort</a></li>
+    <li><a class="dropdown-item" href="../articles/rhc-validation.html">Case study: right heart catheterization and ICU mortality</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -76,6 +76,11 @@ core scientific question:</p>
 <p>Is a risk factor or exposure independently associated with an
 outcome, after adjusting for confounders?</p>
 </blockquote>
+<p>Put simply: treated and untreated patients differ in many ways
+besides the treatment itself, so a naive comparison of their outcomes
+can be misleading. A confounder-adjusted analysis holds those other
+differences fixed so that any observed difference in outcome reflects
+the treatment — not who happened to receive it.</p>
 <p>Matching is used in the context of estimating the effect of a binary
 treatment or exposure on an outcome while controlling for measured
 pre-treatment variables. The goal of matching is to produce
@@ -117,6 +122,11 @@ two outcomes (<code>outcome_binary</code>,
 <p>The first step is to estimate a propensity score for each unit — the
 predicted probability of receiving treatment given the covariates. This
 is done via logistic regression.</p>
+<p>Think of the propensity score as a single number summarizing how
+similar a patient is to the treated group based on their
+characteristics. Two patients with the same score are comparable on the
+measured covariates, even when their raw characteristics differ — which
+is what makes the score useful for matching.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_ps_model.html">build_ps_model</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data</span>,</span>
@@ -141,8 +151,12 @@ is done via logistic regression.</p>
 <div class="section level2">
 <h2 id="step-2-check-initial-imbalance">Step 2: Check Initial Imbalance<a class="anchor" aria-label="anchor" href="#step-2-check-initial-imbalance"></a>
 </h2>
-<p>Before matching, we can examine the initial imbalance using
-<code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code> via <code><a href="../reference/check_balance.html">check_balance()</a></code>:</p>
+<p>If the treated and untreated groups differ in their covariates, any
+difference in their outcomes could be caused by those covariates rather
+than by the treatment. Imbalance is exactly that difference, and
+matching works by removing it. Before matching, we can examine the
+initial imbalance using <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code> via
+<code><a href="../reference/check_balance.html">check_balance()</a></code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/match_cohort.html">match_cohort</a></span><span class="op">(</span><span class="va">ps</span>, caliper <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/check_balance.html">check_balance</a></span><span class="op">(</span><span class="va">m0</span>, threshold <span class="op">=</span> <span class="fl">0.10</span>, plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -191,6 +205,13 @@ is done via logistic regression.</p>
 <p>We perform 1:1 nearest-neighbor matching on the propensity score
 without replacement, with a caliper of 0.2 standard deviations of the
 logit(PS):</p>
+<p>1:1 nearest-neighbor matching pairs each treated patient with the
+untreated patient whose propensity score is closest. “Without
+replacement” means each patient is used at most once, and the
+<em>caliper</em> is a tolerance window: a pair is kept only if the two
+scores are close enough — here, within 0.2 standard deviations, on the
+logit scale (a standard transformation of probabilities). A treated
+patient with no untreated counterpart that close is left unmatched.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">matched</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/match_cohort.html">match_cohort</a></span><span class="op">(</span><span class="va">ps</span>, caliper <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Unmatched:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>, <span class="st">"-&gt; Matched:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">matched</span><span class="op">$</span><span class="va">data</span><span class="op">)</span>, <span class="st">"observations\n"</span><span class="op">)</span></span>
@@ -214,6 +235,10 @@ treatment groups:</p>
 result. The <code>balance_plot</code> element visualizes absolute
 standardized mean differences (ASMD) for each covariate before and after
 matching:</p>
+<p>ASMD measures how far apart the two groups are on a covariate in
+standard-deviation units. Because it is scale-free, covariates measured
+on different scales (age in years, BMI, a disease indicator) can be
+compared on a single axis.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pipeline.html">run_pipeline</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data</span>,</span>
@@ -238,7 +263,10 @@ the matched cohort. All covariates should fall below the dashed line
 <h3 id="unmatched-data">Unmatched Data<a class="anchor" aria-label="anchor" href="#unmatched-data"></a>
 </h3>
 <p>For the unmatched data, we use chi-square tests (categorical) and
-Wilcoxon rank-sum tests (continuous):</p>
+Wilcoxon rank-sum tests (continuous). The chi-square test compares
+proportions between the two groups; the Wilcoxon rank-sum test compares
+two continuous distributions without assuming they are normally
+shaped:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/table_unmatched.html">table_unmatched</a></span><span class="op">(</span><span class="va">data</span>, <span class="st">"exposure"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"diabetes"</span>, <span class="st">"hypertension"</span>, <span class="st">"bmi"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div id="mwlefoodfi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -750,7 +778,10 @@ N = 333</span><span class="gt_footnote_marks" style="white-space:nowrap;font-sty
 <h3 id="matched-data">Matched Data<a class="anchor" aria-label="anchor" href="#matched-data"></a>
 </h3>
 <p>For the matched data, we use paired tests — McNemar (categorical) and
-Wilcoxon signed-rank (continuous):</p>
+Wilcoxon signed-rank (continuous). Because each pair holds one treated
+and one untreated patient, these tests compare outcomes within pairs;
+McNemar is the categorical counterpart, and the signed-rank test is the
+paired version of the rank-sum test:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/table_matched.html">table_matched</a></span><span class="op">(</span><span class="va">matched</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"diabetes"</span>, <span class="st">"hypertension"</span>, <span class="st">"bmi"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div id="ucmrwtkdbi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -1426,10 +1457,12 @@ confounders included. Efficient and familiar, but the estimate depends
 on the outcome-model functional form, and it extrapolates where
 propensity scores have poor overlap.</li>
 <li>
-<strong>Matching</strong> discards poorly overlaid units, so
+<strong>Matching</strong> discards poorly overlaid units — patients
+whose propensity score has no counterpart in the other group — so
 inference stays close to the data; it answers the
-treatment-on-the-treated question and is the estimator used in the
-source cardiac-surgery papers. Cost: fewer units and no benefit from
+treatment-on-the-treated question (the effect among the patients who
+actually received the treatment) and is the estimator used in the source
+cardiac-surgery papers. Cost: fewer units and no benefit from
 observations that do not overlap.</li>
 <li>
 <strong>Stratification</strong> groups patients into
