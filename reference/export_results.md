@@ -50,7 +50,7 @@ res <- run_pipeline(
 #> Pipeline complete.
 out_dir <- tempfile("indepassoc_export_")
 export_results(res, output_dir = out_dir)
-#> Results exported to: /tmp/Rtmpm69Zzx/indepassoc_export_19ca362e2b23
+#> Results exported to: /tmp/Rtmp4qiGXC/indepassoc_export_197518652641
 list.files(out_dir)
 #> [1] "balance_check_all.csv"         "balance_check_matched.csv"    
 #> [3] "binary_regression_summary.csv" "comparison.csv"               

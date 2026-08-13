@@ -1,15 +1,8 @@
 pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
-articles:
-  causal-benchmarks: causal-benchmarks.html
-  clinician-cohort-tutorial: clinician-cohort-tutorial.html
-  clinician-walkthrough (1): clinician-walkthrough (1).html
-  clinician-walkthrough: clinician-walkthrough.html
-  clinician-Walkthrough: clinician-Walkthrough.html
-  indepassoc-quickstart: indepassoc-quickstart.html
-  rhc-validation: rhc-validation.html
-last_built: 2026-08-13T20:40Z
+articles: {}
+last_built: 2026-08-13T20:59Z
 urls:
   reference: https://mostafa-abbas.github.io/IndepAssoc/reference
   article: https://mostafa-abbas.github.io/IndepAssoc/articles
