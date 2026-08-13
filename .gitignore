@@ -1,4 +1,4 @@
-/*
-!/CLEAN/
-/CLEAN/*
-!/CLEAN/IndepAssoc-main/
+docs
+*.tar.gz
+*.Rcheck/
+vignettes/*.html
