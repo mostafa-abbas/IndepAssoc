@@ -1,0 +1,11 @@
+url: https://mostafa-abbas.github.io/IndepAssoc/
+template:
+  bootstrap: 5
+articles:
+- title: Articles
+  navbar: Articles
+  contents:
+  - indepassoc-quickstart
+  - rhc-validation
+  - causal-benchmarks
+  - clinician-walkthrough
