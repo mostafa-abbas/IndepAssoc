@@ -1,18 +1,19 @@
-# Five Ways to Check a Finding: A Walkthrough for Clinicians
+# A Walkthrough for Clinicians: Does Right Heart Catheterization Increase Mortality Risk?
 
-## Who this is for
+## Clinical overview
 
-You do not need a statistics background to follow this walkthrough. If
-you can read a lab report, you can read this. We will use one real,
-well-known clinical question — *does right heart catheterization (RHC)
-increase the risk of dying within 30 days?* — and walk through exactly
-how IndepAssoc checks whether that finding is real, using data from
-5,735 critically ill patients.
+This walkthrough focuses on the clinical intuition behind checking a
+clinical finding for confounding, not the underlying statistical code.
+We’ll use a classic clinical question — does right heart catheterization
+(RHC) increase 30-day mortality? — to show how IndepAssoc evaluates a
+real-world clinical finding, using data from 5,735 critically ill
+patients.
 
-If you want the full technical version of this same analysis, with every
-statistical detail, see the [RHC case study
+For the complete statistical methodology — every model, every parameter,
+every diagnostic — see the [full RHC case study
 vignette](https://mostafa-abbas.github.io/IndepAssoc/articles/rhc-validation.md).
-This page is the plain-language companion to it.
+Think of this page as the conceptual guide to interpreting those
+results, and that page as the detailed reference underneath it.
 
 ## The problem: sicker patients are more likely to get the procedure
 
@@ -37,15 +38,11 @@ a similar untreated patient, the only major difference left between the
 two groups is whether they received the treatment; on the right, five
 statistical approaches independently reach the same conclusion.
 
-The rest of this walkthrough shows exactly how IndepAssoc solves this
-problem — step by step, on the real RHC data.
-
-## Step 1 — Load the data
+## Step 1 — Load the data, and look at the raw numbers first
 
 ``` r
 
-library(IndepAssoc)
-
+data(rhc_sample)
 # rhc_sample bundles the classic RHC cohort:
 #   - rhc_sample$data:       5,735 ICU patients
 #   - rhc_sample$covariates: the confounders to adjust for (severity of
@@ -54,11 +51,45 @@ library(IndepAssoc)
 # The exposure column is `swang1` (received RHC or not).
 # The outcome column we'll use is `dth30` (died within 30 days).
 
+# Check dataset dimensions: 5,735 patients across 63 recorded metrics
 dim(rhc_sample$data)
 #> [1] 5735   63
+
+# Verify the number of baseline clinical confounders to control
 length(rhc_sample$covariates)
 #> [1] 50
 ```
+
+Before doing any statistical adjustment, look at the numbers exactly as
+they sit in the raw data — no propensity scores, no matching, nothing
+fancy:
+
+``` r
+
+raw_table <- table(
+  RHC = rhc_sample$data$swang1,
+  Died_30d = rhc_sample$data$dth30
+)
+raw_table
+#>    Died_30d
+#> RHC    0    1
+#>   0 2463 1088
+#>   1 1354  830
+
+prop.table(raw_table, margin = 1)
+#>    Died_30d
+#> RHC         0         1
+#>   0 0.6936074 0.3063926
+#>   1 0.6199634 0.3800366
+```
+
+This is the comparison a lot of casual analyses stop at — and it’s
+exactly the comparison you *cannot* trust yet. In the raw data, patients
+who received RHC died at a noticeably higher rate — 38.0% versus 30.6%
+among those who didn’t. That difference could genuinely be because RHC
+is harmful, or it could simply be because RHC patients were sicker going
+in. There is no way to tell which from this table alone. That is the
+whole reason the rest of this walkthrough exists.
 
 ## Step 2 — Build a propensity score
 
@@ -163,31 +194,6 @@ results <- run_pipeline(
   methods = c("regression", "matching", "stratification", "iptw", "aipw"),
   seed = 1
 )
-#> Step 1/9: Building propensity score model...
-#>   Positivity: PS window [0.010, 0.990]; control [0.003, 0.955], treated [0.019, 0.985]; 12 outside window -> VIOLATED
-#> Step 2/9: Matching cohorts...
-#> Step 3/9: Checking balance...
-#> Step 4/9: Generating unmatched descriptive table...
-#> The following warnings were returned during `add_p()`:
-#> ! For variable `cat1` (`swang1`) and "statistic", "p.value", and "parameter"
-#>   statistics: Chi-squared approximation may be incorrect
-#> ! For variable `cat2` (`swang1`) and "statistic", "p.value", and "parameter"
-#>   statistics: Chi-squared approximation may be incorrect
-#> ! For variable `ortho` (`swang1`) and "statistic", "p.value", and "parameter"
-#>   statistics: Chi-squared approximation may be incorrect
-#> Step 5/9: Generating matched descriptive table...
-#> 
-#> Step 6/9: Fitting all outcome models (3 types)...
-#> 
-#> Step 7/9: Running paired statistical tests...
-#> 
-#> Step 8/9: Generating balance table...
-#> 
-#> Step 9/9: Running requested confounding-adjustment methods...
-#> 
-#>   IPTW weights (ATE): min 0.39, median 0.78, max 20.18, max/min ratio 52.2
-#> 
-#> Pipeline complete.
 ```
 
 ``` r
@@ -200,6 +206,25 @@ format_comparison(results$comparison)
 #> 4           IPTW 1.32 1.14–1.53  <0.001 5735
 #> 5           AIPW 1.33 1.17–1.51  <0.001 5735
 ```
+
+### What does an odds ratio mean?
+
+Every row in the table above reports an **odds ratio (OR)** — a way of
+comparing how likely an outcome is in one group versus another.
+
+- **An OR of 1.0 means no difference at all** between the RHC and
+  non-RHC groups.
+- **An OR above 1.0 means higher odds of the outcome** (here, dying
+  within 30 days) in the RHC group.
+- The regression method above estimates an OR of **1.49** — in plain
+  terms, patients who received RHC had roughly **49% higher odds** of
+  dying within 30 days than similar patients who didn’t, after adjusting
+  for the confounders listed earlier.
+
+The other four methods estimate slightly different numbers (this is
+expected — see the caveat below on why the methods don’t target the
+exact same quantity), but every one of them lands above 1.0, and every
+confidence interval excludes 1.0. That consistency is the finding.
 
 ## Step 6 — The verdict
 
@@ -217,11 +242,25 @@ five methods estimate an odds ratio above 1 for 30-day mortality, and
 every confidence interval excludes “no effect.”
 
 All five methods — despite resting on different statistical assumptions
-— agree: RHC is associated with a roughly 30-50% higher odds of dying
-within 30 days, and no method’s confidence interval crosses the “no
-effect” line. That agreement, across five genuinely different
-approaches, is what makes this a robust finding rather than an artifact
-of one particular modeling choice.
+— agree: the odds of dying within 30 days were higher in the RHC group,
+and no method’s confidence interval crosses 1.0 (the “no effect” line).
+That agreement, across five genuinely different approaches, is what
+makes this a robust finding rather than an artifact of one particular
+modeling choice.
+
+### Key takeaways
+
+- **The raw, unadjusted comparison (Step 1) cannot be trusted on its
+  own** — sicker patients were more likely to receive RHC, so any
+  difference seen there is tangled up with baseline illness severity.
+- **After adjusting for confounders five independent ways, the finding
+  held up.** Regression, matching, stratification, IPTW, and AIPW all
+  estimate an odds ratio above 1.0, with confidence intervals that all
+  exclude “no effect.”
+- **Agreement across five different methods is much stronger evidence
+  than any single adjusted model alone** — it means the finding isn’t an
+  artifact of one particular method’s assumptions.
+- **This is still an association, not proof of causation** — see below.
 
 ## What this does — and does not — prove
 
@@ -249,8 +288,9 @@ you.
 
 ## Try it on your own data
 
-The same five steps shown here — build a propensity score, check
-overlap, match, check balance, compare five methods — work on any binary
-exposure and any outcome. See the [quick-start
+The same six steps shown here — look at the raw numbers, build a
+propensity score, check overlap, match, check balance, compare five
+methods — work on any binary exposure and any outcome. See the
+[quick-start
 guide](https://mostafa-abbas.github.io/IndepAssoc/articles/indepassoc-quickstart.md)
 to run this on your own cohort.
