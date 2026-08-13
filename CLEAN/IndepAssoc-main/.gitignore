@@ -1,4 +1,0 @@
-docs
-*.tar.gz
-*.Rcheck/
-vignettes/*.html
