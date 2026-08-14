@@ -125,6 +125,18 @@ balance <- check_balance(matched, threshold = 0.10)
 cat("All balanced:", balance$all_balanced, "\n")
 ```
 
+`all_balanced` is a strict, all-or-nothing check: it is `TRUE` only if *every*
+row in `balance$post` (including the `distance` row — the propensity score
+itself) falls under the threshold. Seeing `FALSE` here is expected and not a
+sign that matching failed — look at `balance$post` in the previous section:
+the actual covariates (`age`, `diabetes`, `hypertension`, `bmi`) are all
+comfortably under 0.10, and it is only the `distance` row, at 0.1565, that
+pushes the summary flag to `FALSE`. The propensity score is not itself a
+clinical covariate you need balanced — it's the matching criterion — so a
+lingering imbalance there is far less concerning than imbalance on an actual
+confounder. Treat `all_balanced` as a quick screening signal that tells you
+*to go look at the balance table*, not as a pass/fail verdict on its own.
+
 ### Love Plot
 
 `run_pipeline()` returns the ASMD chart as part of its result. The
@@ -153,6 +165,14 @@ Blue bars represent the unmatched cohort and orange bars represent the matched
 cohort. All covariates should fall below the dashed line (ASMD < 0.10) after
 matching.
 
+`result$balance_plot` is a standard `ggplot2` object, so it saves like any
+other:
+
+```{r love-plot-save, eval=FALSE}
+# Save for a manuscript figure
+ggsave("balance_plot.png", result$balance_plot, width = 8, height = 5, dpi = 300)
+```
+
 ## Step 5: Descriptive Tables
 
 ### Unmatched Data
@@ -172,10 +192,20 @@ For the matched data, we use paired tests — McNemar (categorical) and
 Wilcoxon signed-rank (continuous). Because each pair holds one treated and one
 untreated patient, these tests compare outcomes within pairs; McNemar is the
 categorical counterpart, and the signed-rank test is the paired version of the
-rank-sum test:
+rank-sum test.
 
-```{r table-matched}
-table_matched(matched, c("age", "diabetes", "hypertension", "bmi"))
+`table_matched()` builds one output table per variable type (categorical vs.
+continuous) under the hood, so calling it with a mix of both in a single pass
+renders as two side-by-side sub-tables that don't line up cleanly in a
+narrow, vignette-width HTML column. Calling it once per type keeps each table
+self-contained and readable:
+
+```{r table-matched-categorical}
+table_matched(matched, c("diabetes", "hypertension"))
+```
+
+```{r table-matched-continuous}
+table_matched(matched, c("age", "bmi"))
 ```
 
 ## Step 6: Estimate the Treatment Effect
@@ -297,6 +327,15 @@ IPTW) is evidence the association is not an artifact of any single adjustment
 strategy. Disagreement flags misspecification or poor overlap, not a vote —
 inspect the propensity-score distribution and the balance tables before
 trusting any single estimate.
+
+**A note on pre-specification.** The robustness argument above only holds if
+you report all five methods, not just whichever one happens to give the
+result you expected. If a single primary method is needed for a manuscript
+(reviewers and pre-registered protocols often require one headline
+estimate), pick it — typically matching or AIPW, per the guidance above —
+*before* looking at the comparison table, and report the other four as a
+sensitivity analysis. Choosing the "best-looking" method after the fact
+defeats the purpose of running several in the first place.
 
 ## Step 7: Paired Statistical Tests
 

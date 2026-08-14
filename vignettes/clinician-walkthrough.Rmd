@@ -121,10 +121,15 @@ positivity <- check_positivity(ps)
 positivity
 ```
 
-In this cohort, only a small number of patients (12 out of 5,735) fall
-outside the expected range — a minor, expected amount of imperfect overlap
-in a dataset this size, not a reason to distrust the analysis. IndepAssoc
-flags this automatically so it's never silently ignored.
+<div class="callout">
+**In plain terms:** the word "VIOLATED" above looks alarming, but read the
+number next to it — only 12 of 5,735 patients (0.2%) fell slightly outside
+the ideal overlap window. That is a minor, expected amount of imperfect
+overlap in a dataset this size, not a reason to distrust the analysis.
+IndepAssoc flags this automatically, using a strict, all-or-nothing label, so
+that even a small amount of imperfect overlap is never silently ignored —
+"VIOLATED" means "worth a look," not "the analysis is broken."
+</div>
 
 ## Step 3 — Match each treated patient to a similar untreated patient
 
@@ -208,6 +213,26 @@ The other four methods estimate slightly different numbers (this is
 expected — see the caveat below on why the methods don't target the
 exact same quantity), but every one of them lands above 1.0, and every
 confidence interval excludes 1.0. That consistency is the finding.
+
+**What's the "95% CI" column?** It's the range the true odds ratio
+plausibly falls in, given the sample size and the noise in the data — a
+narrower range means a more precise estimate. When that range doesn't
+include 1.0 (as in every row above), it means "no difference" is not a
+plausible value given this data, which is why we say the finding is
+statistically significant, not just a one-off number.
+</div>
+
+<div class="callout">
+### Why do the five methods give slightly different numbers?
+
+Each method asks the question in a slightly different way — some focus on
+the patients who actually received RHC, others on the whole ICU cohort. What
+matters for this walkthrough is not the exact decimal in each row, but that
+all five point the same direction (odds above 1.0) and all five exclude "no
+effect." That agreement, despite each method looking at the question from a
+different angle, is the robustness signal — not any single row's precise
+value. (See "What this does — and does not — prove," below, for exactly
+which population each method describes.)
 </div>
 
 ## Step 6 — The verdict
@@ -267,6 +292,12 @@ What you can say, honestly and defensibly, is this: **across five
 independent modeling approaches, the association between RHC and increased
 30-day mortality held up.** That is exactly the kind of robustness check a
 single p-value from a single model can never give you.
+
+This does not mean RHC should never be used — it is often clinically
+necessary, and this walkthrough says nothing about the individual patients
+for whom it is the right call. But it does mean the decision to place a
+catheter should account for this independently elevated risk, rather than
+assume the procedure is neutral.
 
 ## Try it on your own data
 
