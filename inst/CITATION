@@ -1,0 +1,50 @@
+citHeader("To cite IndepAssoc in publications use:")
+
+bibentry(
+  bibtype = "Manual",
+  title = "IndepAssoc: Confounder-Adjusted Independent Association Testing via Propensity Score Methods",
+  author = person("Mostafa", "Hamza"),
+  year = 2026,
+  url = "https://github.com/mostafa-abbas/IndepAssoc",
+  note = "R package version 0.6.4",
+  textVersion = paste0(
+    "Mostafa Hamza (2026). IndepAssoc: Confounder-Adjusted ",
+    "Independent Association Testing via Propensity Score Methods. ",
+    "R package version 0.6.4. https://github.com/mostafa-abbas/IndepAssoc"
+  )
+)
+
+bibentry(
+  bibtype = "Article",
+  title = "Female sex is associated with short-term mortality in coronary artery bypass grafting patients: A propensity-matched analysis",
+  author = person("Mostafa M.", "Abbas"),
+  journal = "Heliyon",
+  year = 2025,
+  doi = "10.1016/j.heliyon.2025.e41723",
+  textVersion = paste0(
+    "Mostafa M. Abbas (2025). Female sex is associated with short-term ",
+    "mortality in coronary artery bypass grafting patients: A propensity-matched ",
+    "analysis. Heliyon. doi:10.1016/j.heliyon.2025.e41723"
+  )
+)
+
+bibentry(
+  bibtype = "Article",
+  title = "Atrial appendage closure is associated with increased risk for postoperative atrial fibrillation",
+  author = c(
+    person("Jeffrey H.", "Shuhaiber"),
+    person("Mostafa", "Abbas"),
+    person("Thomas", "Morland"),
+    person("H. Lester", "Kirchner"),
+    person("Yasser", "El-Manzalawy")
+  ),
+  journal = "Journal of Cardiothoracic Surgery",
+  year = 2024,
+  doi = "10.1186/s13019-024-03119-6",
+  textVersion = paste0(
+    "Jeffrey H. Shuhaiber, Mostafa Abbas, Thomas Morland, H. Lester Kirchner, ",
+    "and Yasser El-Manzalawy (2024). Atrial appendage closure is associated with ",
+    "increased risk for postoperative atrial fibrillation. Journal of ",
+    "Cardiothoracic Surgery. doi:10.1186/s13019-024-03119-6"
+  )
+)

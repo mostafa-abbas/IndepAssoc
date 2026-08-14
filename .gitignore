@@ -2,3 +2,5 @@ docs
 *.tar.gz
 *.Rcheck/
 vignettes/*.html
+/doc/
+/Meta/
