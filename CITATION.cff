@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the papers below."
+type: software
+title: "IndepAssoc: Confounder-Adjusted Independent Association Testing via Propensity Score Methods"
+authors:
+  - family-names: Hamza
+    given-names: Mostafa
+repository-code: "https://github.com/mostafa-abbas/IndepAssoc"
+license: MIT
+version: 0.6.4
+date-released: 2026-08-11
+references:
+  - type: article
+    authors:
+      - family-names: Abbas
+        given-names: "Mostafa M."
+    title: "Female sex is associated with short-term mortality in coronary artery bypass grafting patients: A propensity-matched analysis"
+    year: 2025
+    journal: "Heliyon"
+    doi: "10.1016/j.heliyon.2025.e41723"
+  - type: article
+    title: "Atrial appendage closure is associated with increased risk for postoperative atrial fibrillation"
+    authors:
+      - family-names: Shuhaiber
+        given-names: "Jeffrey H."
+      - family-names: Abbas
+        given-names: "Mostafa"
+      - family-names: Morland
+        given-names: "Thomas"
+      - family-names: Kirchner
+        given-names: "H. Lester"
+      - family-names: El-Manzalawy
+        given-names: "Yasser"
+    year: 2024
+    journal: "Journal of Cardiothoracic Surgery"
+    doi: "10.1186/s13019-024-03119-6"
