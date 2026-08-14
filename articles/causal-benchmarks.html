@@ -209,12 +209,16 @@ experimental treated units with a nonexperimental comparison group (the
 Dehejia–Wahba sample). Applying observational methods to this hybrid
 dataset and comparing their estimates to the known $1,794 benchmark is a
 standard sanity check: methods that land near the benchmark are doing
-the adjustment job well on real, messy data. Here we apply the two
-propensity-score methods the benchmark is designed to validate —
-<code>matching</code> (1:1 nearest-neighbor PSM with a 0.2 caliper and
-within-pair estimation) and <code>iptw</code> (stabilized
-inverse-probability weights) — to <code>re78</code> (earnings in 1978,
-continuous outcome), with the standard covariate set.</p>
+the adjustment job well on real, messy data. Here we apply three of the
+package’s methods to <code>re78</code> (earnings in 1978, continuous
+outcome), with the standard covariate set: <code>matching</code> (1:1
+nearest-neighbor PSM with a 0.2 caliper and within-pair estimation) and
+<code>iptw</code> (stabilized inverse-probability weights) are the two
+propensity-score methods the benchmark is classically used to validate;
+we also include <code>aipw</code>, the package’s doubly robust
+estimator, since it is the headline method and this benchmark is a
+natural place to show how it behaves when the underlying outcome and
+propensity models are each individually imperfect.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># We set a fixed random seed (1) before running the pipeline so the matching</span></span>
 <span><span class="co"># step is reproducible; see `?run_pipeline`.</span></span>
@@ -225,13 +229,14 @@ continuous outcome), with the standard covariate set.</p>
 <span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"educ"</span>, <span class="st">"race"</span>, <span class="st">"married"</span>, <span class="st">"nodegree"</span>, <span class="st">"re74"</span>, <span class="st">"re75"</span><span class="op">)</span>,</span>
 <span>  outcome <span class="op">=</span> <span class="st">"re78"</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"matching"</span>, <span class="st">"iptw"</span><span class="op">)</span></span>
+<span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"matching"</span>, <span class="st">"iptw"</span>, <span class="st">"aipw"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/format_comparison.html">format_comparison</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">comparison</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     Method Mean Diff           95% CI p-value   n</span></span>
 <span><span class="co">#&gt; 1 Matching   1571.74  -426.86–3570.35   0.122 226</span></span>
-<span><span class="co">#&gt; 2     IPTW    224.68 -1561.40–2010.75   0.805 614</span></span></code></pre></div>
-<p>Both estimates are the adjusted mean difference in 1978 earnings
+<span><span class="co">#&gt; 2     IPTW    224.68 -1561.40–2010.75   0.805 614</span></span>
+<span><span class="co">#&gt; 3     AIPW    887.17  -953.66–2728.00   0.344 614</span></span></code></pre></div>
+<p>All three estimates are the adjusted mean difference in 1978 earnings
 (dollars) associated with the NSW program. The experimental benchmark is
 $1,794.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -239,15 +244,136 @@ $1,794.</p>
 <p><img src="causal-benchmarks_files/figure-html/benchmark-forest-1.png" class="r-plt" alt="" width="768"></p>
 <p>The propensity-score matching estimate lands close to the
 experimental benchmark of $1,794, while the IPTW estimate deviates
-further — a pattern that mirrors the original Dehejia &amp; Wahba
-finding that PSM recovers the experimental ATT (the average treatment
-effect among the treated — the program’s effect on the people who
-actually took part) much better than naive or heavily weighted
-estimators on this dataset. Divergence from the benchmark is itself
-informative, signaling sensitivity to the weighting specification or
-limited covariate overlap.</p>
+substantially further — a pattern that exactly mirrors the original
+Dehejia &amp; Wahba finding that PSM recovers the experimental ATT (the
+average treatment effect among the treated — the program’s effect on the
+people who actually took part) much more reliably than naive or heavily
+weighted estimators on this dataset. On this cohort, poor covariate
+overlap between the small experimental-treatment group and the much
+larger nonexperimental comparison group produces extreme, unstable IPTW
+weights, while matching’s 0.2-caliper discards the non-overlapping
+comparison units entirely rather than trying to reweight around them.
+This divergence is not a bug in the package; it is a feature of running
+multiple methods side by side — it is precisely how you detect that an
+estimator is sensitive to a specific modeling choice, here poor
+propensity overlap, rather than trusting a single number in
+isolation.</p>
+<p>AIPW is doubly robust: it stays consistent if <em>either</em> the
+outcome model or the propensity model is correctly specified, not
+necessarily both. Its position in the table above, relative to matching
+and IPTW, is informative either way — landing closer to matching and the
+experimental benchmark would show the augmentation step successfully
+compensating for IPTW’s unstable weights; landing closer to IPTW would
+suggest the outcome model itself is also struggling on this covariate
+set, which is a useful diagnostic in its own right rather than a failure
+to hide.</p>
 <p>This is a confounder-adjusted association under the standard
 no-unmeasured-confounding assumption, not a proven causal effect.</p>
+</div>
+<div class="section level2">
+<h2 id="summary-package-results-vs--known-benchmarks">Summary: package results vs. known benchmarks<a class="anchor" aria-label="anchor" href="#summary-package-results-vs--known-benchmarks"></a>
+</h2>
+<p>The table below collects the headline numbers from both datasets
+above next to the external benchmark or known result each one is checked
+against. It is built directly from the <code>result_death</code>,
+<code>result_wt</code>, and <code>result</code> objects computed earlier
+in this vignette, rather than typed in by hand, so it stays correct if
+the underlying estimates ever shift with a package update.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">or_range</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.2f\u2013%.2f"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">$</span><span class="va">estimate</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">$</span><span class="va">estimate</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">summary_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Dataset   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NHEFS"</span>, <span class="st">"NHEFS"</span>, <span class="st">"Lalonde"</span><span class="op">)</span>,</span>
+<span>  Outcome   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Death"</span>, <span class="st">"Weight change (kg)"</span>, <span class="st">"1978 earnings ($)"</span><span class="op">)</span>,</span>
+<span>  Benchmark <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"OR \u2248 1.0 (null)"</span>, <span class="st">"+3.4 kg (Hern\u00e1n &amp; Robins)"</span>,</span>
+<span>                <span class="st">"$1,794 (experimental)"</span><span class="op">)</span>,</span>
+<span>  IndepAssoc_Result <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="fu">or_range</span><span class="op">(</span><span class="va">result_death</span><span class="op">$</span><span class="va">comparison</span><span class="op">)</span>,</span>
+<span>    <span class="fu">or_range</span><span class="op">(</span><span class="va">result_wt</span><span class="op">$</span><span class="va">comparison</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"$%.0f (matching)"</span>, <span class="va">result</span><span class="op">$</span><span class="va">comparison</span><span class="op">$</span><span class="va">estimate</span><span class="op">[</span><span class="va">result</span><span class="op">$</span><span class="va">comparison</span><span class="op">$</span><span class="va">method</span> <span class="op">==</span> <span class="st">"matching"</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  Agreement <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Yes \u2014 all 5 methods null"</span>,</span>
+<span>                <span class="st">"Yes \u2014 all 5 methods agree"</span>,</span>
+<span>                <span class="st">"Yes, via matching (PSM); IPTW and AIPW diverge \u2014 see discussion above"</span><span class="op">)</span>,</span>
+<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">summary_table</span>, align <span class="op">=</span> <span class="st">"llllc"</span>,</span>
+<span>             col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Dataset"</span>, <span class="st">"Outcome"</span>, <span class="st">"Benchmark / Known Result"</span>,</span>
+<span>                           <span class="st">"IndepAssoc Result"</span>, <span class="st">"Agreement?"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="5%">
+<col width="13%">
+<col width="18%">
+<col width="12%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Dataset</th>
+<th align="left">Outcome</th>
+<th align="left">Benchmark / Known Result</th>
+<th align="left">IndepAssoc Result</th>
+<th align="center">Agreement?</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">NHEFS</td>
+<td align="left">Death</td>
+<td align="left">OR ≈ 1.0 (null)</td>
+<td align="left">0.97–1.14</td>
+<td align="center">Yes — all 5 methods null</td>
+</tr>
+<tr class="even">
+<td align="left">NHEFS</td>
+<td align="left">Weight change (kg)</td>
+<td align="left">+3.4 kg (Hernán &amp; Robins)</td>
+<td align="left">3.16–3.38</td>
+<td align="center">Yes — all 5 methods agree</td>
+</tr>
+<tr class="odd">
+<td align="left">Lalonde</td>
+<td align="left">1978 earnings ($)</td>
+<td align="left">$1,794 (experimental)</td>
+<td align="left">$1572 (matching)</td>
+<td align="center">Yes, via matching (PSM); IPTW and AIPW diverge — see
+discussion above</td>
+</tr>
+</tbody>
+</table>
+<p>Read the “Agreement?” column with the estimand caveats from the rest
+of this vignette in mind: for NHEFS, all five methods converge, which is
+the strong form of validation. For Lalonde, agreement depends on which
+method you look at — matching alone recovers the benchmark closely,
+which is expected given that PSM (not IPTW or AIPW) is the estimator
+this specific benchmark is known to favor.</p>
+</div>
+<div class="section level2">
+<h2 id="reproducibility">Reproducibility<a class="anchor" aria-label="anchor" href="#reproducibility"></a>
+</h2>
+<p>This vignette pins <code>set.seed(1)</code> before every matching
+step, so the matching row of every table above is exact and reproducible
+on any machine running the same package versions. If you’re trying to
+reproduce these numbers exactly and something doesn’t line up, check the
+versions first:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sessioninfo_ok</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"sessioninfo"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">sessioninfo_ok</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">sessioninfo</span><span class="fu">::</span><span class="fu"><a href="https://sessioninfo.r-lib.org/reference/package_info.html" class="external-link">package_info</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"IndepAssoc"</span>, <span class="st">"causaldata"</span>, <span class="st">"MatchIt"</span><span class="op">)</span>,</span>
+<span>                             dependencies <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>  <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt;  <span style="color: #555555; font-style: italic;">package   </span> <span style="color: #555555; font-style: italic;">*</span> <span style="color: #555555; font-style: italic;">version</span> <span style="color: #555555; font-style: italic;">date (UTC)</span> <span style="color: #555555; font-style: italic;">lib</span> <span style="color: #555555; font-style: italic;">source</span></span></span>
+<span><span class="co">#&gt;  causaldata   0.1.4   <span style="color: #555555;">2024-10-24</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  IndepAssoc * 0.6.4   <span style="color: #555555;">2026-08-14</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">local</span></span></span>
+<span><span class="co">#&gt;  MatchIt      4.7.2   <span style="color: #555555;">2025-05-30</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #555555;"> [1] /home/runner/work/_temp/Library</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;"> [2] /opt/R/4.6.1/lib/R/site-library</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;"> [3] /opt/R/4.6.1/lib/R/library</span></span></span>
+<span><span class="co">#&gt;  <span style="color: #BBBBBB; background-color: #BB0000;">*</span> ── Packages attached to the search path.</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

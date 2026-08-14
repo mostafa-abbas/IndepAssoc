@@ -228,6 +228,21 @@ treatment groups:</p>
 <code class="sourceCode R"><span><span class="va">balance</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/check_balance.html">check_balance</a></span><span class="op">(</span><span class="va">matched</span>, threshold <span class="op">=</span> <span class="fl">0.10</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"All balanced:"</span>, <span class="va">balance</span><span class="op">$</span><span class="va">all_balanced</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; All balanced: FALSE</span></span></code></pre></div>
+<p><code>all_balanced</code> is a strict, all-or-nothing check: it is
+<code>TRUE</code> only if <em>every</em> row in
+<code>balance$post</code> (including the <code>distance</code> row — the
+propensity score itself) falls under the threshold. Seeing
+<code>FALSE</code> here is expected and not a sign that matching failed
+— look at <code>balance$post</code> in the previous section: the actual
+covariates (<code>age</code>, <code>diabetes</code>,
+<code>hypertension</code>, <code>bmi</code>) are all comfortably under
+0.10, and it is only the <code>distance</code> row, at 0.1565, that
+pushes the summary flag to <code>FALSE</code>. The propensity score is
+not itself a clinical covariate you need balanced — it’s the matching
+criterion — so a lingering imbalance there is far less concerning than
+imbalance on an actual confounder. Treat <code>all_balanced</code> as a
+quick screening signal that tells you <em>to go look at the balance
+table</em>, not as a pass/fail verdict on its own.</p>
 <div class="section level3">
 <h3 id="love-plot">Love Plot<a class="anchor" aria-label="anchor" href="#love-plot"></a>
 </h3>
@@ -254,6 +269,11 @@ compared on a single axis.</p>
 <p>Blue bars represent the unmatched cohort and orange bars represent
 the matched cohort. All covariates should fall below the dashed line
 (ASMD &lt; 0.10) after matching.</p>
+<p><code>result$balance_plot</code> is a standard <code>ggplot2</code>
+object, so it saves like any other:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Save for a manuscript figure</span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span><span class="st">"balance_plot.png"</span>, <span class="va">result</span><span class="op">$</span><span class="va">balance_plot</span>, width <span class="op">=</span> <span class="fl">8</span>, height <span class="op">=</span> <span class="fl">5</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -267,7 +287,7 @@ Wilcoxon rank-sum tests (continuous). The chi-square test compares
 proportions between the two groups; the Wilcoxon rank-sum test compares
 two continuous distributions without assuming they are normally
 shaped:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/table_unmatched.html">table_unmatched</a></span><span class="op">(</span><span class="va">data</span>, <span class="st">"exposure"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"diabetes"</span>, <span class="st">"hypertension"</span>, <span class="st">"bmi"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div id="mwlefoodfi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>#mwlefoodfi table {
@@ -781,9 +801,14 @@ N = 333</span><span class="gt_footnote_marks" style="white-space:nowrap;font-sty
 Wilcoxon signed-rank (continuous). Because each pair holds one treated
 and one untreated patient, these tests compare outcomes within pairs;
 McNemar is the categorical counterpart, and the signed-rank test is the
-paired version of the rank-sum test:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/table_matched.html">table_matched</a></span><span class="op">(</span><span class="va">matched</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"diabetes"</span>, <span class="st">"hypertension"</span>, <span class="st">"bmi"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+paired version of the rank-sum test.</p>
+<p><code><a href="../reference/table_matched.html">table_matched()</a></code> builds one output table per variable
+type (categorical vs. continuous) under the hood, so calling it with a
+mix of both in a single pass renders as two side-by-side sub-tables that
+don’t line up cleanly in a narrow, vignette-width HTML column. Calling
+it once per type keeps each table self-contained and readable:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/table_matched.html">table_matched</a></span><span class="op">(</span><span class="va">matched</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"diabetes"</span>, <span class="st">"hypertension"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div id="ucmrwtkdbi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>#ucmrwtkdbi table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
@@ -1234,98 +1259,537 @@ paired version of the rank-sum test:</p>
 }
 </style>
 <table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
-<thead>
-<tr class="gt_col_headings gt_spanner_row">
-<th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id="label"><span class="gt_from_md"><strong>Characteristic</strong></span></th>
-      <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="3" scope="colgroup" id="level 1; stat_1_1">
-        <div class="gt_column_spanner"><span class="gt_from_md"><strong>Table 1</strong></span></div>
-      </th>
-      <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="3" scope="colgroup" id="level 1; stat_1_2">
-        <div class="gt_column_spanner"><span class="gt_from_md"><strong>Table 2</strong></span></div>
-      </th>
-    </tr>
-<tr class="gt_col_headings">
-<th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="stat_1_1">
+<thead><tr class="gt_col_headings">
+<th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="label"><span class="gt_from_md"><strong>Characteristic</strong></span></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="stat_1">
 <span class="gt_from_md"><strong>0</strong><br>
 N = 162</span><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span>
 </th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="stat_2_1">
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="stat_2">
 <span class="gt_from_md"><strong>1</strong><br>
 N = 162</span><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span>
 </th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="p.value_1">
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="p.value">
 <span class="gt_from_md"><strong>p-value</strong></span><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>2</sup></span>
 </th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="stat_1_2">
-<span class="gt_from_md"><strong>0</strong><br>
-N = 162</span><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>3</sup></span>
-</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="stat_2_2">
-<span class="gt_from_md"><strong>1</strong><br>
-N = 162</span><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>3</sup></span>
-</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="p.value_2">
-<span class="gt_from_md"><strong>p-value</strong></span><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>4</sup></span>
-</th>
-    </tr>
-</thead>
+    </tr></thead>
 <tbody class="gt_table_body">
 <tr>
 <td headers="label" class="gt_row gt_left">diabetes</td>
-<td headers="stat_1_1" class="gt_row gt_center">35 (22%)</td>
-<td headers="stat_2_1" class="gt_row gt_center">45 (28%)</td>
-<td headers="p.value_1" class="gt_row gt_center">0.066</td>
-<td headers="stat_1_2" class="gt_row gt_center"><br></td>
-<td headers="stat_2_2" class="gt_row gt_center"><br></td>
-<td headers="p.value_2" class="gt_row gt_center"><br></td>
+<td headers="stat_1" class="gt_row gt_center">35 (22%)</td>
+<td headers="stat_2" class="gt_row gt_center">45 (28%)</td>
+<td headers="p.value" class="gt_row gt_center">0.066</td>
 </tr>
 <tr>
 <td headers="label" class="gt_row gt_left">hypertension</td>
-<td headers="stat_1_1" class="gt_row gt_center">83 (51%)</td>
-<td headers="stat_2_1" class="gt_row gt_center">84 (52%)</td>
-<td headers="p.value_1" class="gt_row gt_center">&gt;0.9</td>
-<td headers="stat_1_2" class="gt_row gt_center"><br></td>
-<td headers="stat_2_2" class="gt_row gt_center"><br></td>
-<td headers="p.value_2" class="gt_row gt_center"><br></td>
-</tr>
-<tr>
-<td headers="label" class="gt_row gt_left">age</td>
-<td headers="stat_1_1" class="gt_row gt_center"><br></td>
-<td headers="stat_2_1" class="gt_row gt_center"><br></td>
-<td headers="p.value_1" class="gt_row gt_center"><br></td>
-<td headers="stat_1_2" class="gt_row gt_center">62.3 (56.7, 69.7)</td>
-<td headers="stat_2_2" class="gt_row gt_center">64.4 (57.7, 70.5)</td>
-<td headers="p.value_2" class="gt_row gt_center">0.2</td>
-</tr>
-<tr>
-<td headers="label" class="gt_row gt_left">bmi</td>
-<td headers="stat_1_1" class="gt_row gt_center"><br></td>
-<td headers="stat_2_1" class="gt_row gt_center"><br></td>
-<td headers="p.value_1" class="gt_row gt_center"><br></td>
-<td headers="stat_1_2" class="gt_row gt_center">27.3 (24.1, 30.2)</td>
-<td headers="stat_2_2" class="gt_row gt_center">27.9 (23.9, 31.0)</td>
-<td headers="p.value_2" class="gt_row gt_center">0.7</td>
+<td headers="stat_1" class="gt_row gt_center">83 (51%)</td>
+<td headers="stat_2" class="gt_row gt_center">84 (52%)</td>
+<td headers="p.value" class="gt_row gt_center">&gt;0.9</td>
 </tr>
 </tbody>
 <tfoot>
 <tr class="gt_footnotes">
-<td class="gt_footnote" colspan="7">
+<td class="gt_footnote" colspan="4">
 <span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span> <span class="gt_from_md">n (%)</span>
 </td>
     </tr>
 <tr class="gt_footnotes">
-<td class="gt_footnote" colspan="7">
+<td class="gt_footnote" colspan="4">
 <span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>2</sup></span> <span class="gt_from_md">McNemar’s Chi-squared test with continuity correction</span>
 </td>
     </tr>
+</tfoot>
+</table>
+</div>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/table_matched.html">table_matched</a></span><span class="op">(</span><span class="va">matched</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"bmi"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div id="yyjktvorzb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#yyjktvorzb table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#yyjktvorzb thead, #yyjktvorzb tbody, #yyjktvorzb tfoot, #yyjktvorzb tr, #yyjktvorzb td, #yyjktvorzb th {
+  border-style: none;
+}
+
+#yyjktvorzb p {
+  margin: 0;
+  padding: 0;
+}
+
+#yyjktvorzb .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#yyjktvorzb .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#yyjktvorzb .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#yyjktvorzb .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#yyjktvorzb .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#yyjktvorzb .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#yyjktvorzb .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#yyjktvorzb .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#yyjktvorzb .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#yyjktvorzb .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#yyjktvorzb .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#yyjktvorzb .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#yyjktvorzb .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#yyjktvorzb .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#yyjktvorzb .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#yyjktvorzb .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#yyjktvorzb .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#yyjktvorzb .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#yyjktvorzb .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#yyjktvorzb .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#yyjktvorzb .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#yyjktvorzb .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#yyjktvorzb .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#yyjktvorzb .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#yyjktvorzb .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#yyjktvorzb .gt_left {
+  text-align: left;
+}
+
+#yyjktvorzb .gt_center {
+  text-align: center;
+}
+
+#yyjktvorzb .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#yyjktvorzb .gt_font_normal {
+  font-weight: normal;
+}
+
+#yyjktvorzb .gt_font_bold {
+  font-weight: bold;
+}
+
+#yyjktvorzb .gt_font_italic {
+  font-style: italic;
+}
+
+#yyjktvorzb .gt_super {
+  font-size: 65%;
+}
+
+#yyjktvorzb .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#yyjktvorzb .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#yyjktvorzb .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#yyjktvorzb .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#yyjktvorzb .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#yyjktvorzb .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#yyjktvorzb .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#yyjktvorzb .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#yyjktvorzb div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+<table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead><tr class="gt_col_headings">
+<th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="label"><span class="gt_from_md"><strong>Characteristic</strong></span></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="stat_1">
+<span class="gt_from_md"><strong>0</strong><br>
+N = 162</span><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span>
+</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="stat_2">
+<span class="gt_from_md"><strong>1</strong><br>
+N = 162</span><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span>
+</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="p.value">
+<span class="gt_from_md"><strong>p-value</strong></span><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>2</sup></span>
+</th>
+    </tr></thead>
+<tbody class="gt_table_body">
+<tr>
+<td headers="label" class="gt_row gt_left">age</td>
+<td headers="stat_1" class="gt_row gt_center">62.3 (56.7, 69.7)</td>
+<td headers="stat_2" class="gt_row gt_center">64.4 (57.7, 70.5)</td>
+<td headers="p.value" class="gt_row gt_center">0.2</td>
+</tr>
+<tr>
+<td headers="label" class="gt_row gt_left">bmi</td>
+<td headers="stat_1" class="gt_row gt_center">27.3 (24.1, 30.2)</td>
+<td headers="stat_2" class="gt_row gt_center">27.9 (23.9, 31.0)</td>
+<td headers="p.value" class="gt_row gt_center">0.7</td>
+</tr>
+</tbody>
+<tfoot>
 <tr class="gt_footnotes">
-<td class="gt_footnote" colspan="7">
-<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>3</sup></span> <span class="gt_from_md">Median (Q1, Q3)</span>
+<td class="gt_footnote" colspan="4">
+<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span> <span class="gt_from_md">Median (Q1, Q3)</span>
 </td>
     </tr>
 <tr class="gt_footnotes">
-<td class="gt_footnote" colspan="7">
-<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>4</sup></span> <span class="gt_from_md">Wilcoxon signed rank test with continuity correction</span>
+<td class="gt_footnote" colspan="4">
+<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>2</sup></span> <span class="gt_from_md">Wilcoxon signed rank test with continuity correction</span>
 </td>
     </tr>
 </tfoot>
@@ -1342,7 +1806,7 @@ reporting standards in the cardiac surgery literature (Benedetto et al.,
 <div class="section level3">
 <h3 id="binary-outcome">Binary Outcome<a class="anchor" aria-label="anchor" href="#binary-outcome"></a>
 </h3>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">models_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_all_models.html">fit_all_models</a></span><span class="op">(</span></span>
 <span>  ps_model <span class="op">=</span> <span class="va">ps</span>,</span>
 <span>  matched_data <span class="op">=</span> <span class="va">matched</span><span class="op">$</span><span class="va">data</span>,</span>
@@ -1374,7 +1838,7 @@ matched data with random intercept for pair</li>
 <div class="section level3">
 <h3 id="continuous-outcome">Continuous Outcome<a class="anchor" aria-label="anchor" href="#continuous-outcome"></a>
 </h3>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">models_cont</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_all_models.html">fit_all_models</a></span><span class="op">(</span></span>
 <span>  ps_model <span class="op">=</span> <span class="va">ps</span>,</span>
 <span>  matched_data <span class="op">=</span> <span class="va">matched</span><span class="op">$</span><span class="va">data</span>,</span>
@@ -1411,7 +1875,7 @@ binary, inverse-variance pooling for continuous), <code>iptw</code>
 <code>run_pipeline(..., methods = ...)</code> runs them all and returns
 a single comparison table; <code><a href="../reference/format_comparison.html">format_comparison()</a></code> renders it
 as a publication-ready table:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pipeline.html">run_pipeline</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data</span>,</span>
 <span>  exposure <span class="op">=</span> <span class="st">"exposure"</span>,</span>
@@ -1438,7 +1902,7 @@ regression and matching estimates often indicate misspecification of the
 outcome model or poor overlap, and warrant closer inspection of the
 propensity-score distribution.</p>
 <p>The comparison table can be visualized directly:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_comparison.html">plot_comparison</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">comparison</span><span class="op">)</span></span></code></pre></div>
 <p><img src="indepassoc-quickstart_files/figure-html/pipeline-forest-1.png" class="r-plt" alt="" width="768"></p>
 </div>
@@ -1487,6 +1951,15 @@ is not an artifact of any single adjustment strategy. Disagreement flags
 misspecification or poor overlap, not a vote — inspect the
 propensity-score distribution and the balance tables before trusting any
 single estimate.</p>
+<p><strong>A note on pre-specification.</strong> The robustness argument
+above only holds if you report all five methods, not just whichever one
+happens to give the result you expected. If a single primary method is
+needed for a manuscript (reviewers and pre-registered protocols often
+require one headline estimate), pick it — typically matching or AIPW,
+per the guidance above — <em>before</em> looking at the comparison
+table, and report the other four as a sensitivity analysis. Choosing the
+“best-looking” method after the fact defeats the purpose of running
+several in the first place.</p>
 </div>
 <div class="section level2">
 <h2 id="step-7-paired-statistical-tests">Step 7: Paired Statistical Tests<a class="anchor" aria-label="anchor" href="#step-7-paired-statistical-tests"></a>
@@ -1494,7 +1967,7 @@ single estimate.</p>
 <div class="section level3">
 <h3 id="mcnemar-test-binary">McNemar Test (Binary)<a class="anchor" aria-label="anchor" href="#mcnemar-test-binary"></a>
 </h3>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mcnemar_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcnemar_test.html">mcnemar_test</a></span><span class="op">(</span><span class="va">matched</span><span class="op">$</span><span class="va">data</span>, <span class="st">"outcome_binary"</span>, <span class="st">"exposure"</span><span class="op">)</span></span>
 <span><span class="va">mcnemar_result</span><span class="op">$</span><span class="va">p.value</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.3f"</span>, <span class="va">mcnemar_result</span><span class="op">$</span><span class="va">p.value</span><span class="op">)</span></span>
 <span><span class="va">mcnemar_result</span><span class="op">$</span><span class="va">statistic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">mcnemar_result</span><span class="op">$</span><span class="va">statistic</span>, <span class="fl">2</span><span class="op">)</span></span>
@@ -1506,7 +1979,7 @@ single estimate.</p>
 <div class="section level3">
 <h3 id="paired-wilcoxon-test-continuous">Paired Wilcoxon Test (Continuous)<a class="anchor" aria-label="anchor" href="#paired-wilcoxon-test-continuous"></a>
 </h3>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">wilcox_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/paired_wilcoxon_test.html">paired_wilcoxon_test</a></span><span class="op">(</span><span class="va">matched</span><span class="op">$</span><span class="va">data</span>, <span class="st">"outcome_continuous"</span>, <span class="st">"exposure"</span><span class="op">)</span></span>
 <span><span class="va">wilcox_result</span><span class="op">$</span><span class="va">p.value</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.3f"</span>, <span class="va">wilcox_result</span><span class="op">$</span><span class="va">p.value</span><span class="op">)</span></span>
 <span><span class="va">wilcox_result</span></span>
@@ -1518,7 +1991,7 @@ single estimate.</p>
 <h2 id="full-pipeline">Full Pipeline<a class="anchor" aria-label="anchor" href="#full-pipeline"></a>
 </h2>
 <p>All steps above can be executed in a single call:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pipeline.html">run_pipeline</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data</span>,</span>
 <span>  exposure <span class="op">=</span> <span class="st">"exposure"</span>,</span>
@@ -1532,7 +2005,7 @@ single estimate.</p>
 <div class="section level2">
 <h2 id="exporting-results">Exporting Results<a class="anchor" aria-label="anchor" href="#exporting-results"></a>
 </h2>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/export_results.html">export_results</a></span><span class="op">(</span><span class="va">result</span>, output_dir <span class="op">=</span> <span class="st">"output"</span><span class="op">)</span></span></code></pre></div>
 <p>This writes CSV files for the balance tables, regression summaries,
 and statistical tests.</p>

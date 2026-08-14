@@ -390,6 +390,27 @@ magnitude need not match the 30-day analysis exactly. The table is the
 answer; this paragraph is only a guide to reading it, not a substitute
 for it.
 
+### What if the methods had disagreed?
+
+All three outcomes above show five methods landing on the same side of
+the null, which is the reassuring case. It’s worth being explicit about
+the alternative, since a real analysis on a new dataset won’t always
+look this clean. If, say, regression and IPTW had pointed in opposite
+directions — one estimating harm, the other estimating benefit or no
+effect — that would not be a coin flip to resolve by picking a favorite;
+it would be a diagnostic signal. The next steps would be to (1) re-check
+[`check_positivity()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.md)
+for extreme propensity scores or inflated IPTW weights, since IPTW is
+the more sensitive of the two to poor overlap; (2) compare the matching-
+and regression-based estimates specifically, since a large gap between
+them often points to outcome-model misspecification (regression) rather
+than a genuine population difference; and (3) inspect the balance table
+to confirm the matched or weighted sample is actually comparable on the
+confounders that matter clinically, not just on the propensity score as
+a whole. Disagreement across methods is information, not noise — it
+tells you where to look, the same way agreement (as seen above) tells
+you the finding is not an artifact of one method’s assumptions.
+
 ## Combined comparison across outcomes
 
 ``` r
@@ -623,6 +644,25 @@ This is a confounder-adjusted *association* under the standard
 no-unmeasured-confounding assumption — not a proven causal effect. Even
 five methods agreeing in direction cannot rule out an unmeasured
 confounder that happens to affect all five estimators the same way.
+
+## Applying this to your own cohort
+
+Everything above —
+[`build_ps_model()`](https://mostafa-abbas.github.io/IndepAssoc/reference/build_ps_model.md),
+[`check_positivity()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_positivity.md),
+[`match_cohort()`](https://mostafa-abbas.github.io/IndepAssoc/reference/match_cohort.md),
+[`check_balance()`](https://mostafa-abbas.github.io/IndepAssoc/reference/check_balance.md),
+and
+[`run_pipeline()`](https://mostafa-abbas.github.io/IndepAssoc/reference/run_pipeline.md)
+with all five methods — runs the same way on any binary exposure and any
+outcome, binary or continuous. See the [quick-start
+guide](https://mostafa-abbas.github.io/IndepAssoc/articles/indepassoc-quickstart.md)
+for the same workflow on a smaller, simulated dataset, or the
+[clinician-facing
+walkthrough](https://mostafa-abbas.github.io/IndepAssoc/articles/clinician-walkthrough.md)
+for a version of this exact RHC analysis with the statistical detail
+stripped out, if you need a version to share with non-technical
+collaborators.
 
 ## References
 
