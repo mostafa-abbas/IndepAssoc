@@ -56,11 +56,22 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="indepassoc">IndepAssoc<a class="anchor" aria-label="anchor" href="#indepassoc"></a>
 </h1></div>
-<p><a href="https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></p>
+<blockquote>
+<p><strong>One function call. Five independent methods. Publication-ready confounder-adjusted associations.</strong></p>
+</blockquote>
+<p><a href="https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></p>
 <p><strong>Does an exposure–outcome association survive being tested through five distinct methods?</strong></p>
 <p>IndepAssoc answers one question: is a risk factor (an exposure) genuinely associated with an outcome after other relevant factors are accounted for — or is the apparent link a statistical artifact? Instead of trusting a single statistical method, the package tests the same association through five methods that each rely on different modeling assumptions, and shows whether they agree. When they agree, the finding is robust; when they do not, the signal needs a closer look.</p>
 <div class="float">
 <img src="reference/figures/indepassoc-overview.png" alt="Conceptual overview: one association in the data, tested through five distinct methods (regression, matching, stratification, IPTW, AIPW), then a check of whether the methods agree"><div class="figcaption">Conceptual overview: one association in the data, tested through five distinct methods (regression, matching, stratification, IPTW, AIPW), then a check of whether the methods agree</div>
+</div>
+<div class="section level2">
+<h2 id="in-one-picture">In one picture<a class="anchor" aria-label="anchor" href="#in-one-picture"></a>
+</h2>
+<p>Running <code><a href="reference/run_pipeline.html">run_pipeline()</a></code> on the SUPPORT RHC cohort (n = 5,735, 50 confounders) — all five methods agree that RHC is associated with increased 30-day mortality:</p>
+<div class="float">
+<img src="reference/figures/clinician-rhc-panel-summary.png" alt="RHC Consensus Plot"><div class="figcaption">RHC Consensus Plot</div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="new-to-these-methods">New to these methods?<a class="anchor" aria-label="anchor" href="#new-to-these-methods"></a>
@@ -158,6 +169,20 @@
 <h2 id="reproducibility">Reproducibility<a class="anchor" aria-label="anchor" href="#reproducibility"></a>
 </h2>
 <p>Matching-based results draw on the random number generator, so a fixed seed is required to reproduce them. Set it explicitly — <code>run_pipeline(..., seed = N)</code> or, for direct matching, <code>match_cohort(..., seed = N)</code> — and reuse the same seed value to obtain identical results.</p>
+</div>
+<div class="section level2">
+<h2 id="getting-help">Getting Help<a class="anchor" aria-label="anchor" href="#getting-help"></a>
+</h2>
+<ul>
+<li>
+<strong>Bug reports &amp; feature requests:</strong> <a href="https://github.com/mostafa-abbas/IndepAssoc/issues" class="external-link">Open an issue</a>
+</li>
+<li>
+<strong>Usage questions:</strong> see the <a href="https://mostafa-abbas.github.io/IndepAssoc/articles/clinician-walkthrough.html">clinician walkthrough</a> or <a href="https://mostafa-abbas.github.io/IndepAssoc/articles/indepassoc-quickstart.html">quick-start guide</a>
+</li>
+<li>
+<strong>Citing this package:</strong> see <code>CITATION.cff</code>, or run <code>citation("IndepAssoc")</code> in R</li>
+</ul>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">

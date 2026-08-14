@@ -1,6 +1,11 @@
 # IndepAssoc
 
+> **One function call. Five independent methods. Publication-ready
+> confounder-adjusted associations.**
+
 [![R-CMD-check](https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Does an exposure–outcome association survive being tested through five
 distinct methods?**
@@ -21,6 +26,17 @@ agree](reference/figures/indepassoc-overview.png)
 Conceptual overview: one association in the data, tested through five
 distinct methods (regression, matching, stratification, IPTW, AIPW),
 then a check of whether the methods agree
+
+## In one picture
+
+Running
+[`run_pipeline()`](https://mostafa-abbas.github.io/IndepAssoc/reference/run_pipeline.md)
+on the SUPPORT RHC cohort (n = 5,735, 50 confounders) — all five methods
+agree that RHC is associated with increased 30-day mortality:
+
+![RHC Consensus Plot](reference/figures/clinician-rhc-panel-summary.png)
+
+RHC Consensus Plot
 
 ## New to these methods?
 
@@ -195,3 +211,14 @@ seed is required to reproduce them. Set it explicitly —
 `run_pipeline(..., seed = N)` or, for direct matching,
 `match_cohort(..., seed = N)` — and reuse the same seed value to obtain
 identical results.
+
+## Getting Help
+
+- **Bug reports & feature requests:** [Open an
+  issue](https://github.com/mostafa-abbas/IndepAssoc/issues)
+- **Usage questions:** see the [clinician
+  walkthrough](https://mostafa-abbas.github.io/IndepAssoc/articles/clinician-walkthrough.html)
+  or [quick-start
+  guide](https://mostafa-abbas.github.io/IndepAssoc/articles/indepassoc-quickstart.html)
+- **Citing this package:** see `CITATION.cff`, or run
+  `citation("IndepAssoc")` in R
