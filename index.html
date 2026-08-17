@@ -61,17 +61,18 @@
 </blockquote>
 <p><a href="https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/mostafa-abbas/IndepAssoc/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></p>
 <p><strong>Does an exposure–outcome association survive being tested through five distinct methods?</strong></p>
-<p>IndepAssoc answers one question: is a risk factor (an exposure) genuinely associated with an outcome after other relevant factors are accounted for — or is the apparent link a statistical artifact? Instead of trusting a single statistical method, the package tests the same association through five methods that each rely on different modeling assumptions, and shows whether they agree. When they agree, the finding is robust; when they do not, the signal needs a closer look.</p>
-<div class="float">
-<img src="reference/figures/indepassoc-overview.png" alt="Conceptual overview: one association in the data, tested through five distinct methods (regression, matching, stratification, IPTW, AIPW), then a check of whether the methods agree"><div class="figcaption">Conceptual overview: one association in the data, tested through five distinct methods (regression, matching, stratification, IPTW, AIPW), then a check of whether the methods agree</div>
-</div>
+<p>IndepAssoc answers one question: is a risk factor (an exposure) genuinely associated with an outcome after other relevant factors are accounted for — or is the apparent link a statistical artifact? Rather than trusting a single statistical method, the package tests the same association through five methods that each rely on different modeling assumptions, and reports whether they agree. When they agree, the finding is robust; when they do not, the signal warrants a closer look before it is written up.</p>
 <div class="section level2">
-<h2 id="in-one-picture">In one picture<a class="anchor" aria-label="anchor" href="#in-one-picture"></a>
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>Running <code><a href="reference/run_pipeline.html">run_pipeline()</a></code> on the SUPPORT RHC cohort (n = 5,735, 50 confounders) — all five methods agree that RHC is associated with increased 30-day mortality:</p>
-<div class="float">
-<img src="reference/figures/clinician-rhc-panel-summary.png" alt="RHC Consensus Plot"><div class="figcaption">RHC Consensus Plot</div>
-</div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mostafa-abbas/IndepAssoc"</span><span class="op">)</span></span></code></pre></div>
+<p>Alternatively, install from source with the package checked out locally:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><code>causaldata</code> and <code>MatchIt</code> are additionally needed to build the vignettes.</p>
 </div>
 <div class="section level2">
 <h2 id="new-to-these-methods">New to these methods?<a class="anchor" aria-label="anchor" href="#new-to-these-methods"></a>
@@ -94,12 +95,13 @@
 <h2 id="what-it-is--and-what-it-is-not">What it is — and what it is not<a class="anchor" aria-label="anchor" href="#what-it-is--and-what-it-is-not"></a>
 </h2>
 <p><strong>What it is:</strong> a pipeline that tests whether an exposure is independently associated with an outcome — adjusting for confounding factors via five distinct methods — regression, matching, stratification, and two propensity-score weighting approaches — and produces publication-ready tables and effect estimates with minimal code.</p>
-<p><strong>What it is not:</strong> proof of causation. The package reports confounder-adjusted associations under the standard no-unmeasured-confounding assumption; it does not establish causal effects. An association — however robust — is not a causal effect.</p>
+<p><strong>What it is not:</strong> proof of causation. The package reports confounder-adjusted associations; it does not establish causal effects. IPTW and AIPW are causal- inference estimators, but their output represents a causal effect only if the identifiability assumptions hold: no unmeasured confounding, positivity (every covariate pattern has a nonzero chance of both exposure levels), and — for IPTW in particular — a correctly specified propensity model. An association — however robust across methods — is not a causal effect, and the package does not claim otherwise.</p>
+<p><strong>What “all five methods agree” does and does not tell you.</strong> Cross-method agreement is evidence against <em>estimator-specific</em> bias — a finding that survives five different modeling assumptions is unlikely to be an artifact of how any one of them was specified. It is not evidence against <em>unmeasured confounding</em>: all five methods adjust for the same covariate set, so an important confounder left out of that set would bias all five in the same direction, and agreement across them would look identical to a genuine effect. Agreement rules out specification-dependent artifacts; it cannot rule out a shared blind spot in the confounder list.</p>
 </div>
 <div class="section level2">
 <h2 id="how-it-works">How it works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mostafa-abbas.github.io/IndepAssoc/">IndepAssoc</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_cohort</span><span class="op">)</span></span>
 <span></span>
@@ -113,62 +115,117 @@
 <span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"regression"</span>, <span class="st">"matching"</span>, <span class="st">"stratification"</span>, <span class="st">"iptw"</span>, <span class="st">"aipw"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/format_comparison.html">format_comparison</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">comparison</span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="reference/format_comparison.html">format_comparison()</a></code> rounds the raw <code>$comparison</code> data frame into the publication-ready table below. Here <code>matching</code> is propensity-score matching with conditional-logit/paired estimation (conditional logistic regression stratified by matched pair for binary outcomes, a within-pair fixed-effects linear model for continuous outcomes).</p>
+<p><code>example_cohort</code> is a fully simulated dataset shipped with the package (see <a href="#datasets">Datasets</a>) — it carries no patient information of any kind, and exists purely so the pipeline can be run end-to-end on the first try. <code><a href="reference/format_comparison.html">format_comparison()</a></code> rounds the raw <code>$comparison</code> data frame into the publication-ready table below. Here <code>matching</code> is propensity-score matching with conditional-logit/paired estimation (conditional logistic regression stratified by matched pair for binary outcomes, a within-pair fixed-effects linear model for continuous outcomes).</p>
 <pre><code>          Method Mean Diff     95% CI p-value   n
 1     Regression      1.54  0.59–2.48   0.001 500
 2       Matching      2.15  0.95–3.34  &lt;0.001 324
 3 Stratification      1.58  0.45–2.71   0.006 500
 4           IPTW      1.38 -0.05–2.81   0.059 500
 5           AIPW      1.48  0.51–2.46   0.003 500</code></pre>
-<p>The five methods do not all target the same estimand: <code>matching</code> targets the average treatment effect on the treated (ATT) by construction, <code>iptw</code> and <code>aipw</code> target the marginal ATE over the full analytic sample, <code>stratification</code> pools stratum-specific effects across the full sample, and <code>regression</code> reports a conditional (covariate-adjusted) effect — the binary-outcome odds ratio is non-collapsible, so it is not numerically equal to a marginal ATE. Agreement across the five is still meaningful robustness evidence, but they are related quantities, not five copies of one number.</p>
+<p>The five methods do not all target the same estimand, and point estimates are not expected to be numerically identical even when every model is correctly specified:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th>Method</th>
+<th>Estimand</th>
+<th>Pooling / SE</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Regression</td>
+<td>Conditional (covariate-adjusted) effect</td>
+<td>Model-based Wald SE</td>
+</tr>
+<tr>
+<td>Matching</td>
+<td>ATT</td>
+<td>Conditional logit (binary) / within-pair fixed-effects OLS (continuous)</td>
+</tr>
+<tr>
+<td>Stratification</td>
+<td>ATE or ATT (5 propensity-score strata by default)</td>
+<td>Binary+ATE: Cochran–Mantel–Haenszel; other cases: inverse-variance- or treated-count-weighted pooling across strata</td>
+</tr>
+<tr>
+<td>IPTW</td>
+<td>ATE (stabilized weights) or ATT</td>
+<td>Sandwich (HC0) SE on the weighted outcome model</td>
+</tr>
+<tr>
+<td>AIPW</td>
+<td>ATE or ATT</td>
+<td>Empirical influence-function variance (doubly robust)</td>
+</tr>
+</tbody>
+</table>
+<p><code>matching</code> targets the ATT by construction; <code>iptw</code> and <code>aipw</code> default to the marginal ATE over the full analytic sample; <code>stratification</code>’s pooling rule depends on the outcome type and estimand rather than being a single fixed formula (see the technical vignette for the exact rule used in each case); <code>regression</code> reports a conditional effect, and for binary outcomes the odds ratio is non-collapsible, so it is not numerically equal to a marginal ATE. Agreement across the five is still meaningful robustness evidence, but they are related quantities, not five copies of one number.</p>
+<p><strong>A worked example of why this matters:</strong> the IPTW row below is the one result close to the significance threshold. IPTW weights are not trimmed by default. Re-running the same call with light trimming of extreme weights (<code>fit_outcome(..., method = "iptw", trim = 0.01)</code>) moves the estimate from 1.38 (95% CI −0.05 to 2.81, p = 0.059) to 1.58 (95% CI 0.20 to 2.95, p = 0.025) — the same data, the same model, a materially different conclusion. This is exactly why the diagnostics below exist: a borderline p-value on a weighted estimator is a prompt to look at the weight distribution before reporting it, not to report it as-is.</p>
+<p><strong>Data requirements:</strong> all specified covariates must be complete (no missing values) — the pipeline does not currently perform automatic case deletion or imputation, and will error on covariate missingness rather than silently dropping rows. Handle missing data before calling <code><a href="reference/run_pipeline.html">run_pipeline()</a></code>.</p>
+</div>
+<div class="section level2">
+<h2 id="diagnostics">Diagnostics<a class="anchor" aria-label="anchor" href="#diagnostics"></a>
+</h2>
+<p>Every call to <code><a href="reference/run_pipeline.html">run_pipeline()</a></code> automatically computes propensity-score positivity and covariate balance — no extra step required. They’re worth checking before trusting any of the five effect estimates:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/check_positivity.html">check_positivity</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">ps_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/check_balance.html">check_balance</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">matched</span><span class="op">)</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">balance_plot</span>   <span class="co"># ggplot Love plot: ASMD before vs. after matching</span></span></code></pre></div>
+<p>Here’s what that looks like on the quickstart example above — <code>summary(res)</code> reports it plainly:</p>
+<pre><code>Balance check: FAILED</code></pre>
+<p>The post-match ASMD on the propensity-score distance itself is 0.157, above the default 0.1 threshold, even though all four individual covariates balance well (0.006–0.076). That doesn’t invalidate the other four methods’ estimates, but it’s a direct, honest signal that this particular match deserves scrutiny — a tighter caliper or an expanded propensity model, and the matching-based estimate reported alongside, not instead of, the other four. This is what the diagnostics are for, and the package surfaces it without being asked.</p>
+</div>
+<div class="section level2">
+<h2 id="in-one-picture">In one picture<a class="anchor" aria-label="anchor" href="#in-one-picture"></a>
+</h2>
+<p>Running <code><a href="reference/run_pipeline.html">run_pipeline()</a></code> on the RHC cohort described below (n = 5,735, 50 confounders) — all five methods agree that RHC is associated with increased 30-day mortality:</p>
+<div class="float">
+<img src="reference/figures/indepassoc-overview.png" alt="Conceptual overview: one association in the data, tested through five distinct methods (regression, matching, stratification, IPTW, AIPW), then a check of whether the methods agree"><div class="figcaption">Conceptual overview: one association in the data, tested through five distinct methods (regression, matching, stratification, IPTW, AIPW), then a check of whether the methods agree</div>
+</div>
+<div class="float">
+<img src="reference/figures/clinician-rhc-panel-summary.png" alt="RHC Consensus Plot"><div class="figcaption">RHC Consensus Plot</div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="a-real-world-validation">A real-world validation<a class="anchor" aria-label="anchor" href="#a-real-world-validation"></a>
 </h2>
-<p>The same pipeline holds up on a real clinical question. The bundled <code>rhc_sample</code> cohort — 5,735 intensive-care patients from the SUPPORT study — was analyzed for the association between right heart catheterization (RHC) and 30-day mortality, adjusting for 50 confounders with all five methods. Each method independently found that RHC was associated with increased 30-day mortality, with odds ratios in the 1.3–1.5 range and confidence intervals excluding no effect:</p>
+<p>To confirm the pipeline behaves sensibly outside of simulation, the same five methods were applied to a long-standing, publicly available benchmark in the causal-inference literature: the Right Heart Catheterization (RHC) cohort from the SUPPORT study (Connors et al., <em>JAMA</em>, 1996), which ships with the package as <code>rhc_sample</code> and is also distributed independently through public data-sharing repositories such as the <code>causaldata</code> R package and the Vanderbilt Department of Biostatistics. No hospital, health-system, or patient-level data outside of this public dataset was used at any stage of the package’s development or testing.</p>
+<p>On this cohort (5,735 intensive-care patients, adjusting for 50 confounders), each method independently found that RHC was associated with increased 30-day mortality, with odds ratios in the 1.3–1.5 range and confidence intervals excluding no effect:</p>
 <div class="float">
 <img src="reference/figures/rhc-forest-dth30.png" alt="Forest plot of 30-day mortality odds ratios by method: regression (OR 1.49), matching (OR 1.39), stratification (OR 1.39), IPTW (OR 1.32), and AIPW (OR 1.33); all confidence intervals exclude 1, so all five methods agree that right heart catheterization is associated with increased 30-day mortality"><div class="figcaption">Forest plot of 30-day mortality odds ratios by method: regression (OR 1.49), matching (OR 1.39), stratification (OR 1.39), IPTW (OR 1.32), and AIPW (OR 1.33); all confidence intervals exclude 1, so all five methods agree that right heart catheterization is associated with increased 30-day mortality</div>
 </div>
-<p>That all five methods point the same way on a confounder-adjusted benchmark shows the pipeline works on real data, not only on simulated cohorts. The full analysis — balance checks, matching diagnostics, and sensitivity checks — is in the <a href="https://mostafa-abbas.github.io/IndepAssoc/articles/rhc-validation.html">rhc-validation vignette</a>.</p>
+<p>That all five methods point the same way on a well-characterized, public-domain benchmark demonstrates that the pipeline reproduces an established finding on real clinical data, not only on simulated cohorts. The full analysis — balance checks, matching diagnostics, and sensitivity checks — is in the <a href="https://mostafa-abbas.github.io/IndepAssoc/articles/rhc-validation.html">rhc-validation vignette</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="package-testing--ci">Package testing &amp; CI<a class="anchor" aria-label="anchor" href="#package-testing--ci"></a>
+</h2>
+<p><em>(Not to be confused with the empirical validation above — this section describes software correctness, not a clinical finding.)</em></p>
+<p>The package has 631 passing unit tests and passes <code>R CMD check</code> cleanly (0 errors, 0 notes; one environmental warning — <code>qpdf</code> not installed on the test machine — unrelated to package code). Correctness is checked against <code>example_cohort</code> (simulated, known ground-truth treatment effect) and <code>rhc_sample</code> (the public RHC benchmark described above).</p>
 </div>
 <div class="section level2">
 <h2 id="background">Background<a class="anchor" aria-label="anchor" href="#background"></a>
 </h2>
-<p>IndepAssoc is the packaged form of the analysis pipeline used in two published retrospective cohort studies from the same author group: <em><a href="https://doi.org/10.1016/j.heliyon.2025.e41723" class="external-link">Female sex is associated with short-term mortality in coronary artery bypass grafting patients: A propensity-matched analysis</a></em> (Heliyon, 2025) and <em><a href="https://doi.org/10.1186/s13019-024-03119-6" class="external-link">Atrial appendage closure is associated with increased risk for postoperative atrial fibrillation</a></em> (Journal of Cardiothoracic Surgery, 2024). Both studies used the same propensity-score workflow — a logistic propensity-score model, 1:1 nearest-neighbor matching, ASMD balance checks, paired descriptive tests, and conditional outcome models — which this package generalizes into a reusable interface with five confounding-adjustment methods.</p>
+<p>IndepAssoc is the packaged form of the analysis pipeline used in two published retrospective cohort studies from the same author group: <em><a href="https://doi.org/10.1016/j.heliyon.2025.e41723" class="external-link">Female sex is associated with short-term mortality in coronary artery bypass grafting patients: A propensity-matched analysis</a></em> (Heliyon, 2025) and <em><a href="https://doi.org/10.1186/s13019-024-03119-6" class="external-link">Atrial appendage closure is associated with increased risk for postoperative atrial fibrillation</a></em> (Journal of Cardiothoracic Surgery, 2024). Both studies used the same propensity-score workflow — a logistic propensity-score model, 1:1 nearest-neighbor matching, ASMD balance checks, paired descriptive tests, and conditional outcome models — which this package generalizes into a reusable interface with five confounding-adjustment methods. The source cohorts underlying those two publications are not distributed with this package; only the simulated and public benchmark datasets described below are.</p>
 </div>
 <div class="section level2">
 <h2 id="datasets">Datasets<a class="anchor" aria-label="anchor" href="#datasets"></a>
 </h2>
-<p>Two datasets ship with the package:</p>
+<p>Two datasets ship with the package, and both are either fully simulated or fully public — no proprietary, institutional, or identifiable patient data is included:</p>
 <ul>
 <li>
-<code>example_cohort</code> — a simulated 500-row cohort with a known treatment effect, for quick runs of the full pipeline.</li>
+<code>example_cohort</code> — a simulated 500-row cohort with a known treatment effect, generated programmatically for quick, reproducible runs of the full pipeline.</li>
 <li>
-<code>rhc_sample</code> — the cleaned Right Heart Catheterization (RHC) cohort from the SUPPORT study (5735 rows, 50 confounders), the basis of the <code>rhc-validation</code> vignette. It is a confounder-adjusted association benchmark, not a proof of causality (see <code><a href="reference/rhc_sample.html">?rhc_sample</a></code>).</li>
+<code>rhc_sample</code> — a cleaned copy of the public Right Heart Catheterization (RHC) cohort from the SUPPORT study (5,735 rows, 50 confounders), the basis of the <code>rhc-validation</code> vignette. This dataset is a widely used, openly available benchmark in the causal-inference methods literature; it is a confounder-adjusted association benchmark, not a proof of causality (see <code><a href="reference/rhc_sample.html">?rhc_sample</a></code> for provenance and variable definitions).</li>
 </ul>
-<p>Both are lazy-loaded via <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code>; the raw-generation scripts live in <code>data-raw/</code> (<code>simulate_example_cohort.R</code>, <code>prepare_rhc.R</code>) and are excluded from the installed package.</p>
-</div>
-<div class="section level2">
-<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
-</h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mostafa-abbas/IndepAssoc"</span><span class="op">)</span></span></code></pre></div>
-<p>Alternatively, install from source with the package source checked out:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><code>causaldata</code> and <code>MatchIt</code> are needed for the vignettes.</p>
-</div>
-<div class="section level2">
-<h2 id="validation">Validation<a class="anchor" aria-label="anchor" href="#validation"></a>
-</h2>
-<p>The package has 631 passing unit tests and passes <code>R CMD check</code> cleanly (0 errors, 0 notes; one environmental warning — <code>qpdf</code> not installed on the test machine — unrelated to package code). The methods are validated against the bundled <code>example_cohort</code> (a simulated cohort with a known treatment effect) and <code>rhc_sample</code>, the real Right Heart Catheterization cohort from the SUPPORT study (5,735 patients, 50 confounders) used in the <code>rhc-validation</code> vignette.</p>
+<p>Both are lazy-loaded via <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code>; the generation and cleaning scripts live in <code>data-raw/</code> (<code>simulate_example_cohort.R</code>, <code>prepare_rhc.R</code>) and are excluded from the installed package.</p>
 </div>
 <div class="section level2">
 <h2 id="reproducibility">Reproducibility<a class="anchor" aria-label="anchor" href="#reproducibility"></a>
 </h2>
-<p>Matching-based results draw on the random number generator, so a fixed seed is required to reproduce them. Set it explicitly — <code>run_pipeline(..., seed = N)</code> or, for direct matching, <code>match_cohort(..., seed = N)</code> — and reuse the same seed value to obtain identical results.</p>
+<p>Matching-based results draw on the random number generator, so a fixed seed is required to reproduce them exactly. Set it explicitly — <code>run_pipeline(..., seed = N)</code> or, for direct matching, <code>match_cohort(..., seed = N)</code> — and reuse the same seed value to obtain identical results.</p>
 </div>
 <div class="section level2">
 <h2 id="getting-help">Getting Help<a class="anchor" aria-label="anchor" href="#getting-help"></a>
