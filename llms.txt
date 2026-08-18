@@ -139,8 +139,8 @@ specification:
 
 | Method | Estimand | Pooling / SE |
 |----|----|----|
-| Regression | Conditional (covariate-adjusted) effect | Model-based Wald SE |
-| Matching | ATT | Conditional logit (binary) / within-pair fixed-effects OLS (continuous) |
+| Regression | Multivariable-adjusted effect | Model-based Wald SE |
+| Matching | ATT (Average Treatment Effect on the Treated) | Conditional logit (binary) / within-pair fixed-effects OLS (continuous) |
 | Stratification | ATE or ATT (5 propensity-score strata by default) | Binary+ATE: Cochran–Mantel–Haenszel; other cases: inverse-variance- or treated-count-weighted pooling across strata |
 | IPTW | ATE (stabilized weights) or ATT (SMR weighting) | Sandwich (HC0) SE on the weighted outcome model |
 | AIPW | ATE or ATT | Empirical influence-function variance (doubly robust) |
