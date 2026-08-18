@@ -121,6 +121,10 @@ positivity
 #>   exposure 1 (n=2184): PS [0.019, 0.985], median 0.555
 #> Positivity: VIOLATED (12 outside window)
 #> IPTW weights (ATE): min 0.39, median 0.78, max 20.18, max/min ratio 52.2
+#> 
+#> Note: Some propensity scores fall outside the support window.
+#>    IPTW/AIPW estimates for units near the boundary may be unstable.
+#>    Consider trimming extreme weights or restricting the sample.
 ```
 
 **In plain terms:** the word “VIOLATED” above looks alarming, but read

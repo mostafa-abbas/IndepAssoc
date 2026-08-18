@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Mostafa Hamza**. Author, maintainer.
+- **Mostafa Abbas**. Author, maintainer.
 
 ## Citation
 

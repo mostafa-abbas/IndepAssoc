@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -781,7 +781,11 @@ already built:</p>
 <span><span class="co">#&gt;   exposure 0 (n=3551): PS [0.003, 0.955], median 0.236</span></span>
 <span><span class="co">#&gt;   exposure 1 (n=2184): PS [0.019, 0.985], median 0.555</span></span>
 <span><span class="co">#&gt; Positivity: VIOLATED (12 outside window)</span></span>
-<span><span class="co">#&gt; IPTW weights (ATE): min 0.39, median 0.78, max 20.18, max/min ratio 52.2</span></span></code></pre></div>
+<span><span class="co">#&gt; IPTW weights (ATE): min 0.39, median 0.78, max 20.18, max/min ratio 52.2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Note: Some propensity scores fall outside the support window.</span></span>
+<span><span class="co">#&gt;    IPTW/AIPW estimates for units near the boundary may be unstable.</span></span>
+<span><span class="co">#&gt;    Consider trimming extreme weights or restricting the sample.</span></span></code></pre></div>
 <p>Two things stand out. First, the treated and control propensity-score
 distributions overlap broadly (roughly 0.019-0.985 treated vs
 0.003-0.955 control), so the cohort does not have a structural
@@ -1024,7 +1028,7 @@ originate from the SUPPORT study and are mirrored at <a href="https://hbiostat.o
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Mostafa Hamza.</p>
+  <p>Developed by Mostafa Abbas.</p>
 </div>
 
 <div class="pkgdown-footer-right">

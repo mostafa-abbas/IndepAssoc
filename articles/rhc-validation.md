@@ -484,6 +484,10 @@ print(pos_check)
 #>   exposure 1 (n=2184): PS [0.019, 0.985], median 0.555
 #> Positivity: VIOLATED (12 outside window)
 #> IPTW weights (ATE): min 0.39, median 0.78, max 20.18, max/min ratio 52.2
+#> 
+#> Note: Some propensity scores fall outside the support window.
+#>    IPTW/AIPW estimates for units near the boundary may be unstable.
+#>    Consider trimming extreme weights or restricting the sample.
 ```
 
 Two things stand out. First, the treated and control propensity-score

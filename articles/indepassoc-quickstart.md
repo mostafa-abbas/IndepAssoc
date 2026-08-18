@@ -106,44 +106,15 @@ via
 
 m0 <- match_cohort(ps, caliper = 0.2)
 check_balance(m0, threshold = 0.10, plot = FALSE)
-#> $pre
-#> Balance Measures
-#>                  Type Diff.Un Diff.Adj
-#> distance     Distance  0.4047   0.1565
-#> age           Contin.  0.2669   0.0762
-#> diabetes       Binary  0.1088   0.0617
-#> hypertension   Binary  0.0165   0.0062
-#> bmi           Contin.  0.1638   0.0334
+#> Covariate balance check
+#> =======================
+#> Threshold (ASMD): 0.1 
+#> Overall balance: FAILED 
+#>   4 of 10 covariates below threshold
+#>   Largest ASMD: 0.156 (covariate: NA)
 #> 
-#> Sample sizes
-#>           Control Treated
-#> All           167     333
-#> Matched       162     162
-#> Unmatched       5     171
-#> 
-#> $post
-#> Balance Measures
-#>                  Type Diff.Adj
-#> distance     Distance   0.1565
-#> age           Contin.   0.0762
-#> diabetes       Binary   0.0617
-#> hypertension   Binary   0.0062
-#> bmi           Contin.   0.0334
-#> 
-#> Sample sizes
-#>           Control Treated
-#> All           167     333
-#> Matched       162     162
-#> Unmatched       5     171
-#> 
-#> $threshold
-#> [1] 0.1
-#> 
-#> $all_balanced
-#> [1] FALSE
-#> 
-#> attr(,"class")
-#> [1] "IndepBalance"
+#> Tip: If balance is borderline, consider a tighter caliper
+#>    or a larger match ratio in match_cohort().
 ```
 
 ## Step 3: Match Cohorts

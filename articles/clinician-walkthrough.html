@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,10 +94,6 @@ were sicker to begin with,” not “RHC caused harm.”</p>
 <p>This is called <strong>confounding by indication</strong>, and it is
 the single biggest threat to trusting any finding from real-world
 clinical data.</p>
-<!--
-Save the uploaded "cohort_matching_workflow" illustration to:
-  ../man/figures/clinician-cohort-matching-story.png
--->
 <div class="float">
 <img src="../reference/figures/clinician-cohort-matching-story.png" alt="Raw, confounded data on the left; after matching each treated patient to a similar untreated patient, the only major difference left between the two groups is whether they received the treatment; on the right, five statistical approaches independently reach the same conclusion."><div class="figcaption">Raw, confounded data on the left; after matching
 each treated patient to a similar untreated patient, the only major
@@ -145,13 +141,6 @@ fancy:</p>
 <span><span class="co">#&gt; RHC         0         1</span></span>
 <span><span class="co">#&gt;   0 0.6936074 0.3063926</span></span>
 <span><span class="co">#&gt;   1 0.6199634 0.3800366</span></span></code></pre></div>
-<!--
-NOTE for whoever renders this: the paragraph below references "the raw
-death rate in each group" without a specific number, since this document
-was written without executing R against the real data. Once rendered,
-replace the placeholder wording with the actual percentages from the
-table above.
--->
 <p>This is the comparison a lot of casual analyses stop at — and it’s
 exactly the comparison you <em>cannot</em> trust yet. In the raw data,
 patients who received RHC died at a noticeably higher rate — 38.0%
@@ -184,7 +173,11 @@ checking <strong>positivity</strong>.</p>
 <span><span class="co">#&gt;   exposure 0 (n=3551): PS [0.003, 0.955], median 0.236</span></span>
 <span><span class="co">#&gt;   exposure 1 (n=2184): PS [0.019, 0.985], median 0.555</span></span>
 <span><span class="co">#&gt; Positivity: VIOLATED (12 outside window)</span></span>
-<span><span class="co">#&gt; IPTW weights (ATE): min 0.39, median 0.78, max 20.18, max/min ratio 52.2</span></span></code></pre></div>
+<span><span class="co">#&gt; IPTW weights (ATE): min 0.39, median 0.78, max 20.18, max/min ratio 52.2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Note: Some propensity scores fall outside the support window.</span></span>
+<span><span class="co">#&gt;    IPTW/AIPW estimates for units near the boundary may be unstable.</span></span>
+<span><span class="co">#&gt;    Consider trimming extreme weights or restricting the sample.</span></span></code></pre></div>
 <div class="callout">
 <p><strong>In plain terms:</strong> the word “VIOLATED” above looks
 alarming, but read the number next to it — only 12 of 5,735 patients
@@ -316,10 +309,6 @@ describes.)</p>
 <div class="section level2">
 <h2 id="step-6-the-verdict">Step 6 — The verdict<a class="anchor" aria-label="anchor" href="#step-6-the-verdict"></a>
 </h2>
-<!--
-Save the uploaded "RHC_image" panel figure to:
-  ../man/figures/clinician-rhc-panel-summary.png
--->
 <div class="float">
 <img src="../reference/figures/clinician-rhc-panel-summary.png" alt="Panel A: treated and untreated patients overlap well on the propensity score. Panel B: after matching, the covariates that were most imbalanced at baseline are brought close to the balance threshold. Panel C: all five methods estimate an odds ratio above 1 for 30-day mortality, and every confidence interval excludes “no effect.”"><div class="figcaption">Panel A: treated and untreated patients overlap
 well on the propensity score. Panel B: after matching, the covariates
@@ -401,7 +390,7 @@ your own cohort.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Mostafa Hamza.</p>
+  <p>Developed by Mostafa Abbas.</p>
 </div>
 
 <div class="pkgdown-footer-right">

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">IndepAssoc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -160,44 +160,15 @@ initial imbalance using <code><a href="https://ngreifer.github.io/cobalt/referen
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/match_cohort.html">match_cohort</a></span><span class="op">(</span><span class="va">ps</span>, caliper <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/check_balance.html">check_balance</a></span><span class="op">(</span><span class="va">m0</span>, threshold <span class="op">=</span> <span class="fl">0.10</span>, plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $pre</span></span>
-<span><span class="co">#&gt; <span style="text-decoration: underline;">Balance Measures</span></span></span>
-<span><span class="co">#&gt;                  Type Diff.Un Diff.Adj</span></span>
-<span><span class="co">#&gt; distance     Distance  0.4047   0.1565</span></span>
-<span><span class="co">#&gt; age           Contin.  0.2669   0.0762</span></span>
-<span><span class="co">#&gt; diabetes       Binary  0.1088   0.0617</span></span>
-<span><span class="co">#&gt; hypertension   Binary  0.0165   0.0062</span></span>
-<span><span class="co">#&gt; bmi           Contin.  0.1638   0.0334</span></span>
+<span><span class="co">#&gt; Covariate balance check</span></span>
+<span><span class="co">#&gt; =======================</span></span>
+<span><span class="co">#&gt; Threshold (ASMD): 0.1 </span></span>
+<span><span class="co">#&gt; Overall balance: FAILED </span></span>
+<span><span class="co">#&gt;   4 of 10 covariates below threshold</span></span>
+<span><span class="co">#&gt;   Largest ASMD: 0.156 (covariate: NA)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="text-decoration: underline;">Sample sizes</span></span></span>
-<span><span class="co">#&gt;           Control Treated</span></span>
-<span><span class="co">#&gt; All           167     333</span></span>
-<span><span class="co">#&gt; Matched       162     162</span></span>
-<span><span class="co">#&gt; Unmatched       5     171</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $post</span></span>
-<span><span class="co">#&gt; <span style="text-decoration: underline;">Balance Measures</span></span></span>
-<span><span class="co">#&gt;                  Type Diff.Adj</span></span>
-<span><span class="co">#&gt; distance     Distance   0.1565</span></span>
-<span><span class="co">#&gt; age           Contin.   0.0762</span></span>
-<span><span class="co">#&gt; diabetes       Binary   0.0617</span></span>
-<span><span class="co">#&gt; hypertension   Binary   0.0062</span></span>
-<span><span class="co">#&gt; bmi           Contin.   0.0334</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="text-decoration: underline;">Sample sizes</span></span></span>
-<span><span class="co">#&gt;           Control Treated</span></span>
-<span><span class="co">#&gt; All           167     333</span></span>
-<span><span class="co">#&gt; Matched       162     162</span></span>
-<span><span class="co">#&gt; Unmatched       5     171</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $threshold</span></span>
-<span><span class="co">#&gt; [1] 0.1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $all_balanced</span></span>
-<span><span class="co">#&gt; [1] FALSE</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; attr(,"class")</span></span>
-<span><span class="co">#&gt; [1] "IndepBalance"</span></span></code></pre></div>
+<span><span class="co">#&gt; Tip: If balance is borderline, consider a tighter caliper</span></span>
+<span><span class="co">#&gt;    or a larger match ratio in match_cohort().</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="step-3-match-cohorts">Step 3: Match Cohorts<a class="anchor" aria-label="anchor" href="#step-3-match-cohorts"></a>
@@ -2072,7 +2043,7 @@ pp.1-21.</p></li>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Mostafa Hamza.</p>
+  <p>Developed by Mostafa Abbas.</p>
 </div>
 
 <div class="pkgdown-footer-right">
