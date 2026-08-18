@@ -89,6 +89,8 @@ fit_outcome <- function(data, exposure, covariates, outcome,
   if (length(missing_covs) > 0) stop(paste("Covariates not found:", paste(missing_covs, collapse = ", ")))
   if (!outcome %in% names(data)) stop(paste("Outcome", outcome, "not found."))
 
+  .check_missing_data(data, c(exposure, covariates, outcome), caller = "fit_outcome")
+
   if (type == "binary") {
     y <- data[[outcome]]
     y <- y[!is.na(y)]

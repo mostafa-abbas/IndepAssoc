@@ -1,3 +1,22 @@
+# IndepAssoc 0.6.5 (2026-08-17)
+
+## Bug fixes
+
+- `run_pipeline()` and `fit_outcome()` now validate the exposure, all
+  specified covariates, and the outcome for missing values before any method
+  runs, via a shared `.check_missing_data()` check. The error names the
+  affected column(s) and the exact count and percentage of missing values,
+  and the check applies identically whether `run_pipeline()` or
+  `fit_outcome()` is called directly.
+  Previously, missing values in the exposure or a covariate caused an
+  unreadable internal `$<-.data.frame` length-mismatch error during
+  propensity-score fitting. More seriously, missing outcome values were not
+  checked at all: `iptw`, `matching`, `stratification`, and `regression`
+  each completed using their underlying model's own default row handling,
+  while `aipw` silently returned `NA` for its estimate with no error or
+  warning, producing a comparison table with an unexplained blank AIPW row
+  next to four populated ones.
+
 # IndepAssoc 0.6.4 (2026-08-11)
 
 ## Bug fixes

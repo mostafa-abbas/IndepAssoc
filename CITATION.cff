@@ -3,12 +3,12 @@ message: "If you use this software, please cite both the software and the papers
 type: software
 title: "IndepAssoc: Confounder-Adjusted Independent Association Testing via Propensity Score Methods"
 authors:
-  - family-names: Hamza
+  - family-names: Abbas
     given-names: Mostafa
 repository-code: "https://github.com/mostafa-abbas/IndepAssoc"
 license: MIT
-version: 0.6.4
-date-released: 2026-08-11
+version: 0.6.5
+date-released: 2026-08-17
 references:
   - type: article
     authors:

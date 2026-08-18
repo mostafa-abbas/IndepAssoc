@@ -69,6 +69,14 @@ run_pipeline <- function(data, exposure, covariates, outcome,
                          methods = c("regression", "matching", "stratification", "iptw", "aipw"),
                          seed = NULL,
                          estimand = c("ATE", "ATT")) {
+  if (!is.data.frame(data)) stop("`data` must be a data.frame.")
+  if (!exposure %in% names(data)) stop("Exposure `", exposure, "` not found in data.")
+  missing_covs <- setdiff(covariates, names(data))
+  if (length(missing_covs) > 0) stop("Covariates not found: ", paste(missing_covs, collapse = ", "))
+  if (!outcome %in% names(data)) stop("Outcome `", outcome, "` not found in data.")
+
+  .check_missing_data(data, c(exposure, covariates, outcome), caller = "run_pipeline")
+
   if (missing(type)) {
     type <- detect_outcome_type(data[[outcome]])
     if (is.null(type)) type <- "binary"
@@ -216,4 +224,29 @@ print.IndepAssoc <- function(x, ...) {
 #' @export
 summary.IndepAssoc <- function(object, ...) {
   print.IndepAssoc(object, ...)
+}
+
+#' Plot an IndepAssoc pipeline result
+#'
+#' Displays the ASMD (Love) plot from the balance check.
+#'
+#' @param x An `IndepAssoc` object from `run_pipeline()`.
+#' @param ... Additional arguments (ignored).
+#'
+#' @examples
+#' data(example_cohort)
+#' res <- run_pipeline(
+#'   data = example_cohort,
+#'   exposure = "exposure",
+#'   covariates = c("age", "diabetes", "hypertension", "bmi"),
+#'   outcome = "outcome_binary",
+#'   type = "binary",
+#'   methods = "regression"
+#' )
+#' plot(res)
+#'
+#' @export
+plot.IndepAssoc <- function(x, ...) {
+  print(x$balance_plot)
+  invisible(x)
 }

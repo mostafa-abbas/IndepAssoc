@@ -44,10 +44,6 @@ not "RHC caused harm."
 This is called **confounding by indication**, and it is the single biggest
 threat to trusting any finding from real-world clinical data.
 
-<!--
-Save the uploaded "cohort_matching_workflow" illustration to:
-  ../man/figures/clinician-cohort-matching-story.png
--->
 ![Raw, confounded data on the left; after matching each treated patient to
 a similar untreated patient, the only major difference left between the two
 groups is whether they received the treatment; on the right, five
@@ -87,13 +83,7 @@ raw_table
 prop.table(raw_table, margin = 1)
 ```
 
-<!--
-NOTE for whoever renders this: the paragraph below references "the raw
-death rate in each group" without a specific number, since this document
-was written without executing R against the real data. Once rendered,
-replace the placeholder wording with the actual percentages from the
-table above.
--->
+
 
 This is the comparison a lot of casual analyses stop at — and it's exactly the comparison you *cannot* trust yet. In the raw data, patients who received RHC died at a noticeably higher rate — 38.0% versus 30.6% among those who didn't. That difference could genuinely be because RHC is harmful, or it could simply be because RHC patients were sicker going in. There is no way to tell which from this table alone. That is the whole reason the rest of this walkthrough exists.
 
@@ -237,10 +227,7 @@ which population each method describes.)
 
 ## Step 6 — The verdict
 
-<!--
-Save the uploaded "RHC_image" panel figure to:
-  ../man/figures/clinician-rhc-panel-summary.png
--->
+
 ![Panel A: treated and untreated patients overlap well on the propensity
 score. Panel B: after matching, the covariates that were most imbalanced at
 baseline are brought close to the balance threshold. Panel C: all five

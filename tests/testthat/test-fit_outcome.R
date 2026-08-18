@@ -252,8 +252,9 @@ test_that("fit_outcome auto-detects a continuous outcome when type is omitted", 
 
 test_that("fit_outcome on rhc_sample continuous outcome completes without 'y values must be 0 <= y <= 1'", {
   data(rhc_sample)
+  d <- rhc_sample$data[complete.cases(rhc_sample$data[, c("swang1", "los")]), ]
   res <- expect_no_error(
-    fit_outcome(rhc_sample$data, "swang1", rhc_sample$covariates,
+    fit_outcome(d, "swang1", rhc_sample$covariates,
                 "los", method = "regression")
   )
   expect_equal(res$type, "continuous")

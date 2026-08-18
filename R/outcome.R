@@ -9,6 +9,26 @@ normalize <- function(x) {
 }
 
 #' Summarize a glm/lm/clogit model for the treatment effect
+#'
+#' @param model A fitted model object (`glm`, `lm`, `clogit`, or `plm`).
+#' @param treatment_feature Character; name of the exposure / treatment column.
+#' @param type `"binary"` or `"continuous"`.
+#'
+#' @return A one-row data frame of the treatment-effect summary.  Columns
+#'   always include the coefficient estimate, standard error, z- or t-value,
+#'   p-value, and Wald 95% CI bounds (`2.5 %`, `97.5 %`).  Two convenience
+#'   columns are added depending on `type`:
+#'   \describe{
+#'     \item{`type = "binary"`}{`OR` (exponentiated coefficient = odds ratio),
+#'       `lower`, `upper` (exponentiated CI bounds).}
+#'     \item{`type = "continuous"`}{`SC` (the raw coefficient on the
+#'       `normalize()`-transformed outcome used internally by
+#'       `fit_all_models()` — **not** on the same scale as
+#'       `res$comparison$estimate`, which reports effects on the original
+#'       outcome scale), `lower`, `upper` (CI bounds on the same normalized
+#'       scale).}
+#'   }
+#'
 #' @examples
 #' fit <- glm(outcome_binary ~ exposure + age,
 #'            data = example_cohort, family = "binomial")

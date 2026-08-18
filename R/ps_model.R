@@ -31,6 +31,8 @@ build_ps_model <- function(data, exposure, covariates, family = "binomial") {
   missing_covs <- setdiff(covariates, names(data))
   if (length(missing_covs) > 0) stop(paste("Covariates not found:", paste(missing_covs, collapse = ", ")))
 
+  .check_missing_data(data, c(exposure, covariates), caller = "build_ps_model")
+
   if (nrow(data) < 4) {
     stop("`data` must contain at least 4 rows to build a propensity score model.")
   }

@@ -14,6 +14,41 @@
 #' @noRd
 NULL
 
+#' Check for missing values in specified columns
+#'
+#' Stops with a clear, actionable error if any of the specified columns
+#' contain `NA` values.  The message names every column with missingness
+#' and instructs the user to handle the NAs before calling the pipeline.
+#'
+#' @param data Data frame to inspect.
+#' @param columns Character vector of column names to check.
+#' @param caller Name of the calling function for the error message.
+#' @keywords internal
+#' @noRd
+.check_missing_data <- function(data, columns, caller = deparse(sys.call(sys.frame(0))[[1]])) {
+  cols_present <- intersect(columns, names(data))
+  cols_absent  <- setdiff(columns, names(data))
+  if (length(cols_absent) > 0) {
+    stop(sprintf(
+      "%s: columns not found in `data`: %s",
+      caller, paste(cols_absent, collapse = ", ")
+    ))
+  }
+  na_counts <- vapply(cols_present, function(col) sum(is.na(data[[col]])), integer(1))
+  cols_with_na <- cols_present[na_counts > 0]
+  if (length(cols_with_na) > 0) {
+    details <- vapply(cols_with_na, function(col) {
+      sprintf("  `%s`: %d missing value(s) out of %d rows (%.1f%%)",
+              col, na_counts[col], nrow(data),
+              100 * na_counts[col] / nrow(data))
+    }, character(1))
+    stop(sprintf(
+      "%s: missing values detected in the following columns:\n%s\nPlease remove or impute missing values before calling %s().",
+      caller, paste(details, collapse = "\n"), caller
+    ))
+  }
+}
+
 #' Ensure a numeric 'match_num' column exists
 #' @keywords internal
 #' @noRd

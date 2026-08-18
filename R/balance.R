@@ -55,3 +55,37 @@ check_balance <- function(match_obj, threshold = 0.10, plot = FALSE) {
 
   result
 }
+
+#' Print an IndepBalance summary
+#'
+#' @param x An `IndepBalance` object from `check_balance()`.
+#' @param ... Additional arguments (ignored).
+#'
+#' @export
+print.IndepBalance <- function(x, ...) {
+  post_stats <- as.data.frame(x$post$Balance)
+  asmd_col <- grep("Diff\\.Adj|Diff\\.Un", names(post_stats), value = TRUE)
+  if (length(asmd_col) == 0) asmd_col <- grep("Diff", names(post_stats), value = TRUE)
+
+  cat("Covariate balance check\n")
+  cat("=======================\n")
+  cat("Threshold (ASMD):", x$threshold, "\n")
+  cat("Overall balance:", if (x$all_balanced) "PASSED" else "FAILED", "\n")
+
+  if (length(asmd_col) > 0) {
+    vals <- abs(as.numeric(unlist(post_stats[, asmd_col, drop = FALSE])))
+    n_covs <- length(vals)
+    n_ok <- sum(vals < x$threshold, na.rm = TRUE)
+    n_above <- sum(vals >= x$threshold, na.rm = TRUE)
+    cat(sprintf("  %d of %d covariates below threshold\n", n_ok, n_covs))
+    if (n_above > 0) {
+      worst <- post_stats[which.max(vals), , drop = FALSE]
+      cat(sprintf("  Largest ASMD: %.3f (covariate: %s)\n",
+                  max(vals, na.rm = TRUE), rownames(worst)))
+    }
+  }
+  cat("\n")
+  cat("Tip: If balance is borderline, consider a tighter caliper\n",
+      "  or a larger match ratio in match_cohort().\n")
+  invisible(x)
+}

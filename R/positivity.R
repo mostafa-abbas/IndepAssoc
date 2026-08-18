@@ -122,5 +122,15 @@ print.IndepPositivity <- function(x, ...) {
   w <- x$weights
   cat(sprintf("IPTW weights (%s): min %.2f, median %.2f, max %.2f, max/min ratio %.1f\n",
               w$estimand, w$min, w$median, w$max, w$max_min_ratio))
+
+  if (x$violation) {
+    cat("\nNote: Some propensity scores fall outside the support window.\n",
+        "  IPTW/AIPW estimates for units near the boundary may be unstable.\n",
+        "  Consider trimming extreme weights or restricting the sample.\n")
+  } else if (w$max_min_ratio > 20) {
+    cat("\nNote: The IPTW weight distribution is wide (max/min ratio > 20).\n",
+        "  Large weights can inflate variance; consider weight trimming\n",
+        "  via the `trim` argument in fit_outcome().\n")
+  }
   invisible(x)
 }

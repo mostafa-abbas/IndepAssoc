@@ -16,9 +16,10 @@ test_that("run_pipeline auto-detects a continuous outcome when type is omitted",
 
 test_that("run_pipeline on rhc_sample continuous outcome completes without 'y values must be 0 <= y <= 1'", {
   data(rhc_sample)
+  d <- rhc_sample$data[complete.cases(rhc_sample$data[, c("swang1", "los")]), ]
   res <- expect_no_error(
     suppressWarnings(suppressMessages(run_pipeline(
-      data = rhc_sample$data,
+      data = d,
       exposure = "swang1",
       covariates = rhc_sample$covariates,
       outcome = "los",
