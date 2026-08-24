@@ -8,6 +8,42 @@ Summarize a glm/lm/clogit model for the treatment effect
 model_summ(model, treatment_feature, type = c("binary", "continuous"))
 ```
 
+## Arguments
+
+- model:
+
+  A fitted model object (`glm`, `lm`, `clogit`, or `plm`).
+
+- treatment_feature:
+
+  Character; name of the exposure / treatment column.
+
+- type:
+
+  `"binary"` or `"continuous"`.
+
+## Value
+
+A one-row data frame of the treatment-effect summary. Columns always
+include the coefficient estimate, standard error, z- or t-value,
+p-value, and Wald 95% CI bounds (`2.5 %`, `97.5 %`). Two convenience
+columns are added depending on `type`:
+
+- `type = "binary"`:
+
+  `OR` (exponentiated coefficient = odds ratio), `lower`, `upper`
+  (exponentiated CI bounds).
+
+- `type = "continuous"`:
+
+  `SC` (the raw coefficient on the
+  [`normalize()`](https://mostafa-abbas.github.io/IndepAssoc/reference/normalize.md)-transformed
+  outcome used internally by
+  [`fit_all_models()`](https://mostafa-abbas.github.io/IndepAssoc/reference/fit_all_models.md)
+  — **not** on the same scale as `res$comparison$estimate`, which
+  reports effects on the original outcome scale), `lower`, `upper` (CI
+  bounds on the same normalized scale).
+
 ## Details
 
 The exposure's coefficient rows are selected by exact name match, or —

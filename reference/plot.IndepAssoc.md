@@ -1,27 +1,24 @@
-# Export pipeline results to CSV files
+# Plot an IndepAssoc pipeline result
 
-Saves all pipeline outputs to CSV files in the specified directory.
+Displays the ASMD (Love) plot from the balance check.
 
 ## Usage
 
 ``` r
-export_results(result, output_dir = "output")
+# S3 method for class 'IndepAssoc'
+plot(x, ...)
 ```
 
 ## Arguments
 
-- result:
+- x:
 
   An `IndepAssoc` object from
   [`run_pipeline()`](https://mostafa-abbas.github.io/IndepAssoc/reference/run_pipeline.md).
 
-- output_dir:
+- ...:
 
-  Directory to write CSV files to.
-
-## Value
-
-Invisibly returns the output directory path.
+  Additional arguments (ignored).
 
 ## Examples
 
@@ -48,12 +45,6 @@ res <- run_pipeline(
 #> Step 8/9: Generating balance table...
 #> Step 9/9: Running requested confounding-adjustment methods...
 #> Pipeline complete.
-out_dir <- tempfile("indepassoc_export_")
-export_results(res, output_dir = out_dir)
-#> Results exported to: /tmp/RtmpfRzoiZ/indepassoc_export_19a24e88e043
-list.files(out_dir)
-#> [1] "balance_check_all.csv"         "balance_check_matched.csv"    
-#> [3] "binary_regression_summary.csv" "comparison.csv"               
-#> [5] "stat_test_binary_matched.csv" 
-unlink(out_dir, recursive = TRUE)
+plot(res)
+
 ```

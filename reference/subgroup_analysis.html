@@ -88,6 +88,17 @@
     <p>A data frame with one row per subgroup level, containing
 subgroup name, n, estimate, CI, and p-value.</p>
     </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p><code>subgroup_var</code> is intended to be a categorical variable with a
+small number of levels and adequate per-subgroup sample size; continuous
+variables should be binned first (e.g. <code>cut(age, breaks = 4)</code>). Subgroups
+whose model fails to fit (e.g. a degenerate outcome within the subgroup)
+return an NA row rather than halting the analysis; when several subgroups
+fail, the individual failure messages are consolidated into a single
+summary warning naming each affected subgroup (details truncated beyond
+the first few).</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
