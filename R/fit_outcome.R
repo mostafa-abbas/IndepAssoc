@@ -91,16 +91,7 @@ fit_outcome <- function(data, exposure, covariates, outcome,
 
   .check_missing_data(data, c(exposure, covariates, outcome), caller = "fit_outcome")
 
-  if (type == "binary") {
-    y <- data[[outcome]]
-    y <- y[!is.na(y)]
-    if (length(y) > 0 && length(unique(y)) < 2) {
-      stop(sprintf(
-        "Binary outcome `%s` has zero variance (all %d values are %s) - cannot estimate a treatment effect.",
-        outcome, length(y), y[1]
-      ))
-    }
-  }
+  .check_zero_variance(data, outcome, type)
 
   funs <- c(
     regression     = ".fit_regression",
@@ -191,7 +182,11 @@ fit_outcome <- function(data, exposure, covariates, outcome,
       n1 <- rep(0, n_strata)
       for (s in seq_len(n_strata)) {
         sub <- d[d$.stratum == s, ]
-        n1[s] <- sum(sub[[exposure]])
+        if (is.factor(sub[[exposure]])) {
+          n1[s] <- sum(sub[[exposure]] == "treated")
+        } else {
+          n1[s] <- sum(sub[[exposure]])
+        }
         tab <- table(sub[[exposure]], sub[[outcome]])
         if (!all(dim(tab) == c(2, 2))) next
         if (any(tab == 0)) tab <- tab + 0.5
@@ -220,12 +215,17 @@ fit_outcome <- function(data, exposure, covariates, outcome,
                          mh$conf.int[1], mh$conf.int[2], mh$p.value, nrow(d), NULL)
     }
   } else {
-    est_rows <- vapply(unique(d$.stratum), function(s) {
+est_rows <- vapply(unique(d$.stratum), function(s) {
       sub <- d[d$.stratum == s, ]
       m <- stats::lm(stats::as.formula(paste(outcome, "~", exposure)), data = sub)
-      se <- summary(m)$coefficients[exposure, "Std. Error"]
-      c(est = unname(coef(m)[exposure]), se = se, n1 = sum(sub[[exposure]]))
-    }, numeric(3))
+      sc <- summary(m)$coefficients
+      idx <- grep(paste0("^", exposure), rownames(sc))[1]
+      se <- as.numeric(sc[idx, "Std. Error"])
+      est <- unname(coef(m)[idx])
+      exposure_col <- sub[[exposure]]
+      if (is.factor(exposure_col)) exposure_col <- as.numeric(exposure_col)
+      c(est = est, se = se, n1 = sum(exposure_col))
+}, numeric(3))
     keep <- is.finite(est_rows["se", ]) & est_rows["se", ] > 0
     diffs <- est_rows[, keep, drop = FALSE]
     if (ncol(diffs) == 0) stop("No stratum produced a valid variance for pooling.")
@@ -280,7 +280,7 @@ fit_outcome <- function(data, exposure, covariates, outcome,
 .fit_iptw <- function(data, exposure, covariates, outcome, type,
                       estimand = c("ATE", "ATT"), trim = NULL, ...) {
   estimand <- match.arg(estimand)
-  d <- data
+  d <- .normalize_exposure_col(data, exposure)
   p_denom_form <- stats::as.formula(paste(exposure, "~", paste(covariates, collapse = " + ")))
   denom <- stats::predict(stats::glm(p_denom_form, data = d, family = stats::binomial), type = "response")
   denom <- pmin(pmax(denom, 1e-6), 1 - 1e-6)
@@ -317,7 +317,7 @@ fit_outcome <- function(data, exposure, covariates, outcome,
 .fit_aipw <- function(data, exposure, covariates, outcome, type,
                       estimand = c("ATE", "ATT"), trim = NULL, ...) {
   estimand <- match.arg(estimand)
-  d <- data
+  d <- .normalize_exposure_col(data, exposure)
   a <- d[[exposure]]
 
   mu_form <- stats::as.formula(paste(outcome, "~", paste(c(exposure, covariates), collapse = " + ")))

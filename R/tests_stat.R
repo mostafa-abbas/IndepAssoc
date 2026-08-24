@@ -46,7 +46,7 @@ mcnemar_test <- function(matched_data, outcome, exposure) {
   }
 
   strat_ids <- sort(unique(matched_data$match_num))
-  tabs <- array(0L, dim = c(2, 2, length(strat_ids)),
+  tabs <- array(0, dim = c(2, 2, length(strat_ids)),
                 dimnames = list(outcome = c("0", "1"),
                                 exposure = as.character(grp_vals),
                                 stratum = as.character(strat_ids)))
@@ -77,6 +77,7 @@ mcnemar_test <- function(matched_data, outcome, exposure) {
       if (dim(tabs)[3] < 2) {
         stop("fewer than 2 usable strata")
       }
+      storage.mode(tabs) <- "double"
       mh <- stats::mantelhaen.test(tabs)
       if (is.na(mh$p.value) || !is.finite(mh$statistic)) {
         stop("non-finite Mantel-Haenszel statistic (degenerate outcome)")

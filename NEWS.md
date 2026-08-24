@@ -2,6 +2,33 @@
 
 ## Bug fixes
 
+- `fit_outcome()` with `type = "continuous"` now errors clearly when the
+  outcome has zero variance (every value identical), naming the outcome, the
+  row count, and the constant value — mirroring the existing binary
+  zero-variance guard. Previously all adjustment methods (`regression`,
+  `matching`, `stratification`, `iptw`, `aipw`) silently succeeded and
+  returned a meaningless estimate of ~0 with a degenerate confidence
+  interval (and, for some methods, plausible-looking p-values computed from
+  floating-point noise). **Behavior change for `run_pipeline()`:** a constant
+  continuous outcome now halts step 9 with this clear error instead of
+  returning a zero-effect comparison row.
+- `subgroup_analysis()` no longer emits one "failed to fit" warning per
+  degenerate subgroup. When several subgroups fail to fit (previously easy
+  to trigger by passing a continuous variable such as age as `subgroup_var`,
+  which produced hundreds of near-identical warnings), the individual
+  failure messages are consolidated into a single summary warning giving the
+  failure count and naming each affected subgroup (details truncated beyond
+  the first few). The documented warn + NA-row behavior is otherwise
+  unchanged, and `subgroup_var` is now documented as intended to be
+  categorical with adequate per-subgroup sample size.
+- Fixed integer overflow in `mcnemar_test()`'s internal
+  `stats::mantelhaen.test()` call on matched cohorts with large per-stratum
+  cell counts (e.g. tens of thousands of rows within a single matched group).
+  The per-stratum tables were previously built as an integer array, so
+  `mantelhaen.test()` emitted four `NAs produced by integer overflow`
+  warnings while computing a confidence interval that `mcnemar_test()` never
+  returns; the reported statistic and p-value were not affected before this
+  fix, but the noisy/alarming warnings are now silenced.
 - `run_pipeline()` and `fit_outcome()` now validate the exposure, all
   specified covariates, and the outcome for missing values before any method
   runs, via a shared `.check_missing_data()` check. The error names the

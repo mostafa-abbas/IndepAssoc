@@ -122,6 +122,62 @@ test_that("mcnemar_test completes without NA under ratio > 1 matching", {
   expect_equal(res$p.value, mh$p.value)
 })
 
+# Textbook 2x2 matched-pairs example (Wikipedia/McNemar): 700 pairs with
+# discordant counts b = 25 (case +/control -) and c = 15 (case -/control +).
+# With R's default continuity correction (as used by stats::mcnemar.test()
+# and inherited here from stats::mantelhaen.test(correct = TRUE)), the McNemar
+# chi-squared statistic is (|25 - 15| - 1)^2 / (25 + 15) = 2.025 and
+# p = pchisq(2.025, df = 1, lower.tail = FALSE) ~= 0.1547289.
+test_that("mcnemar_test reproduces the textbook matched-pairs McNemar statistic", {
+  cells <- data.frame(
+    n      = c(65, 25, 15, 595),
+    y_case = c(1, 1, 0, 0),
+    y_ctrl = c(1, 0, 1, 0)
+  )
+  md_rows <- vector("list", nrow(cells))
+  pair_id <- 0L
+  for (i in seq_len(nrow(cells))) {
+    ids <- pair_id + seq_len(cells$n[i])
+    pair_id <- pair_id + cells$n[i]
+    md_rows[[i]] <- rbind(
+      data.frame(match_num = ids, exposure = 1, outcome = cells$y_case[i]),
+      data.frame(match_num = ids, exposure = 0, outcome = cells$y_ctrl[i])
+    )
+  }
+  md <- do.call(rbind, md_rows)
+
+  res <- mcnemar_test(md, "outcome", "exposure")
+  expect_equal(unname(res$statistic), 2.025, tolerance = 1e-8)
+  expect_equal(unname(res$p.value), pchisq(2.025, df = 1, lower.tail = FALSE),
+               tolerance = 1e-8)
+})
+
+# Golden reference for the large-strata overflow bug (dev-notes/
+# OPENCODE_FIX_mcnemar_integer_overflow_v3.md): 6 strata of 11,000 rows each
+# previously triggered exactly 4 "NAs produced by integer overflow" warnings
+# inside stats::mantelhaen.test(); the returned statistic/p-value were already
+# correct (verified against an independent double-storage computation).
+test_that("mcnemar_test does not silently corrupt results under large strata", {
+  build_large_stratum_data <- function(strata_sizes, seed = 42) {
+    set.seed(seed)
+    rows <- lapply(seq_along(strata_sizes), function(i) {
+      n_i <- strata_sizes[i]
+      exposure <- rep(c(0, 1), length.out = n_i)
+      outcome  <- rbinom(n_i, 1, ifelse(exposure == 1, 0.6, 0.3))
+      data.frame(match_num = i, exposure = exposure, outcome = outcome)
+    })
+    do.call(rbind, rows)
+  }
+  big_data <- build_large_stratum_data(rep(11000L, 6))
+
+  expect_warning(
+    res <- mcnemar_test(big_data, "outcome", "exposure"),
+    NA
+  )
+  expect_equal(unname(res$statistic), 5817.019793, tolerance = 1e-6)
+  expect_equal(unname(res$p.value), 0, tolerance = 1e-10)
+})
+
 test_that("paired statistical tests complete on rhc_sample at ratio 1 and 2", {
   data(rhc_sample)
   ps <- build_ps_model(rhc_sample$data, "swang1", rhc_sample$covariates)

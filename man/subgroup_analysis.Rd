@@ -34,6 +34,16 @@ subgroup name, n, estimate, CI, and p-value.
 \description{
 Repeats \code{fit_outcome()} within each level of a subgroup variable.
 }
+\details{
+\code{subgroup_var} is intended to be a categorical variable with a
+small number of levels and adequate per-subgroup sample size; continuous
+variables should be binned first (e.g. \code{cut(age, breaks = 4)}). Subgroups
+whose model fails to fit (e.g. a degenerate outcome within the subgroup)
+return an NA row rather than halting the analysis; when several subgroups
+fail, the individual failure messages are consolidated into a single
+summary warning naming each affected subgroup (details truncated beyond
+the first few).
+}
 \examples{
 data(example_cohort)
 ps <- build_ps_model(example_cohort, "exposure",

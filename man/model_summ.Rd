@@ -6,6 +6,29 @@
 \usage{
 model_summ(model, treatment_feature, type = c("binary", "continuous"))
 }
+\arguments{
+\item{model}{A fitted model object (\code{glm}, \code{lm}, \code{clogit}, or \code{plm}).}
+
+\item{treatment_feature}{Character; name of the exposure / treatment column.}
+
+\item{type}{\code{"binary"} or \code{"continuous"}.}
+}
+\value{
+A one-row data frame of the treatment-effect summary.  Columns
+always include the coefficient estimate, standard error, z- or t-value,
+p-value, and Wald 95\% CI bounds (\verb{2.5 \%}, \verb{97.5 \%}).  Two convenience
+columns are added depending on \code{type}:
+\describe{
+\item{\code{type = "binary"}}{\code{OR} (exponentiated coefficient = odds ratio),
+\code{lower}, \code{upper} (exponentiated CI bounds).}
+\item{\code{type = "continuous"}}{\code{SC} (the raw coefficient on the
+\code{normalize()}-transformed outcome used internally by
+\code{fit_all_models()} — \strong{not} on the same scale as
+\code{res$comparison$estimate}, which reports effects on the original
+outcome scale), \code{lower}, \code{upper} (CI bounds on the same normalized
+scale).}
+}
+}
 \description{
 Summarize a glm/lm/clogit model for the treatment effect
 }

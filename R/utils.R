@@ -14,6 +14,21 @@
 #' @noRd
 NULL
 
+#' Normalize a factor-coded exposure column to numeric 0/1
+#'
+#' Mirrors `build_ps_model()`'s arm convention (first factor level = control,
+#' second = treated). The weighted estimators (`iptw`, `aipw`) do arithmetic
+#' on the exposure directly, so a factor column surviving from matched
+#' `match_cohort()` output must be converted before use.
+#' @keywords internal
+#' @noRd
+.normalize_exposure_col <- function(data, exposure) {
+  if (is.factor(data[[exposure]])) {
+    data[[exposure]] <- as.numeric(data[[exposure]] != levels(data[[exposure]])[1])
+  }
+  data
+}
+
 #' Check for missing values in specified columns
 #'
 #' Stops with a clear, actionable error if any of the specified columns
@@ -59,6 +74,31 @@ NULL
     return(data)
   }
   stop("Matched data must contain 'match_num' or 'strata' column.")
+}
+
+#' Stop with a clear error when the outcome has zero variance
+#'
+#' Mirrors the binary guard for continuous outcomes: an outcome whose
+#' non-missing values are all identical carries no information for effect
+#' estimation, so downstream estimators would silently return a meaningless
+#' ~0 estimate. The message names the outcome, the row count, and the value.
+#' Non-numeric outcomes are only assessed for `type = "binary"` (matching the
+#' original inline check's behavior); `fit_all_models()` deliberately does not
+#' call this for continuous responses, where graceful NA-row degradation is
+#' the documented contract.
+#' @keywords internal
+#' @noRd
+.check_zero_variance <- function(data, outcome, type) {
+  y <- data[[outcome]]
+  if (type != "binary" && !is.numeric(y) && !is.logical(y)) return(invisible(NULL))
+  y <- y[!is.na(y)]
+  kind <- if (type == "binary") "Binary" else "Continuous"
+  if (length(y) > 0 && length(unique(y)) < 2) {
+    stop(sprintf(
+      "%s outcome `%s` has zero variance (all %d values are %s) - cannot estimate a treatment effect.",
+      kind, outcome, length(y), format(y[1])
+    ))
+  }
 }
 
 #' Detect whether an outcome vector is binary (0/1 coded) or continuous.

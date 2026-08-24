@@ -252,3 +252,89 @@ test_that("fit_all_models degrades gracefully when the continuous response is co
   expect_equal(nrow(fam$summary_w), 3)
   expect_false(any(is.na(fam$summary_w[fam$summary_w$Model == "Fully adjusted linear regression", "SC"])))
 })
+
+test_that("fit_outcome rejects a zero-variance continuous outcome across all methods", {
+  # Continuous analogue of the binary zero-variance guard: a constant
+  # outcome gives no information for effect estimation, so every method
+  # must raise the clear error instead of silently returning ~0.
+  d <- simulate_test_cohort()
+  d$y_const <- rep(7.25, nrow(d))
+  covs <- c("age", "diabetes", "hypertension")
+  for (meth in c("regression", "matching", "stratification", "iptw", "aipw")) {
+    expect_error(
+      fit_outcome(d, "exposure", covs, "y_const",
+                  type = "continuous", method = meth, seed = 42),
+      "zero variance",
+      info = meth
+    )
+  }
+})
+
+test_that("fit_outcome continuous zero-variance error names outcome, count, and value", {
+  d <- simulate_test_cohort()
+  d$y_const <- 7.25
+  err <- tryCatch(
+    fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"),
+                "y_const", type = "continuous", method = "iptw"),
+    error = function(e) e
+  )
+  expect_s3_class(err, "simpleError")
+  expect_match(conditionMessage(err),
+               "Continuous outcome `y_const` has zero variance")
+  expect_match(conditionMessage(err),
+               sprintf("all %d values are 7.25", nrow(d)))
+  expect_match(conditionMessage(err), "cannot estimate a treatment effect")
+})
+
+test_that("fit_outcome rejects a constant non-0/1 outcome when type is omitted (auto-detected continuous)", {
+  d <- simulate_test_cohort()
+  d$y_const <- 5
+  expect_error(
+    fit_outcome(d, "exposure", c("age", "diabetes", "hypertension"),
+                "y_const", method = "iptw"),
+    "zero variance"
+  )
+})
+
+test_that("fit_outcome weighted methods accept a factor exposure on matched data", {
+  # 0.6.4 allows factor-coded exposures, but match_cohort()'s returned data
+  # keeps the factor column, and the weight arithmetic in iptw/aipw must
+  # handle it instead of crashing on factor math. Results must equal the
+  # numerically-coded equivalent run (same seed -> same matches).
+  d <- simulate_test_cohort()
+  covs <- c("age", "diabetes", "hypertension")
+  df <- d
+  df$exposure <- factor(df$exposure, labels = c("control", "treated"))
+  m_f <- suppressWarnings(match_cohort(build_ps_model(df, "exposure", covs), seed = 42))
+  m_n <- suppressWarnings(match_cohort(build_ps_model(d, "exposure", covs), seed = 42))
+  expect_true(is.factor(m_f$data$exposure))
+
+  for (meth in c("iptw", "aipw")) {
+    rf <- fit_outcome(m_f$data, "exposure", covs, "outcome",
+                      type = "binary", method = meth)
+    rn <- fit_outcome(m_n$data, "exposure", covs, "outcome",
+                      type = "binary", method = meth)
+    expect_equal(rf$estimate, rn$estimate, tolerance = 1e-8, info = meth)
+    expect_equal(rf$p_value, rn$p_value, tolerance = 1e-8, info = meth)
+    expect_equal(rf$conf_low, rn$conf_low, tolerance = 1e-8, info = meth)
+  }
+
+  rc_f <- fit_outcome(m_f$data, "exposure", covs, "outcome_continuous",
+                      type = "continuous", method = "iptw")
+  rc_n <- fit_outcome(m_n$data, "exposure", covs, "outcome_continuous",
+                      type = "continuous", method = "iptw")
+  expect_equal(rc_f$estimate, rc_n$estimate, tolerance = 1e-8)
+
+  # stratification pools per-stratum effects arithmetically -> same requirement
+  rs_f <- fit_outcome(m_f$data, "exposure", covs, "outcome_continuous",
+                      type = "continuous", method = "stratification")
+  rs_n <- fit_outcome(m_n$data, "exposure", covs, "outcome_continuous",
+                      type = "continuous", method = "stratification")
+  expect_equal(rs_f$estimate, rs_n$estimate, tolerance = 1e-8)
+
+  ra_f <- fit_outcome(m_f$data, "exposure", covs, "outcome",
+                      type = "binary", estimand = "ATT", method = "stratification")
+  ra_n <- fit_outcome(m_n$data, "exposure", covs, "outcome",
+                      type = "binary", estimand = "ATT", method = "stratification")
+  expect_equal(ra_f$estimate, ra_n$estimate, tolerance = 1e-8)
+})

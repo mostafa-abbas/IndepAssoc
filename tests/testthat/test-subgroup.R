@@ -118,3 +118,54 @@ test_that("subgroup_analysis still defaults to binary for a 0/1 outcome when typ
   expect_true(all(!is.na(out$estimate)))
   expect_equal(nrow(out), length(unique(d$grp)))
 })
+
+test_that("subgroup_analysis collapses repeated subgroup failures into a single summary warning", {
+  # Continuous subgroup_var (age): every matched singleton subgroup fails to
+  # fit, but the caller must see ONE summary warning, not one per subgroup.
+  # The warn + NA-row behavior itself is deliberate and stays unchanged.
+  d <- simulate_test_cohort()
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- suppressWarnings(match_cohort(ps))
+  warns <- character(0)
+  out <- withCallingHandlers(
+    subgroup_analysis(m, "outcome", "age"),
+    warning = function(w) {
+      warns <<- c(warns, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  fit_warns <- warns[grepl("failed to fit", warns, fixed = TRUE)]
+  expect_length(fit_warns, 1)
+  expect_match(fit_warns[1], "subgroups failed to fit")
+  # per-group sentence format preserved for the first failures
+  expect_match(fit_warns[1], "Subgroup '", fixed = TRUE)
+  expect_match(fit_warns[1], "failed to fit:", fixed = TRUE)
+  expect_match(fit_warns[1], "(and ", fixed = TRUE)
+  # documented design preserved: one NA row per degenerate subgroup
+  expect_identical(nrow(out), length(unique(m$data$age)))
+  expect_true(all(is.na(out$estimate)))
+})
+
+test_that("subgroup_analysis lists each failing subgroup in the summary warning", {
+  # Two tiny subgroups (B and C) both fail; A and D fit. The single summary
+  # warning names every failing subgroup in the pinned sentence format.
+  d <- simulate_test_cohort()
+  d$grp <- c("B", "C", sample(c("A", "D"), nrow(d) - 2, replace = TRUE))
+  ps <- build_ps_model(d, "exposure", c("age", "diabetes", "hypertension"))
+  m <- suppressWarnings(match_cohort(ps))
+  warns <- character(0)
+  out <- withCallingHandlers(
+    subgroup_analysis(m, "outcome", "grp", method = "iptw"),
+    warning = function(w) {
+      warns <<- c(warns, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  fit_warns <- warns[grepl("failed to fit", warns, fixed = TRUE)]
+  expect_length(fit_warns, 1)
+  expect_match(fit_warns[1], "2 of 4 subgroups failed to fit", fixed = TRUE)
+  expect_match(fit_warns[1], "Subgroup 'B' failed to fit", fixed = TRUE)
+  expect_match(fit_warns[1], "Subgroup 'C' failed to fit", fixed = TRUE)
+  expect_false(grepl("(and ", fit_warns[1], fixed = TRUE)) # nothing truncated
+  expect_identical(nrow(out), 4L)
+})

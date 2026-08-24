@@ -9,3 +9,4 @@
 ^Meta$
 ^CITATION\.cff$
 ^OPENCODE-.*\.md$
+^dev-notes$

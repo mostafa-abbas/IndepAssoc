@@ -13,6 +13,15 @@
 #' @return A data frame with one row per subgroup level, containing
 #'   subgroup name, n, estimate, CI, and p-value.
 #'
+#' @details `subgroup_var` is intended to be a categorical variable with a
+#'   small number of levels and adequate per-subgroup sample size; continuous
+#'   variables should be binned first (e.g. `cut(age, breaks = 4)`). Subgroups
+#'   whose model fails to fit (e.g. a degenerate outcome within the subgroup)
+#'   return an NA row rather than halting the analysis; when several subgroups
+#'   fail, the individual failure messages are consolidated into a single
+#'   summary warning naming each affected subgroup (details truncated beyond
+#'   the first few).
+#'
 #' @examples
 #' data(example_cohort)
 #' ps <- build_ps_model(example_cohort, "exposure",
@@ -50,6 +59,7 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
   }
 
   groups <- unique(data[[subgroup_var]])
+  failures <- list()
   results <- lapply(groups, function(g) {
     sub_data <- data[data[[subgroup_var]] == g, ]
 
@@ -69,8 +79,10 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
         stringsAsFactors = FALSE
       )
     }, error = function(e) {
-      warning("Subgroup '", as.character(g), "' failed to fit: ",
-              conditionMessage(e), call. = FALSE)
+      failures[[length(failures) + 1L]] <<- list(
+        subgroup = as.character(g),
+        msg = conditionMessage(e)
+      )
       data.frame(
         subgroup = as.character(g),
         n = nrow(sub_data),
@@ -82,6 +94,19 @@ subgroup_analysis <- function(match_obj, outcome, subgroup_var, type = c("binary
       )
     })
   })
+
+  if (length(failures) > 0) {
+    n_fail <- length(failures)
+    detail_n <- min(3L, n_fail)
+    details <- vapply(seq_len(detail_n), function(i) {
+      sprintf("Subgroup '%s' failed to fit: %s.",
+              failures[[i]]$subgroup, sub("\\.$", "", failures[[i]]$msg))
+    }, character(1))
+    more <- if (n_fail > detail_n) sprintf(" (and %d more)", n_fail - detail_n) else ""
+    warning(sprintf("%d of %d subgroups failed to fit and returned NA rows. %s%s",
+                    n_fail, length(groups), paste(details, collapse = " "), more),
+            call. = FALSE)
+  }
 
   do.call(rbind, results)
 }
