@@ -207,6 +207,7 @@ fit_outcome <- function(data, exposure, covariates, outcome,
       d$exposure_f <- factor(d[[exposure]], levels = sort(unique(d[[exposure]])))
       d$outcome_f  <- factor(d[[outcome]],  levels = sort(unique(d[[outcome]])))
       tbl <- stats::xtabs(~ d$exposure_f + d$outcome_f + d$.stratum)
+      storage.mode(tbl) <- "double"
       mh <- tryCatch(
         stats::mantelhaen.test(tbl),
         error = function(e) stats::mantelhaen.test(tbl, correct = FALSE)
