@@ -38,6 +38,14 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.6" id="indepassoc-066-2026-08-23">IndepAssoc 0.6.6 (2026-08-23)<a class="anchor" aria-label="anchor" href="#indepassoc-066-2026-08-23"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-6-6">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-6-6"></a></h3>
+<ul><li>Factor-coded exposures are now converted to 0/1 before weighted estimation (<code>iptw</code> and <code>aipw</code>). Previously these estimators did arithmetic on the factor directly, so matched cohorts with a factor exposure could return incorrect estimates.</li>
+<li>Factor-coded exposures are now handled in the <code>stratification</code> estimator and in the linear-model estimator used for continuous outcomes. Previously the stratified count summed factor codes rather than treated units.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.5" id="indepassoc-065-2026-08-17">IndepAssoc 0.6.5 (2026-08-17)<a class="anchor" aria-label="anchor" href="#indepassoc-065-2026-08-17"></a></h2>
 <div class="section level3">
 <h3 id="bug-fixes-0-6-5">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-6-5"></a></h3>

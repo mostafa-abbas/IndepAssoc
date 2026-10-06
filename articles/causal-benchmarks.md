@@ -300,8 +300,8 @@ if (sessioninfo_ok) {
 }
 #>  package    * version date (UTC) lib source
 #>  causaldata   0.1.4   2024-10-24 [1] RSPM
-#>  IndepAssoc * 0.6.6   2026-08-24 [1] local
-#>  MatchIt      4.7.2   2025-05-30 [1] RSPM
+#>  IndepAssoc * 0.6.6   2026-10-06 [1] local
+#>  MatchIt      4.8.1   2026-09-26 [1] RSPM
 #> 
 #>  [1] /home/runner/work/_temp/Library
 #>  [2] /opt/R/4.6.1/lib/R/site-library

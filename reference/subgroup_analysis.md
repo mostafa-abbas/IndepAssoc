@@ -70,8 +70,7 @@ data(example_cohort)
 ps <- build_ps_model(example_cohort, "exposure",
                      c("age", "diabetes", "hypertension", "bmi"))
 matched <- match_cohort(ps)
-#> Warning: Fewer control units than treated units; not all treated units will get
-#> a match.
+#> Warning: Fewer control units than treated units; not all treated units will get a match.
 subgroup_analysis(matched, "outcome_binary", "diabetes", type = "binary")
 #> Subgroup variable 'diabetes' removed from the covariate set for subgroup models because it is constant within each subgroup.
 #>   subgroup   n estimate  conf_low conf_high     p_value

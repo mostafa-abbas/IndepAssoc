@@ -79,8 +79,7 @@ res <- find_matching_data_summary(
   "exposure",
   c("age", "diabetes", "hypertension", "bmi")
 )
-#> Warning: Fewer control units than treated units; not all treated units will get
-#> a match.
+#> Warning: Fewer control units than treated units; not all treated units will get a match.
 head(res$match_summ$all)
 #>              Means Treated Means Control Std. Mean Diff. Var. Ratio  eCDF Mean
 #> distance         0.6779234     0.6422246      0.40466753  1.0342505 0.11632886

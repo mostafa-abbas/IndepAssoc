@@ -53,8 +53,7 @@ data(example_cohort)
 ps <- build_ps_model(example_cohort, "exposure",
                      c("age", "diabetes", "hypertension", "bmi"))
 matched <- match_cohort(ps)
-#> Warning: Fewer control units than treated units; not all treated units will get
-#> a match.
+#> Warning: Fewer control units than treated units; not all treated units will get a match.
 bal <- check_balance(matched, threshold = 0.10)
 bal$all_balanced
 #> [1] FALSE

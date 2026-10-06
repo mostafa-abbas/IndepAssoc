@@ -86,8 +86,7 @@ data(example_cohort)
 ps <- build_ps_model(example_cohort, "exposure",
                      c("age", "diabetes", "hypertension", "bmi"))
 matched <- match_cohort(ps, caliper = 0.2, ratio = 1)
-#> Warning: Fewer control units than treated units; not all treated units will get
-#> a match.
+#> Warning: Fewer control units than treated units; not all treated units will get a match.
 head(matched$data)
 #>    exposure      age diabetes hypertension      bmi outcome_binary
 #> 2         0 59.35302        0            1 30.62061              1

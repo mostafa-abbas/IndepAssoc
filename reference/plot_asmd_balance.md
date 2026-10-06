@@ -55,8 +55,7 @@ res <- find_matching_data_summary(
   "exposure",
   c("age", "diabetes", "hypertension", "bmi")
 )
-#> Warning: Fewer control units than treated units; not all treated units will get
-#> a match.
+#> Warning: Fewer control units than treated units; not all treated units will get a match.
 plot_asmd_balance(res)
 
 plot_asmd_balance(res, top_n = 10)

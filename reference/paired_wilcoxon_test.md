@@ -46,8 +46,7 @@ data(example_cohort)
 ps <- build_ps_model(example_cohort, "exposure",
                      c("age", "diabetes", "hypertension", "bmi"))
 matched <- match_cohort(ps)
-#> Warning: Fewer control units than treated units; not all treated units will get
-#> a match.
+#> Warning: Fewer control units than treated units; not all treated units will get a match.
 paired_wilcoxon_test(matched$data, "outcome_continuous", "exposure")
 #>                label        0(n=162)        1(n=162) statistic     p.value
 #> 1 outcome_continuous 84.3(79.2-88.5) 86.1(81.1-90.6)      4734 0.001795215

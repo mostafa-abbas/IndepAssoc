@@ -98,8 +98,7 @@ degrades to an <code>NA</code> row with a warning rather than halting the pipeli
 <span class="r-in"><span><span class="va">ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_ps_model.html">build_ps_model</a></span><span class="op">(</span><span class="va">example_cohort</span>, <span class="st">"exposure"</span>,</span></span>
 <span class="r-in"><span>                     <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"diabetes"</span>, <span class="st">"hypertension"</span>, <span class="st">"bmi"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">matched</span> <span class="op">&lt;-</span> <span class="fu"><a href="match_cohort.html">match_cohort</a></span><span class="op">(</span><span class="va">ps</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Fewer control units than treated units; not all treated units will get</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> a match.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Fewer control units than treated units; not all treated units will get a match.</span>
 <span class="r-in"><span><span class="fu">mcnemar_test</span><span class="op">(</span><span class="va">matched</span><span class="op">$</span><span class="va">data</span>, <span class="st">"outcome_binary"</span>, <span class="st">"exposure"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            label  0(n=162) 1(n=162) statistic     p.value           p</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 outcome_binary 74(45.7%) 102(63%)  9.592105 0.001954158 0.001954158</span>

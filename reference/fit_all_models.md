@@ -50,8 +50,7 @@ data(example_cohort)
 ps <- build_ps_model(example_cohort, "exposure",
                      c("age", "diabetes", "hypertension", "bmi"))
 matched <- match_cohort(ps)
-#> Warning: Fewer control units than treated units; not all treated units will get
-#> a match.
+#> Warning: Fewer control units than treated units; not all treated units will get a match.
 models <- fit_all_models(ps, matched$data, "outcome_binary", type = "binary")
 models$summary_w
 #>            label                   Model   OR     CI_95           p

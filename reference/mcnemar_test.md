@@ -48,8 +48,7 @@ data(example_cohort)
 ps <- build_ps_model(example_cohort, "exposure",
                      c("age", "diabetes", "hypertension", "bmi"))
 matched <- match_cohort(ps)
-#> Warning: Fewer control units than treated units; not all treated units will get
-#> a match.
+#> Warning: Fewer control units than treated units; not all treated units will get a match.
 mcnemar_test(matched$data, "outcome_binary", "exposure")
 #>            label  0(n=162) 1(n=162) statistic     p.value           p
 #> 1 outcome_binary 74(45.7%) 102(63%)  9.592105 0.001954158 0.001954158

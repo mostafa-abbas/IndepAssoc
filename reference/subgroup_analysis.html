@@ -106,8 +106,7 @@ the first few).</p>
 <span class="r-in"><span><span class="va">ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_ps_model.html">build_ps_model</a></span><span class="op">(</span><span class="va">example_cohort</span>, <span class="st">"exposure"</span>,</span></span>
 <span class="r-in"><span>                     <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"diabetes"</span>, <span class="st">"hypertension"</span>, <span class="st">"bmi"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">matched</span> <span class="op">&lt;-</span> <span class="fu"><a href="match_cohort.html">match_cohort</a></span><span class="op">(</span><span class="va">ps</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Fewer control units than treated units; not all treated units will get</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> a match.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Fewer control units than treated units; not all treated units will get a match.</span>
 <span class="r-in"><span><span class="fu">subgroup_analysis</span><span class="op">(</span><span class="va">matched</span>, <span class="st">"outcome_binary"</span>, <span class="st">"diabetes"</span>, type <span class="op">=</span> <span class="st">"binary"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Subgroup variable 'diabetes' removed from the covariate set for subgroup models because it is constant within each subgroup.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   subgroup   n estimate  conf_low conf_high     p_value</span>

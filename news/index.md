@@ -1,5 +1,18 @@
 # Changelog
 
+## IndepAssoc 0.6.6 (2026-08-23)
+
+### Bug fixes
+
+- Factor-coded exposures are now converted to 0/1 before weighted
+  estimation (`iptw` and `aipw`). Previously these estimators did
+  arithmetic on the factor directly, so matched cohorts with a factor
+  exposure could return incorrect estimates.
+- Factor-coded exposures are now handled in the `stratification`
+  estimator and in the linear-model estimator used for continuous
+  outcomes. Previously the stratified count summed factor codes rather
+  than treated units.
+
 ## IndepAssoc 0.6.5 (2026-08-17)
 
 ### Bug fixes
